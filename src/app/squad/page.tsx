@@ -75,7 +75,7 @@ export default async function SquadPage({
               ? 'Your draft is live right now.'
               : 'Your squad appears here after the draft.'}
           </p>
-          <Link href={`/league/${leagueId}/draft`} className="inline-block font-bold text-accent">
+          <Link href={`/draft?league=${leagueId}`} className="inline-block font-bold text-accent">
             Go to the draft room
           </Link>
         </div>

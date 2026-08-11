@@ -94,7 +94,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
               </p>
             )}
             <Link
-              href={`/league/${league.id}/draft`}
+              href={`/draft?league=${league.id}`}
               className="btn-primary mt-2 w-full"
             >
               <Swords className="h-4 w-4" />
@@ -113,7 +113,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
         </>
       ) : league.draftStatus === 'active' ? (
         <Link
-          href={`/league/${league.id}/draft`}
+          href={`/draft?league=${league.id}`}
           className="your-pick card flex min-h-14 items-center justify-center gap-2 p-4 text-lg font-bold active:scale-[0.99]"
         >
           <Swords className="h-5 w-5" />
@@ -123,7 +123,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
         <>
           <LeagueStandings league={league} viewerId={session.userId} members={members} />
           <Link
-            href={`/league/${league.id}/draft`}
+            href={`/draft?league=${league.id}`}
             className="btn-outline mx-auto w-full max-w-xs"
           >
             View Draft Recap

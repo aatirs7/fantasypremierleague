@@ -317,14 +317,14 @@ export default async function HomePage({
               'Not scheduled yet'
             )}
           </p>
-          <Link href={`/league/${activeId}/draft`} className="btn-primary w-full">
+          <Link href={`/draft?league=${activeId}`} className="btn-primary w-full">
             <Swords className="h-4 w-4" />
             Enter Draft Room
           </Link>
         </section>
       ) : active?.draftStatus === 'active' ? (
         <Link
-          href={`/league/${activeId}/draft`}
+          href={`/draft?league=${activeId}`}
           className="btn-primary reveal w-full"
           style={{ animationDelay: '70ms' }}
         >
@@ -385,7 +385,7 @@ export default async function HomePage({
       {/* Last draft card, once drafted. */}
       {active?.draftStatus === 'complete' && firstPick ? (
         <Link
-          href={`/league/${activeId}/draft`}
+          href={`/draft?league=${activeId}`}
           className="reveal card flex items-center gap-3.5 p-4 active:scale-[0.99]"
           style={{ animationDelay: '160ms' }}
         >

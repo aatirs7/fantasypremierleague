@@ -96,6 +96,10 @@ body {
   -webkit-tap-highlight-color: transparent;
   position: relative;
   letter-spacing: 0.01em;
+  /* Every page fills the dynamic viewport, so short pages and long pages
+     get identical browser-toolbar and fixed-bar behavior on iOS. */
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
 }
 
 /* Deep plum wash from the top, settling to near-black. */
