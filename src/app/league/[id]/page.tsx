@@ -91,11 +91,11 @@ export default async function LeaguePage({
                   <Countdown toIso={league.draftTime.toISOString()} doneText="It is draft time" />
                 </p>
                 <p className="text-xs text-muted">
-                  {new Date(league.draftTime).toLocaleString('en-GB', {
+                  {new Date(league.draftTime).toLocaleString('en-US', {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',
-                    hour: '2-digit',
+                    hour: 'numeric',
                     minute: '2-digit',
                   })}
                 </p>

@@ -553,11 +553,11 @@ export default function DraftRoom({
           {state.draftTime ? (
             <p className="text-center text-sm text-muted">
               Scheduled for{' '}
-              {new Date(state.draftTime).toLocaleString('en-GB', {
+              {new Date(state.draftTime).toLocaleString('en-US', {
                 weekday: 'short',
                 day: 'numeric',
                 month: 'short',
-                hour: '2-digit',
+                hour: 'numeric',
                 minute: '2-digit',
               })}
             </p>

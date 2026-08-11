@@ -18,7 +18,7 @@ export default async function Landing({
   try {
     const kickoff = await editableGw();
     if (kickoff) {
-      kickoffLine = `Gameweek ${kickoff.gw} kicks off ${kickoff.deadline.toLocaleDateString('en-GB', {
+      kickoffLine = `Gameweek ${kickoff.gw} kicks off ${kickoff.deadline.toLocaleDateString('en-US', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',

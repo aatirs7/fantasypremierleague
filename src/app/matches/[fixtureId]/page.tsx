@@ -132,11 +132,11 @@ export default async function MatchDetailPage({
         >
           {status}
           {!f.started && f.kickoff
-            ? ` ${f.kickoff.toLocaleString('en-GB', {
+            ? ` ${f.kickoff.toLocaleString('en-US', {
                 weekday: 'short',
                 day: 'numeric',
                 month: 'short',
-                hour: '2-digit',
+                hour: 'numeric',
                 minute: '2-digit',
               })}`
             : ''}

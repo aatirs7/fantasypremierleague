@@ -362,66 +362,72 @@ export default async function HomePage({
         </Link>
       ) : null}
 
-      {/* My Team card. */}
-      <Link
-        href="/squad"
-        className="reveal card flex flex-col items-center gap-2 p-4 text-center active:scale-[0.99]"
-        style={{ animationDelay: '100ms' }}
-      >
-        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/12">
-          <Shirt className="h-6 w-6 text-accent" strokeWidth={2} />
-        </span>
-        <span className="min-w-0">
-          <span className="block text-xs text-muted">My Team</span>
-          <span className="block truncate text-base font-bold">{teamName}</span>
-          <span className="block text-xs text-muted">
-            {formation ?? (active?.draftStatus === 'complete' ? 'Set your lineup' : 'Drafts soon')}
+      {/* Square tiles, two across, so the dashboard fits without scrolling. */}
+      <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
+        <Link
+          href="/squad"
+          className="card flex aspect-square flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
+        >
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/12">
+            <Shirt className="h-6 w-6 text-accent" strokeWidth={2} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[0.65rem] text-muted">My Team</span>
+            <span className="block truncate text-sm font-bold">{teamName}</span>
+            <span className="block text-[0.65rem] text-muted">
+              {formation ?? (active?.draftStatus === 'complete' ? 'Set your lineup' : 'Drafts soon')}
+            </span>
             {gwPoints != null ? (
-              <span className={gwLive ? 'ml-1.5 font-bold text-live' : 'ml-1.5 text-muted'}>
+              <span
+                className={`block text-[0.65rem] font-bold ${gwLive ? 'text-live' : 'text-muted'}`}
+              >
                 {gwLive ? `● ${gwPoints} pts live` : `GW: ${gwPoints} pts`}
               </span>
             ) : null}
           </span>
-        </span>
-      </Link>
-
-      {/* League overview card. */}
-      <Link
-        href={`/league/${activeId}`}
-        className="reveal card relative flex flex-col items-center gap-2 overflow-hidden p-4 text-center active:scale-[0.99]"
-        style={{ animationDelay: '130ms' }}
-      >
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(180deg, transparent 55%, rgba(245,183,61,0.08) 100%)',
-          }}
-          aria-hidden
-        />
-        <Trophy className="h-8 w-8 text-gold/80" strokeWidth={1.6} />
-        <span className="min-w-0">
-          <span className="block text-xs text-muted">League Overview</span>
-          <span className="block truncate text-base font-bold">{active?.name}</span>
-          <span className="block text-xs text-muted">
-            {teamCount} {teamCount === 1 ? 'Team' : 'Teams'}
-            {myRank ? ` · You are ${ordinal(myRank)} of ${fieldSize}` : ''}
-          </span>
-        </span>
-      </Link>
-
-      {/* Last draft card, once drafted. */}
-      {active?.draftStatus === 'complete' && firstPick ? (
-        <Link
-          href={`/draft?league=${activeId}`}
-          className="reveal card flex flex-col items-center gap-1 p-4 text-center active:scale-[0.99]"
-          style={{ animationDelay: '160ms' }}
-        >
-          <span className="block text-xs text-muted">Your Last Draft</span>
-          <span className="block truncate text-base font-bold">{active.name} Draft</span>
-          <span className="block text-xs text-muted">First pick: {firstPick}</span>
         </Link>
-      ) : null}
+
+        <Link
+          href={`/league/${activeId}`}
+          className="card relative flex aspect-square flex-col items-center justify-center gap-2 overflow-hidden p-3 text-center active:scale-[0.98]"
+        >
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background: 'linear-gradient(180deg, transparent 55%, rgba(245,183,61,0.08) 100%)',
+            }}
+            aria-hidden
+          />
+          <Trophy className="h-9 w-9 text-gold/80" strokeWidth={1.6} />
+          <span className="min-w-0">
+            <span className="block text-[0.65rem] text-muted">League</span>
+            <span className="block truncate text-sm font-bold">{active?.name}</span>
+            <span className="block text-[0.65rem] text-muted">
+              {teamCount} {teamCount === 1 ? 'Team' : 'Teams'}
+            </span>
+            {myRank ? (
+              <span className="block text-[0.65rem] font-bold text-accent">
+                {ordinal(myRank)} of {fieldSize}
+              </span>
+            ) : null}
+          </span>
+        </Link>
+
+        {/* Last draft, once drafted. */}
+        {active?.draftStatus === 'complete' && firstPick ? (
+          <Link
+            href={`/draft?league=${activeId}`}
+            className="card flex aspect-square flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
+          >
+            <Swords className="h-8 w-8 text-accent" strokeWidth={1.8} />
+            <span className="min-w-0">
+              <span className="block text-[0.65rem] text-muted">Last Draft</span>
+              <span className="block truncate text-sm font-bold">{firstPick}</span>
+              <span className="block text-[0.65rem] text-muted">your first pick</span>
+            </span>
+          </Link>
+        ) : null}
+      </section>
 
       {/* Movement recap, only when something moved. */}
       {recap ? (

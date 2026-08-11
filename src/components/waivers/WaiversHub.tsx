@@ -152,7 +152,7 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
             <p className="text-sm">
               <span className="font-bold text-accent">Claims open.</span>{' '}
               <span className="text-muted">
-                Processed {new Date(win.closesAt).toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+                Processed {new Date(win.closesAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}
                 , 24h before the deadline.
               </span>
             </p>

@@ -59,7 +59,7 @@ function MatchCard({ f, clubById }: { f: FixtureRow; clubById: Map<number, Club>
           ) : (
             <span className="font-display text-base leading-none text-foreground">
               {f.kickoff
-                ? f.kickoff.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                ? f.kickoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
                 : 'TBC'}
             </span>
           )}
@@ -121,7 +121,7 @@ export default async function MatchesPage({
   const byDay = new Map<string, FixtureRow[]>();
   for (const f of rows) {
     const key = f.kickoff
-      ? f.kickoff.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })
+      ? f.kickoff.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' })
       : 'Date TBC';
     if (!byDay.has(key)) byDay.set(key, []);
     byDay.get(key)!.push(f);
@@ -230,7 +230,7 @@ export default async function MatchesPage({
             {gw.name}
             {gw.finished
               ? ' · finished'
-              : ` · deadline ${gw.deadline.toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}`}
+              : ` · deadline ${gw.deadline.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}`}
           </p>
 
           {[...byDay.entries()].map(([day, dayRows]) => (
