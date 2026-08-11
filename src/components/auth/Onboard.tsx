@@ -9,9 +9,15 @@ type Mode = 'login' | 'register';
 const INPUT_CLS =
   'min-h-11 w-full rounded-xl border border-edge bg-white/[0.03] px-3.5 text-sm outline-none placeholder:text-muted-2 focus:border-accent/60';
 
-export default function Onboard({ next }: { next?: string }) {
+export default function Onboard({
+  next,
+  initialMode = 'login',
+}: {
+  next?: string;
+  initialMode?: Mode;
+}) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>('login');
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
   const [busy, setBusy] = useState(false);
@@ -119,9 +125,9 @@ export default function Onboard({ next }: { next?: string }) {
         <button
           onClick={submit}
           disabled={busy || !validUsername || pin.length !== 4}
-          className="min-h-11 rounded-xl bg-accent px-4 text-sm font-bold text-[var(--accent-ink)] active:scale-95 disabled:opacity-30"
+          className="btn-primary w-full"
         >
-          {busy ? 'One sec...' : mode === 'login' ? 'Sign in' : 'Create account'}
+          {busy ? 'One sec...' : mode === 'login' ? 'Log In' : 'Get Started'}
         </button>
       </div>
     </div>

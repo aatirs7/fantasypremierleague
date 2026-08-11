@@ -1,12 +1,11 @@
-import { CalendarDays, Home, Shirt, Trophy, Search, User, type LucideIcon } from 'lucide-react';
+import { Home, Swords, Shirt, Trophy, Menu, type LucideIcon } from 'lucide-react';
 
-// Shared nav destinations, used by the mobile bottom bar and the desktop
-// top bar so the two stay in sync.
+// Five destinations, per the reference design: Home, Draft, My Team,
+// League, More. Shared by the mobile bottom bar and the desktop top bar.
 export const TABS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/home', label: 'Home', icon: Home },
-  { href: '/squad', label: 'Squad', icon: Shirt },
+  { href: '/draft', label: 'Draft', icon: Swords },
+  { href: '/squad', label: 'My Team', icon: Shirt },
   { href: '/league', label: 'League', icon: Trophy },
-  { href: '/matches', label: 'Matches', icon: CalendarDays },
-  { href: '/players', label: 'Players', icon: Search },
-  { href: '/me', label: 'Me', icon: User },
+  { href: '/more', label: 'More', icon: Menu },
 ];

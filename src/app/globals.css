@@ -7,18 +7,18 @@
   token architecture unchanged; the look is its own.
 */
 :root {
-  --bg: #0a0b10;
-  --bg-2: #10111a;
-  --surface: #14161f;
-  --surface-raised: #1d202d;
-  --line: rgba(255, 255, 255, 0.07);
-  --line-strong: rgba(255, 255, 255, 0.15);
-  --fg: #f2f3f8;
-  --muted: #9aa0b5;
-  --muted-2: #676d84;
+  --bg: #0a0912;
+  --bg-2: #171029;
+  --surface: #131020;
+  --surface-raised: #1b1730;
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --fg: #f5f4fa;
+  --muted: #9d99b0;
+  --muted-2: #6b6780;
 
   --accent: #8b5cf6;
-  --accent-2: #7c3aed;
+  --accent-2: #6d28d9;
   --accent-ink: #ffffff;
 
   --gold: #f5b73d;
@@ -27,9 +27,9 @@
   --slate: #6b7896;
 
   --live: #fb3d80;
-  --glow-1: rgba(139, 92, 246, 0.16);
-  --glow-2: rgba(251, 61, 128, 0.06);
-  --glass-bg: rgba(16, 17, 26, 0.84);
+  --glow-1: rgba(124, 58, 237, 0.22);
+  --glow-2: rgba(139, 92, 246, 0.08);
+  --glass-bg: rgba(14, 12, 24, 0.85);
   --card-shadow: none;
 }
 
@@ -78,7 +78,7 @@
   --color-bronze: var(--bronze);
   --color-slate: var(--slate);
   --color-live: var(--live);
-  --font-display: var(--font-bebas);
+  --font-display: var(--font-hanken);
   --font-sans: var(--font-hanken);
 }
 
@@ -98,26 +98,126 @@ body {
   letter-spacing: 0.01em;
 }
 
-/* Flat modern ground: one quiet vertical wash, nothing theatrical. */
+/* Deep plum wash from the top, settling to near-black. */
 .bg-atmosphere {
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background: linear-gradient(180deg, var(--bg-2), var(--bg) 32%);
+  background:
+    radial-gradient(140% 55% at 50% -8%, var(--glow-1), transparent 62%),
+    linear-gradient(180deg, var(--bg-2), var(--bg) 45%);
 }
 
-/* Display type: bold modern grotesk. */
+/* Display type: same face as body, heavier and tighter. */
 .font-display {
-  font-family: var(--font-bebas), var(--font-hanken), sans-serif;
+  font-family: var(--font-hanken), system-ui, sans-serif;
   letter-spacing: -0.02em;
   font-weight: 700;
+}
+
+/* Primary action: full violet gradient pill. */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  border-radius: 9999px;
+  padding-inline: 1.5rem;
+  background: linear-gradient(100deg, #8b5cf6, #6d28d9);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.btn-primary:active {
+  transform: scale(0.97);
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+}
+
+/* Secondary action: outlined pill. */
+.btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  border-radius: 9999px;
+  padding-inline: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.btn-outline:active {
+  transform: scale(0.97);
+}
+
+/* Underline tabs. */
+.tab-underline {
+  position: relative;
+  padding-bottom: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.tab-underline[data-active='true'] {
+  color: var(--fg);
+}
+.tab-underline[data-active='true']::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* The team pitch. */
+.pitch {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(90% 30% at 50% 52%, rgba(255, 255, 255, 0.045) 0%, transparent 55%),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0 3.6rem, transparent 3.6rem 7.2rem),
+    linear-gradient(180deg, #123a26, #0c2c1c);
+  position: relative;
+  overflow: hidden;
+}
+.pitch::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 7rem;
+  height: 7rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.pitch::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 52%;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+.plate {
+  background: rgba(8, 7, 14, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.7rem;
 }
 
 /* Room for the floating bottom nav plus iOS safe area. Hidden at lg where
    the top nav takes over. */
 .pb-tabbar {
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
 }
 @media (min-width: 1024px) {
   .pb-tabbar {

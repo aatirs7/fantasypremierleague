@@ -96,6 +96,14 @@ function topicFor(pathname: string): HelpTopic | null {
       ],
     };
   }
+  if (pathname.startsWith('/more')) {
+    return {
+      title: 'More',
+      steps: [
+        'Everything else lives here: player scouting, fixtures, the real PL table, and your profile.',
+      ],
+    };
+  }
   if (pathname.startsWith('/me')) {
     return {
       title: 'Me',

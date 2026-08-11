@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Space_Grotesk, Inter } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 import BottomTabBar from '@/components/nav/BottomTabBar';
 import DesktopNav from '@/components/nav/DesktopNav';
@@ -8,14 +8,8 @@ import HelpButton from '@/components/HelpButton';
 import ThemeButton from '@/components/ThemeButton';
 import './globals.css';
 
-// Display and body faces. The CSS vars keep their historical names so the
-// token bridge in globals.css stays untouched.
-const display = Space_Grotesk({
-  variable: '--font-bebas',
-  subsets: ['latin'],
-  weight: ['500', '700'],
-});
-
+// One face for everything, per the reference design. The CSS var keeps its
+// historical name so the token bridge in globals.css stays untouched.
 const body = Inter({
   variable: '--font-hanken',
   subsets: ['latin'],
@@ -53,7 +47,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-theme={theme}
-      className={`${display.variable} ${body.variable} h-full antialiased`}
+      className={`${body.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col pb-tabbar pt-[env(safe-area-inset-top)]">
         <div className="bg-atmosphere" aria-hidden />

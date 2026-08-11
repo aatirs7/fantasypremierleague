@@ -1,25 +1,26 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { and, eq } from 'drizzle-orm';
-import {
-  ArrowLeftRight,
-  ArrowRight,
-  ListOrdered,
-  Search,
-  Shirt,
-  Swords,
-  Timer,
-} from 'lucide-react';
+import { and, desc, eq, inArray } from 'drizzle-orm';
+import { ChevronRight, Shirt, Swords, Trophy, TrendingDown, TrendingUp } from 'lucide-react';
 import { db } from '@/lib/db';
-import { gameweeks, gwScores, leagues, squads, standingSnapshots, users } from '@/lib/schema';
-import { inArray } from 'drizzle-orm';
-import { TrendingDown, TrendingUp } from 'lucide-react';
+import {
+  draftPicks,
+  gameweeks,
+  gwScores,
+  leagueMembers,
+  leagues,
+  lineups,
+  squads,
+  standingSnapshots,
+  users,
+} from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { editableGw } from '@/lib/lineup';
 import { leagueTable } from '@/lib/scoring';
 import { myLeagues, resolveActiveLeagueId } from '@/lib/leagues';
 import LeagueActions from '@/components/leagues/LeagueActions';
-import Countdown from '@/components/leagues/Countdown';
+import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
+import Avatar from '@/components/Avatar';
 import RememberLeague from '@/components/RememberLeague';
 import PullToRefresh from '@/components/PullToRefresh';
 
@@ -31,6 +32,20 @@ const ordinal = (n: number) => {
   return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;
 };
 
+function greeting(): string {
+  const hour = Number(
+    new Intl.DateTimeFormat('en-GB', {
+      hour: 'numeric',
+      hour12: false,
+      timeZone: 'America/New_York',
+    }).format(new Date()),
+  );
+  if (hour < 5) return 'Good night,';
+  if (hour < 12) return 'Good morning,';
+  if (hour < 18) return 'Good afternoon,';
+  return 'Good evening,';
+}
+
 export default async function HomePage({
   searchParams,
 }: {
@@ -41,18 +56,19 @@ export default async function HomePage({
   const { league: requested } = await searchParams;
   const mine = await myLeagues(session.userId);
 
-  // No league yet: the dashboard IS the join/create chooser.
   if (mine.length === 0) {
     return (
-      <div className="reveal mx-auto max-w-md space-y-6 py-8 text-center">
-        <header className="space-y-2">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent font-display text-2xl text-[var(--accent-ink)]">
-            {session.username.slice(0, 1).toUpperCase()}
-          </span>
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">Welcome</p>
-          <h1 className="font-display text-3xl leading-none">{session.username}</h1>
+      <div className="reveal mx-auto max-w-md space-y-6 py-6">
+        <header className="flex items-center justify-between px-1">
+          <div>
+            <p className="text-sm text-muted">{greeting()}</p>
+            <h1 className="text-2xl font-bold tracking-tight">{session.username}</h1>
+          </div>
+          <Link href="/me">
+            <Avatar name={session.username} size={40} />
+          </Link>
         </header>
-        <p className="text-sm text-muted">
+        <p className="px-1 text-sm text-muted">
           Join a friend&apos;s league with their code, or start your own and share it.
         </p>
         <LeagueActions />
@@ -67,6 +83,12 @@ export default async function HomePage({
     .from(squads)
     .where(and(eq(squads.leagueId, activeId), eq(squads.userId, session.userId)))
     .limit(1);
+  const [memberCountRow] = await db
+    .select({ userId: leagueMembers.userId })
+    .from(leagueMembers)
+    .where(eq(leagueMembers.leagueId, activeId))
+    .then((rows) => [{ n: rows.length }]);
+  const teamCount = memberCountRow?.n ?? 0;
 
   const nextGw = await editableGw();
   const [currentGw] = await db
@@ -74,6 +96,30 @@ export default async function HomePage({
     .from(gameweeks)
     .where(eq(gameweeks.isCurrent, true))
     .limit(1);
+
+  const teamName = mySquad?.name ?? `${session.username} FC`;
+
+  // Formation string from the current editable lineup, e.g. 4-3-3.
+  let formation: string | null = null;
+  if (mySquad && nextGw) {
+    const [lineup] = await db
+      .select()
+      .from(lineups)
+      .where(and(eq(lineups.squadId, mySquad.id), eq(lineups.gw, nextGw.gw)))
+      .limit(1);
+    if (lineup) {
+      const ids = lineup.picks.filter((p) => p.starting).map((p) => p.fplId);
+      const posRows = ids.length
+        ? await db
+            .select({ fplId: sqlFplId.fplId, position: sqlFplId.position })
+            .from(sqlFplId)
+            .where(inArray(sqlFplId.fplId, ids))
+        : [];
+      const c: Record<string, number> = { DEF: 0, MID: 0, FWD: 0 };
+      for (const r of posRows) if (r.position in c) c[r.position]++;
+      formation = `${c.DEF}-${c.MID}-${c.FWD}`;
+    }
+  }
 
   let myRank: number | null = null;
   let fieldSize = 0;
@@ -91,11 +137,13 @@ export default async function HomePage({
       gwLive = me.currentGwLive;
     }
   }
+  void seasonPoints;
   if (mySquad && gwPoints == null) {
     const [latest] = await db
       .select({ totalPoints: gwScores.totalPoints, final: gwScores.final })
       .from(gwScores)
       .where(eq(gwScores.squadId, mySquad.id))
+      .orderBy(desc(gwScores.gw))
       .limit(1);
     if (latest) {
       gwPoints = latest.totalPoints;
@@ -103,8 +151,26 @@ export default async function HomePage({
     }
   }
 
-  // Recap: movement since this gameweek's baseline snapshot, wc26 style.
-  // Only a UNIQUE top mover gets named; ties stay quiet.
+  // My first draft pick, for the Last Draft card.
+  let firstPick: string | null = null;
+  if (active?.draftStatus === 'complete') {
+    const [fp] = await db
+      .select({ fplId: draftPicks.fplId })
+      .from(draftPicks)
+      .where(and(eq(draftPicks.leagueId, activeId), eq(draftPicks.userId, session.userId)))
+      .orderBy(draftPicks.pickNumber)
+      .limit(1);
+    if (fp) {
+      const [p] = await db
+        .select({ webName: sqlFplId.webName })
+        .from(sqlFplId)
+        .where(eq(sqlFplId.fplId, fp.fplId))
+        .limit(1);
+      firstPick = p?.webName ?? null;
+    }
+  }
+
+  // Recap: movement since this gameweek's baseline snapshot.
   type Recap = {
     you: { rank: number; rankDelta: number; gained: number } | null;
     climber: { name: string; up: number } | null;
@@ -172,23 +238,24 @@ export default async function HomePage({
     }
   }
 
-  const lq = `?league=${activeId}`;
-
   return (
     <div className="space-y-4 py-2 lg:mx-auto lg:max-w-2xl">
       <PullToRefresh />
       <RememberLeague leagueId={activeId} />
 
-      <header className="reveal flex items-center justify-center gap-2.5 pt-1 text-center">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent font-display text-lg text-[var(--accent-ink)]">
-          {session.username.slice(0, 1).toUpperCase()}
-        </span>
-        <h1 className="truncate font-display text-2xl leading-none">{session.username}</h1>
+      <header className="reveal flex items-center justify-between px-1 pt-1">
+        <div>
+          <p className="text-sm text-muted">{greeting()}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{session.username}</h1>
+        </div>
+        <Link href="/me">
+          <Avatar name={session.username} size={40} />
+        </Link>
       </header>
 
       {mine.length > 1 ? (
         <div className="-mx-4 overflow-x-auto px-4">
-          <div className="flex w-max justify-center gap-1.5 lg:w-full">
+          <div className="flex w-max gap-1.5">
             {mine.map((l) => (
               <Link
                 key={l.id}
@@ -206,92 +273,137 @@ export default async function HomePage({
         </div>
       ) : null}
 
-      {active?.draftStatus === 'pending' ? (
-        <section className="reveal card space-y-3 p-4 text-center" style={{ animationDelay: '60ms' }}>
-          <div className="inline-flex items-center justify-center gap-2 text-gold">
-            <Timer className="h-4 w-4" />
-            <span className="text-[0.7rem] font-bold uppercase tracking-[0.2em]">
-              {active.draftTime ? 'Draft starts in' : 'Draft not scheduled yet'}
-            </span>
-          </div>
-          {active.draftTime ? (
-            <p className="font-display text-4xl">
-              <Countdown toIso={active.draftTime.toISOString()} doneText="It is draft time" />
-            </p>
-          ) : null}
+      {/* Gameweek countdown card. */}
+      {nextGw ? (
+        <section
+          className="reveal card relative overflow-hidden p-4"
+          style={{ animationDelay: '40ms' }}
+        >
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(105deg, transparent 45%, rgba(139,92,246,0.16) 80%, rgba(109,40,217,0.28))',
+            }}
+            aria-hidden
+          />
+          <p className="text-base font-bold">Gameweek {nextGw.gw}</p>
+          <p className="mb-3 text-xs text-muted">
+            {active?.draftStatus === 'complete' ? 'Locks in' : 'Starts in'}
+          </p>
+          <CountdownBlocks toIso={nextGw.deadline.toISOString()} doneText="Underway" />
           <Link
-            href={`/league/${activeId}/draft`}
-            className="mx-auto flex min-h-11 max-w-xs items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-[var(--accent-ink)] active:scale-95"
+            href="/matches"
+            className="mt-3 block border-t border-edge pt-3 text-center text-sm font-bold text-accent"
           >
+            View Fixtures
+          </Link>
+        </section>
+      ) : null}
+
+      {/* Draft state card (pre-draft / live). */}
+      {active?.draftStatus === 'pending' ? (
+        <section className="reveal card space-y-2 p-4" style={{ animationDelay: '70ms' }}>
+          <p className="text-xs text-muted">Draft</p>
+          <p className="text-base font-bold">
+            {active.draftTime ? (
+              <>
+                Starts in{' '}
+                <span className="text-accent">
+                  <Countdown toIso={active.draftTime.toISOString()} doneText="now" />
+                </span>
+              </>
+            ) : (
+              'Not scheduled yet'
+            )}
+          </p>
+          <Link href={`/league/${activeId}/draft`} className="btn-primary w-full">
             <Swords className="h-4 w-4" />
-            Enter the draft room
+            Enter Draft Room
           </Link>
         </section>
       ) : active?.draftStatus === 'active' ? (
         <Link
           href={`/league/${activeId}/draft`}
-          className="your-pick reveal flex min-h-14 items-center justify-center gap-2 rounded-[1.1rem] p-4 text-lg font-bold active:scale-[0.99]"
+          className="btn-primary reveal w-full"
+          style={{ animationDelay: '70ms' }}
         >
           <Swords className="h-5 w-5" />
           Draft is LIVE, jump in
         </Link>
-      ) : (
-        <>
-          {nextGw ? (
-            <Link
-              href="/squad"
-              className="reveal card flex min-h-12 items-center justify-center gap-2 px-4 py-2.5 text-center"
-              style={{ animationDelay: '60ms' }}
-            >
-              <Timer className="h-4 w-4 shrink-0 text-gold" />
-              <span className="text-sm">
-                <span className="font-bold">GW{nextGw.gw}</span>
-                <span className="text-muted"> locks in </span>
-                <span className="font-bold text-gold">
-                  <Countdown toIso={nextGw.deadline.toISOString()} doneText="moments" />
-                </span>
+      ) : null}
+
+      {/* My Team card. */}
+      <Link
+        href="/squad"
+        className="reveal card flex items-center gap-3.5 p-4 active:scale-[0.99]"
+        style={{ animationDelay: '100ms' }}
+      >
+        <span className="flex h-13 w-13 shrink-0 items-center justify-center rounded-xl bg-accent/12">
+          <Shirt className="h-6 w-6 text-accent" strokeWidth={2} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs text-muted">My Team</span>
+          <span className="block truncate text-base font-bold">{teamName}</span>
+          <span className="block text-xs text-muted">
+            {formation ?? (active?.draftStatus === 'complete' ? 'Set your lineup' : 'Drafts soon')}
+            {gwPoints != null ? (
+              <span className={gwLive ? 'ml-1.5 font-bold text-live' : 'ml-1.5 text-muted'}>
+                {gwLive ? `● ${gwPoints} pts live` : `GW: ${gwPoints} pts`}
               </span>
-            </Link>
-          ) : null}
+            ) : null}
+          </span>
+        </span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted-2" />
+      </Link>
 
-          <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
-            <div className="card flex flex-col items-center justify-between p-3 text-center">
-              <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Your rank</p>
-              <p className="mt-1.5 font-display text-3xl leading-none">
-                {myRank ? (
-                  <>
-                    {ordinal(myRank)} <span className="text-muted">of {fieldSize}</span>
-                  </>
-                ) : (
-                  <span className="text-gold">-</span>
-                )}
-              </p>
-              {mine.length > 1 && active ? (
-                <p className="mt-1 max-w-full truncate text-xs text-muted">{active.name}</p>
-              ) : null}
-            </div>
-            <div className="card flex flex-col items-center justify-between p-3 text-center">
-              <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Points</p>
-              <p className="mt-1.5 font-display text-3xl leading-none text-accent">{seasonPoints}</p>
-              {gwPoints != null ? (
-                <p className={`mt-1 text-[0.6rem] font-bold uppercase tracking-wider ${gwLive ? 'text-live' : 'text-muted'}`}>
-                  {gwLive ? `● GW ${gwPoints} live` : `GW: ${gwPoints}`}
-                </p>
-              ) : (
-                <p className="mt-1 text-xs text-muted">Scores once it starts</p>
-              )}
-            </div>
-          </section>
-        </>
-      )}
+      {/* League overview card. */}
+      <Link
+        href={`/league/${activeId}`}
+        className="reveal card relative flex items-center gap-3.5 overflow-hidden p-4 active:scale-[0.99]"
+        style={{ animationDelay: '130ms' }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(100deg, transparent 55%, rgba(245,183,61,0.10) 85%, rgba(245,183,61,0.18))',
+          }}
+          aria-hidden
+        />
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs text-muted">League Overview</span>
+          <span className="block truncate text-base font-bold">{active?.name}</span>
+          <span className="block text-xs text-muted">
+            {teamCount} {teamCount === 1 ? 'Team' : 'Teams'}
+            {myRank ? ` · You are ${ordinal(myRank)} of ${fieldSize}` : ''}
+          </span>
+        </span>
+        <Trophy className="h-9 w-9 shrink-0 text-gold/80" strokeWidth={1.6} />
+      </Link>
 
+      {/* Last draft card, once drafted. */}
+      {active?.draftStatus === 'complete' && firstPick ? (
+        <Link
+          href={`/league/${activeId}/draft`}
+          className="reveal card flex items-center gap-3.5 p-4 active:scale-[0.99]"
+          style={{ animationDelay: '160ms' }}
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs text-muted">Your Last Draft</span>
+            <span className="block truncate text-base font-bold">{active.name} Draft</span>
+            <span className="block text-xs text-muted">First pick: {firstPick}</span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-2" />
+        </Link>
+      ) : null}
+
+      {/* Movement recap, only when something moved. */}
       {recap ? (
-        <section className="reveal card space-y-2 p-4 text-center" style={{ animationDelay: '120ms' }}>
-          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-            This gameweek so far
-          </p>
+        <section className="reveal card space-y-1.5 p-4" style={{ animationDelay: '190ms' }}>
+          <p className="text-xs text-muted">This gameweek so far</p>
           {recap.you ? (
-            <p className="flex items-center justify-center gap-2 text-sm">
+            <p className="flex items-center gap-2 text-sm">
               {recap.you.rankDelta > 0 ? (
                 <TrendingUp className="h-4 w-4 text-accent" />
               ) : recap.you.rankDelta < 0 ? (
@@ -316,8 +428,8 @@ export default async function HomePage({
           ) : null}
           {recap.climber ? (
             <p className="text-xs text-muted">
-              Biggest climber: <span className="font-bold text-accent">{recap.climber.name}</span> up{' '}
-              {recap.climber.up} {recap.climber.up === 1 ? 'spot' : 'spots'}
+              Biggest climber: <span className="font-bold text-accent">{recap.climber.name}</span>{' '}
+              up {recap.climber.up} {recap.climber.up === 1 ? 'spot' : 'spots'}
             </p>
           ) : null}
           {recap.gainer ? (
@@ -328,29 +440,9 @@ export default async function HomePage({
           ) : null}
         </section>
       ) : null}
-
-      <section className="reveal grid grid-cols-2 gap-2.5" style={{ animationDelay: '140ms' }}>
-        {[
-          { href: '/squad', label: 'My Squad', icon: Shirt },
-          { href: `/league/${activeId}`, label: 'Table', icon: ListOrdered },
-          ...(active?.draftStatus === 'complete'
-            ? [
-                { href: `/league/${activeId}/waivers`, label: 'Waivers', icon: Search },
-                { href: `/league/${activeId}/trades`, label: 'Trades', icon: ArrowLeftRight },
-              ]
-            : []),
-        ].map((t) => (
-          <Link
-            key={t.href}
-            href={t.href}
-            className="card flex min-h-12 items-center gap-2.5 px-3.5 active:scale-[0.98]"
-          >
-            <t.icon className="h-4.5 w-4.5 shrink-0 text-accent" strokeWidth={2.2} />
-            <span className="flex-1 truncate text-sm font-bold">{t.label}</span>
-            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-2" />
-          </Link>
-        ))}
-      </section>
     </div>
   );
 }
+
+// Local alias so the wide fpl_players table reads clearly above.
+import { fplPlayers as sqlFplId } from '@/lib/schema';
