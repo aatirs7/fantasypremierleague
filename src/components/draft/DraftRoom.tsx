@@ -630,7 +630,7 @@ export default function DraftRoom({
     <div className="reveal space-y-3 pb-6">
       {/* Status strip, sticky and impossible to miss on your turn. */}
       <div
-        className={`glass sticky top-2 z-30 space-y-2 rounded-2xl p-3 ${myTurn ? 'your-pick' : ''}`}
+        className={`glass sticky top-[calc(env(safe-area-inset-top)+0.5rem)] z-30 space-y-2 rounded-2xl p-3 ${myTurn ? 'your-pick' : ''}`}
       >
         <div className="flex items-center justify-between text-[0.65rem] font-bold uppercase tracking-[0.2em]">
           <span className={myTurn ? '' : 'text-muted'}>
