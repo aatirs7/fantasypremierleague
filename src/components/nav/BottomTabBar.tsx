@@ -13,7 +13,7 @@ export default function BottomTabBar() {
 
   return (
     <nav className="z-40 shrink-0 border-t border-edge bg-surface lg:hidden">
-      <div className="mx-auto grid h-[3.25rem] max-w-md grid-cols-5">
+      <div className="mx-auto grid h-[3.25rem] max-w-md grid-cols-6">
         {TABS.map((tab) => {
           const active = pathname === tab.href || pathname.startsWith(tab.href + '/');
           const Icon = tab.icon;

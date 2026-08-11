@@ -53,7 +53,7 @@ export default async function RootLayout({
           the main region scrolls internally and the tab bar is a normal
           flex child pinned by layout, not position: fixed. This is what
           keeps the bar glued to the bottom on iOS cold starts. */}
-      <body className="flex h-dvh flex-col overflow-hidden pt-[env(safe-area-inset-top)]">
+      <body className="flex h-full flex-col overflow-hidden pt-[env(safe-area-inset-top)]">
         <div className="bg-atmosphere" aria-hidden />
         <AutoRefresh />
         <ThemeButton initial={theme} />

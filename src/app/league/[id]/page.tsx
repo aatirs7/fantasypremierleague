@@ -8,6 +8,7 @@ import { readSession } from '@/lib/auth';
 import { MIN_MANAGERS, isLeagueMember, leagueMemberList } from '@/lib/leagues';
 import InviteShare from '@/components/leagues/InviteShare';
 import LeagueStandings from '@/components/leagues/LeagueStandings';
+import PLStandings from '@/components/matches/PLStandings';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
@@ -16,8 +17,16 @@ import PullToRefresh from '@/components/PullToRefresh';
 
 export const dynamic = 'force-dynamic';
 
-export default async function LeaguePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function LeaguePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ view?: string }>;
+}) {
   const { id } = await params;
+  const { view } = await searchParams;
+  const showPl = view === 'pl';
   const session = await readSession();
   if (!session) redirect(`/?next=/league/${id}`);
 
@@ -53,10 +62,13 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
       </div>
 
       {!pending && league.draftStatus === 'complete' ? (
-        <div className="flex justify-center gap-7 border-b border-edge">
-          <span data-active="true" className="tab-underline">
+        <div className="flex justify-center gap-6 border-b border-edge">
+          <Link href={`/league/${league.id}`} data-active={!showPl} className="tab-underline">
             Standings
-          </span>
+          </Link>
+          <Link href={`/league/${league.id}?view=pl`} data-active={showPl} className="tab-underline">
+            PL Table
+          </Link>
           <Link href={`/league/${league.id}/stats`} className="tab-underline">
             Stats
           </Link>
@@ -119,6 +131,8 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
           <Swords className="h-5 w-5" />
           Draft is LIVE, jump in
         </Link>
+      ) : showPl ? (
+        <PLStandings />
       ) : (
         <>
           <LeagueStandings league={league} viewerId={session.userId} members={members} />

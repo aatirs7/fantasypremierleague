@@ -53,9 +53,9 @@ export function CountdownBlocks({ toIso, doneText }: { toIso: string; doneText: 
         ];
 
   return (
-    <div className="flex gap-6">
+    <div className="flex justify-center gap-8">
       {blocks.map(([n, label]) => (
-        <div key={label as string}>
+        <div key={label as string} className="text-center">
           <p className="text-2xl font-bold tabular-nums leading-tight">
             {String(n).padStart(2, '0')}
           </p>

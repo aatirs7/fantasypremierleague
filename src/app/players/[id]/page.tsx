@@ -197,19 +197,21 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
           >
             <ArrowLeft className="h-5 w-5 text-muted" />
           </Link>
-          {watchlist ? (
-            <WatchlistButton
-              leagueId={watchlist.leagueId}
-              fplId={fplId}
-              initialQueued={watchlist.queued}
-              initialQueue={watchlist.queue}
-              variant="star"
-            />
-          ) : null}
         </div>
         <div className="relative mt-6 max-w-[55%]">
           <p className="text-xl text-muted">{firstName}</p>
-          <h1 className="text-4xl font-bold tracking-tight">{lastName}</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-4xl font-bold tracking-tight">{lastName}</h1>
+            {watchlist ? (
+              <WatchlistButton
+                leagueId={watchlist.leagueId}
+                fplId={fplId}
+                initialQueued={watchlist.queued}
+                initialQueue={watchlist.queue}
+                variant="star"
+              />
+            ) : null}
+          </div>
           <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
             <ClubBadge clubCode={p.clubCode} name={p.clubShort} size={18} />
             {p.clubName} <span className="text-muted-2">•</span> {p.position}

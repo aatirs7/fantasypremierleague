@@ -82,7 +82,10 @@
   --font-sans: var(--font-hanken);
 }
 
+/* Percentage height chain: no vh/dvh units anywhere, so iOS cannot
+   miscompute the shell height on cold start or in Safari. */
 html {
+  height: 100%;
   color-scheme: dark;
   background: var(--bg);
 }

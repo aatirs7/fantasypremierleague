@@ -125,6 +125,20 @@ export default async function SquadPage({
         </p>
       </div>
       {switcher}
+      <div className="flex justify-center gap-2">
+        <Link
+          href={`/league/${leagueId}/trades`}
+          className="btn-outline min-h-10 flex-1 text-xs"
+        >
+          Trades
+        </Link>
+        <Link
+          href={`/league/${leagueId}/waivers`}
+          className="btn-outline min-h-10 flex-1 text-xs"
+        >
+          Waivers
+        </Link>
+      </div>
       <LineupEditor
         squadId={squad.id}
         gw={editable.gw}
