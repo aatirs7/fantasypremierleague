@@ -1,17 +1,20 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { ArrowLeft } from 'lucide-react';
 import { db } from '@/lib/db';
-import { fplPlayers, gameweeks } from '@/lib/schema';
+import { draftQueues, fplPlayers, leagues } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
+import { resolveActiveLeagueId } from '@/lib/leagues';
 import { fetchElementSummary } from '@/lib/fpl';
-import { POS_COLORS, StatusDot } from '@/components/players/PlayerCard';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
+import ClubBadge from '@/components/matches/ClubBadge';
+import PointsChart from '@/components/players/PointsChart';
+import PlayerTabs from '@/components/players/PlayerTabs';
+import WatchlistButton from '@/components/players/WatchlistButton';
 
 export const dynamic = 'force-dynamic';
 
-// Difficulty 1 easy .. 5 hard, FPL's own scale.
 const FDR_CLS: Record<number, string> = {
   1: 'bg-accent/25 text-accent',
   2: 'bg-accent/15 text-accent',
@@ -30,9 +33,28 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
   const [p] = await db.select().from(fplPlayers).where(eq(fplPlayers.fplId, fplId)).limit(1);
   if (!p) notFound();
 
-  // The one permitted on-demand FPL fetch: per-player history + fixtures for
-  // this detail view only, never in bulk. Best-effort: the page still works
-  // from Neon data if FPL is down.
+  // Watchlist wiring: only meaningful while the active league has not
+  // drafted yet.
+  let watchlist: { leagueId: string; queued: boolean; queue: number[] } | null = null;
+  const activeLeagueId = await resolveActiveLeagueId(session.userId);
+  if (activeLeagueId) {
+    const [league] = await db
+      .select({ draftStatus: leagues.draftStatus })
+      .from(leagues)
+      .where(eq(leagues.id, activeLeagueId))
+      .limit(1);
+    if (league?.draftStatus === 'pending') {
+      const rows = await db
+        .select({ fplId: draftQueues.fplId })
+        .from(draftQueues)
+        .where(and(eq(draftQueues.leagueId, activeLeagueId), eq(draftQueues.userId, session.userId)))
+        .orderBy(asc(draftQueues.rank));
+      const queue = rows.map((r) => r.fplId);
+      watchlist = { leagueId: activeLeagueId, queued: queue.includes(fplId), queue };
+    }
+  }
+
+  // The one permitted on-demand FPL fetch: history + fixtures for this view.
   let summary: Awaited<ReturnType<typeof fetchElementSummary>> | null = null;
   try {
     summary = await fetchElementSummary(fplId);
@@ -53,125 +75,194 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
     : [];
   const clubShortById = new Map(clubRows.map((c) => [c.clubId, c.clubShort]));
 
-  const nextDeadline = await db
-    .select()
-    .from(gameweeks)
-    .where(eq(gameweeks.isNext, true))
-    .orderBy(asc(gameweeks.gw))
-    .limit(1);
+  const [firstName, ...restName] = (p.fullName || p.webName).split(' ');
+  const lastName = restName.join(' ') || p.webName;
 
-  const stats: [string, string | number][] = [
-    ['Draft rank', p.draftRank ?? '-'],
-    ['Total points', p.totalPoints],
-    ['Form', p.form ?? '-'],
-    ['PPG', p.ppg ?? '-'],
-    ['Owned', p.ownership ? `${p.ownership}%` : '-'],
-    ['Goals', p.goals],
-    ['Assists', p.assists],
-    ['Clean sheets', p.cleanSheets],
-    ['Minutes', p.minutes],
-    ['Bonus', p.bonus],
-    ['xG', p.xg ?? '-'],
-    ['xA', p.xa ?? '-'],
-    ['ICT', p.ictIndex ?? '-'],
-  ];
+  const history = (summary?.history ?? []).filter((h) => h.round != null);
+  const chartPoints = history.map((h) => ({ gw: h.round!, value: h.total_points ?? 0 }));
 
-  return (
-    <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
-      <Link href="/players" className="flex items-center gap-1 text-sm font-semibold text-muted">
-        <ArrowLeft className="h-4 w-4" /> Players
-      </Link>
-
-      <div className="card flex flex-col items-center gap-3 p-5 text-center">
-        <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={88} />
-        <div className="min-w-0">
-        <div className="flex items-center justify-center gap-2">
-          <h1 className="font-display text-4xl">{p.webName}</h1>
-          <StatusDot status={p.status} />
+  const overview = (
+    <div className="space-y-4">
+      {chartPoints.length >= 2 ? (
+        <div className="card p-4">
+          <p className="text-sm font-bold">Points</p>
+          <p className="mb-2 text-xs text-muted">This season</p>
+          <PointsChart points={chartPoints} />
         </div>
-        <p className="mt-1 flex items-center justify-center gap-2 text-sm text-muted">
-          {p.clubName}
-          <span className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-bold ${POS_COLORS[p.position] ?? ''}`}>
-            {p.position}
-          </span>
-          {p.setPieceNotes ? <span className="text-muted-2">{p.setPieceNotes}</span> : null}
+      ) : (
+        <p className="card p-4 text-center text-xs text-muted">
+          The points chart appears once the season kicks off.
         </p>
-        {p.news ? (
-          <p className="mt-2 rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-2 text-xs text-gold">
-            {p.news}
-            {p.chanceNext != null ? ` (${p.chanceNext}% chance next round)` : ''}
-          </p>
-        ) : null}
-        </div>
-      </div>
-
+      )}
       <div className="card grid grid-cols-3 gap-x-2 gap-y-3 p-4 text-center">
-        {stats.map(([label, value]) => (
+        {(
+          [
+            ['Draft rank', p.draftRank ?? '-'],
+            ['Form', p.form ?? '-'],
+            ['PPG', p.ppg ?? '-'],
+            ['Minutes', p.minutes],
+            ['Clean sheets', p.cleanSheets],
+            ['Bonus', p.bonus],
+            ['xG', p.xg ?? '-'],
+            ['xA', p.xa ?? '-'],
+            ['Owned', p.ownership ? `${p.ownership}%` : '-'],
+          ] as [string, string | number][]
+        ).map(([label, value]) => (
           <div key={label}>
-            <p className="text-[0.6rem] font-bold uppercase tracking-wider text-muted-2">{label}</p>
+            <p className="text-[0.6rem] font-semibold uppercase tracking-wider text-muted-2">
+              {label}
+            </p>
             <p className="text-sm font-bold tabular-nums">{value}</p>
           </div>
         ))}
       </div>
+      {p.setPieceNotes ? (
+        <p className="card p-3.5 text-center text-xs text-muted">
+          Set pieces: <span className="font-bold text-foreground">{p.setPieceNotes}</span>
+        </p>
+      ) : null}
+      {p.news ? (
+        <p className="card border-gold/30 bg-gold/[0.06] p-3.5 text-center text-xs text-gold">
+          {p.news}
+          {p.chanceNext != null ? ` (${p.chanceNext}% chance next round)` : ''}
+        </p>
+      ) : null}
+    </div>
+  );
 
-      {summary?.fixtures?.length ? (
-        <div className="space-y-2">
-          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-            Upcoming fixtures
-          </p>
-          <div className="card divide-y divide-[var(--line)] px-3">
-            {summary.fixtures.slice(0, 6).map((f, i) => {
-              const oppId = f.is_home ? f.team_a : f.team_h;
-              const opp = oppId != null ? (clubShortById.get(oppId) ?? '?') : '?';
-              return (
-                <div key={i} className="flex min-h-11 items-center gap-3 py-2">
-                  <span className="w-10 text-xs font-bold text-muted">GW{f.event ?? '?'}</span>
-                  <span className="flex-1 text-sm font-semibold">
-                    {opp} {f.is_home ? '(H)' : '(A)'}
-                  </span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[0.65rem] font-bold ${FDR_CLS[f.difficulty ?? 3] ?? ''}`}
-                  >
-                    FDR {f.difficulty ?? '?'}
-                  </span>
-                </div>
-              );
-            })}
+  const fixturesTab = summary?.fixtures?.length ? (
+    <div className="card divide-y divide-[var(--line)] px-3">
+      {summary.fixtures.slice(0, 8).map((f, i) => {
+        const oppId = f.is_home ? f.team_a : f.team_h;
+        const opp = oppId != null ? (clubShortById.get(oppId) ?? '?') : '?';
+        return (
+          <div key={i} className="flex min-h-11 items-center gap-3 py-2">
+            <span className="w-12 text-xs font-bold text-muted">GW {f.event ?? '?'}</span>
+            <span className="flex-1 text-sm font-semibold">
+              {opp} {f.is_home ? '(H)' : '(A)'}
+            </span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[0.65rem] font-bold ${FDR_CLS[f.difficulty ?? 3] ?? ''}`}
+            >
+              FDR {f.difficulty ?? '?'}
+            </span>
           </div>
+        );
+      })}
+    </div>
+  ) : (
+    <p className="py-6 text-center text-sm text-muted">Fixtures unavailable right now.</p>
+  );
+
+  const historyTab = history.length ? (
+    <div className="card divide-y divide-[var(--line)] px-3">
+      {history
+        .slice()
+        .reverse()
+        .slice(0, 12)
+        .map((h, i) => (
+          <div key={i} className="flex min-h-11 items-center gap-3 py-2 text-sm">
+            <span className="w-12 text-xs font-bold text-muted">GW {h.round}</span>
+            <span className="flex-1 text-xs text-muted">
+              {h.minutes ?? 0} mins
+              {h.goals_scored ? ` · ${h.goals_scored}G` : ''}
+              {h.assists ? ` · ${h.assists}A` : ''}
+              {h.bonus ? ` · ${h.bonus} bonus` : ''}
+            </span>
+            <span className="font-bold tabular-nums text-accent">{h.total_points ?? 0} pts</span>
+          </div>
+        ))}
+    </div>
+  ) : (
+    <p className="py-6 text-center text-sm text-muted">History appears once the season starts.</p>
+  );
+
+  return (
+    <div className="reveal space-y-5 py-2 lg:mx-auto lg:max-w-2xl">
+      {/* Hero */}
+      <div className="relative min-h-52 overflow-hidden">
+        <div className="absolute right-0 top-0 h-52 w-52 opacity-95">
+          <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={208} className="!rounded-none !bg-transparent !ring-0 object-contain" />
+        </div>
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: 'linear-gradient(90deg, transparent 55%, transparent)' }}
+          aria-hidden
+        />
+        <div className="relative flex items-start justify-between">
+          <Link
+            href="/players"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.05]"
+            aria-label="back"
+          >
+            <ArrowLeft className="h-5 w-5 text-muted" />
+          </Link>
+          {watchlist ? (
+            <WatchlistButton
+              leagueId={watchlist.leagueId}
+              fplId={fplId}
+              initialQueued={watchlist.queued}
+              initialQueue={watchlist.queue}
+              variant="star"
+            />
+          ) : null}
+        </div>
+        <div className="relative mt-6 max-w-[55%]">
+          <p className="text-xl text-muted">{firstName}</p>
+          <h1 className="text-4xl font-bold tracking-tight">{lastName}</h1>
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
+            <ClubBadge clubCode={p.clubCode} name={p.clubShort} size={18} />
+            {p.clubName} <span className="text-muted-2">•</span> {p.position}
+          </p>
+          <div className="mt-4 flex gap-8">
+            <div>
+              <p className="text-2xl font-bold tabular-nums">{p.draftRank ?? '-'}</p>
+              <p className="text-xs text-muted">Draft Rank</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold tabular-nums">{p.totalPoints}</p>
+              <p className="text-xs text-muted">Points</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat row */}
+      <div className="card grid grid-cols-4 divide-x divide-[var(--line)] py-3.5 text-center">
+        {(
+          [
+            [p.totalPoints, 'Points'],
+            [p.goals, 'Goals'],
+            [p.assists, 'Assists'],
+            [p.form ?? '0.0', 'Form'],
+          ] as [string | number, string][]
+        ).map(([value, label]) => (
+          <div key={label}>
+            <p className="text-xl font-bold tabular-nums">{value}</p>
+            <p className="text-xs text-muted">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      <PlayerTabs
+        tabs={[
+          { label: 'Overview', content: overview },
+          { label: 'Fixtures', content: fixturesTab },
+          { label: 'History', content: historyTab },
+        ]}
+      />
+
+      {watchlist ? (
+        <div className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] pt-1 lg:bottom-6">
+          <WatchlistButton
+            leagueId={watchlist.leagueId}
+            fplId={fplId}
+            initialQueued={watchlist.queued}
+            initialQueue={watchlist.queue}
+            variant="pill"
+          />
         </div>
       ) : null}
-
-      {summary?.history?.length ? (
-        <div className="space-y-2">
-          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-            This season
-          </p>
-          <div className="card divide-y divide-[var(--line)] px-3">
-            {summary.history
-              .slice()
-              .reverse()
-              .slice(0, 10)
-              .map((h, i) => (
-                <div key={i} className="flex min-h-11 items-center gap-3 py-2 text-sm">
-                  <span className="w-10 text-xs font-bold text-muted">GW{h.round ?? '?'}</span>
-                  <span className="flex-1 text-xs text-muted">
-                    {h.minutes ?? 0} mins
-                    {h.goals_scored ? ` · ${h.goals_scored}G` : ''}
-                    {h.assists ? ` · ${h.assists}A` : ''}
-                    {h.bonus ? ` · ${h.bonus} bonus` : ''}
-                  </span>
-                  <span className="font-bold tabular-nums text-accent">{h.total_points ?? 0} pts</span>
-                </div>
-              ))}
-          </div>
-        </div>
-      ) : (
-        <p className="text-center text-xs text-muted">
-          {nextDeadline[0]
-            ? 'Gameweek history will appear once the season starts.'
-            : 'No history yet.'}
-        </p>
-      )}
     </div>
   );
 }
