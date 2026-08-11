@@ -64,7 +64,7 @@ export default function ScheduleDraft({
         <button
           onClick={save}
           disabled={busy || !value}
-          className="min-h-11 rounded-xl bg-accent px-4 text-sm font-bold text-[var(--accent-ink)] active:scale-95 disabled:opacity-30"
+          className="btn-primary min-h-11"
         >
           {busy ? '...' : 'Save'}
         </button>

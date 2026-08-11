@@ -516,7 +516,7 @@ export default function DraftRoom({
                     setIntroDone(true);
                   } else setIntroIdx(introIdx + 1);
                 }}
-                className="min-h-11 flex-1 rounded-xl bg-accent text-sm font-bold text-[var(--accent-ink)]"
+                className="btn-primary min-h-11 flex-1"
               >
                 {introIdx === 2 ? 'Got it' : 'Next'}
               </button>

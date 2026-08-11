@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 const INPUT_CLS =
   'min-h-11 w-full rounded-xl border border-edge bg-white/[0.03] px-3.5 text-sm outline-none placeholder:text-muted-2 focus:border-accent/60';
 const BTN_CLS =
-  'min-h-11 rounded-xl bg-accent px-4 text-sm font-bold text-[var(--accent-ink)] active:scale-95 disabled:opacity-30';
+  'btn-primary min-h-11';
 
 export default function LeagueActions() {
   const router = useRouter();

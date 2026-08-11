@@ -186,7 +186,7 @@ export default function HelpButton() {
               ) : null}
               <button
                 onClick={() => (last ? close() : setStep(step + 1))}
-                className="min-h-11 flex-[2] rounded-xl bg-accent text-sm font-bold text-[var(--accent-ink)] active:scale-95"
+                className="btn-primary min-h-11 flex-[2]"
               >
                 {last ? 'Got it' : 'Next'}
               </button>

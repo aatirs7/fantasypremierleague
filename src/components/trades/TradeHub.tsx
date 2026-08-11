@@ -177,7 +177,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
                   <button
                     onClick={() => void act({ action: 'accept', tradeId: t.id })}
                     disabled={busy || data.frozen}
-                    className="min-h-10 flex-1 rounded-xl bg-accent text-xs font-bold text-[var(--accent-ink)] disabled:opacity-40"
+                    className="btn-primary min-h-10 flex-1 text-xs"
                   >
                     Accept
                   </button>
@@ -301,7 +301,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
                     })
                   }
                   disabled={busy || data.frozen || !offer.length || !request.length}
-                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-bold text-[var(--accent-ink)] active:scale-95 disabled:opacity-40"
+                  className="btn-primary w-full"
                 >
                   <ArrowLeftRight className="h-4 w-4" />
                   Propose {offer.length}-for-{request.length}

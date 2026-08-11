@@ -95,7 +95,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
             )}
             <Link
               href={`/league/${league.id}/draft`}
-              className="mt-2 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-[var(--accent-ink)] active:scale-95"
+              className="btn-primary mt-2 w-full"
             >
               <Swords className="h-4 w-4" />
               Enter draft room

@@ -46,7 +46,7 @@ export default function InviteShare({ code, leagueName }: { code: string; league
       </button>
       <button
         onClick={share}
-        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-[var(--accent-ink)] active:scale-95"
+        className="btn-primary w-full"
       >
         <Share2 className="h-4 w-4" />
         {copied === 'link' ? 'Link copied' : 'Share invite link'}
