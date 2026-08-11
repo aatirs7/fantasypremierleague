@@ -46,11 +46,15 @@ export default function PinInput({
           <input
             key={i}
             ref={refs[i]}
-            type="password"
+            // Not type="password": that makes iOS treat the box as a login
+            // credential and constantly offer password autofill. Plain text
+            // masked with CSS keeps the dots without the popup.
+            type="text"
             inputMode="numeric"
             pattern="[0-9]*"
             maxLength={1}
-            autoComplete="off"
+            autoComplete="one-time-code"
+            style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
             value={value[i] ?? ''}
             onChange={(e) => {
               const d = e.target.value.replace(/\D/g, '').slice(-1);

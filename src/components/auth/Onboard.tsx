@@ -92,6 +92,8 @@ export default function Onboard({
             className={INPUT_CLS}
             placeholder="e.g. rayyan_10"
             value={username}
+            name="draft-nickname"
+            autoComplete="off"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
