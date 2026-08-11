@@ -243,7 +243,7 @@ export default async function HomePage({
       <PullToRefresh />
       <RememberLeague leagueId={activeId} />
 
-      <header className="reveal flex items-center justify-between px-1 pt-1">
+      <header className="reveal flex items-center justify-between px-1 pr-14 pt-1">
         <div>
           <p className="text-sm text-muted">{greeting()}</p>
           <h1 className="text-2xl font-bold tracking-tight">{session.username}</h1>

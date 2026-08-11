@@ -189,7 +189,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
           style={{ background: 'linear-gradient(90deg, transparent 55%, transparent)' }}
           aria-hidden
         />
-        <div className="relative flex items-start justify-between">
+        <div className="relative flex items-start justify-between pr-14">
           <Link
             href="/players"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.05]"

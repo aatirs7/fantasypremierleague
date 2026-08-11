@@ -8,9 +8,11 @@ import {
   Search,
   User,
 } from 'lucide-react';
+import { cookies } from 'next/headers';
 import { readSession } from '@/lib/auth';
 import { resolveActiveLeagueId } from '@/lib/leagues';
 import Avatar from '@/components/Avatar';
+import { ThemeRow } from '@/components/ThemeButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +21,7 @@ export default async function MorePage() {
   const session = await readSession();
   if (!session) redirect('/?next=/more');
   const leagueId = await resolveActiveLeagueId(session.userId);
+  const theme = (await cookies()).get('epld_theme')?.value === 'light' ? 'light' : 'dark';
 
   const items = [
     { href: '/players', label: 'Players', sub: 'Scout all 577', icon: Search },
@@ -53,6 +56,7 @@ export default async function MorePage() {
             <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" />
           </Link>
         ))}
+        <ThemeRow initial={theme} />
       </div>
     </div>
   );

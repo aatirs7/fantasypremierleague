@@ -3,25 +3,46 @@
 import { useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
-// Dark/light toggle, top corner next to the help button. The choice lives
-// in a cookie so the server renders the right theme on first paint.
-export default function ThemeButton({ initial }: { initial: 'dark' | 'light' }) {
+function useThemeToggle(initial: 'dark' | 'light') {
   const [theme, setTheme] = useState(initial);
-
   const toggle = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
     document.documentElement.dataset.theme = next;
     document.cookie = `epld_theme=${next}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
   };
+  return { theme, toggle };
+}
 
+// Floating toggle, desktop only (mobile uses the row in More, so nothing
+// collides with page headers).
+export default function ThemeButton({ initial }: { initial: 'dark' | 'light' }) {
+  const { theme, toggle } = useThemeToggle(initial);
   return (
     <button
       onClick={toggle}
       aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-      className="glass fixed right-16 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50 flex h-10 w-10 items-center justify-center rounded-full text-muted shadow-lg shadow-black/20 active:scale-95"
+      className="glass fixed right-16 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50 hidden h-10 w-10 items-center justify-center rounded-full text-muted shadow-lg shadow-black/20 active:scale-95 lg:flex"
     >
       {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+    </button>
+  );
+}
+
+// Menu-row variant for the More page.
+export function ThemeRow({ initial }: { initial: 'dark' | 'light' }) {
+  const { theme, toggle } = useThemeToggle(initial);
+  return (
+    <button onClick={toggle} className="flex min-h-14 w-full items-center gap-3 px-2.5 text-left">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/12 text-accent">
+        {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-bold">Appearance</span>
+        <span className="block text-xs text-muted">
+          {theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+        </span>
+      </span>
     </button>
   );
 }
