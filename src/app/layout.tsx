@@ -3,6 +3,7 @@ import { Bebas_Neue, Hanken_Grotesk } from 'next/font/google';
 import BottomTabBar from '@/components/nav/BottomTabBar';
 import DesktopNav from '@/components/nav/DesktopNav';
 import AutoRefresh from '@/components/AutoRefresh';
+import HelpButton from '@/components/HelpButton';
 import './globals.css';
 
 const display = Bebas_Neue({
@@ -50,6 +51,7 @@ export default function RootLayout({
           {children}
         </main>
         <BottomTabBar />
+        <HelpButton />
       </body>
     </html>
   );
