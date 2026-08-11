@@ -20,7 +20,6 @@ import { leagueTable } from '@/lib/scoring';
 import { myLeagues, resolveActiveLeagueId } from '@/lib/leagues';
 import LeagueActions from '@/components/leagues/LeagueActions';
 import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
-import Avatar from '@/components/Avatar';
 import RememberLeague from '@/components/RememberLeague';
 import PullToRefresh from '@/components/PullToRefresh';
 
@@ -59,16 +58,11 @@ export default async function HomePage({
   if (mine.length === 0) {
     return (
       <div className="reveal mx-auto max-w-md space-y-6 py-6">
-        <header className="flex items-center justify-between px-1">
-          <div>
-            <p className="text-sm text-muted">{greeting()}</p>
-            <h1 className="text-2xl font-bold tracking-tight">{session.username}</h1>
-          </div>
-          <Link href="/me">
-            <Avatar name={session.username} size={40} />
-          </Link>
+        <header className="text-center">
+          <p className="text-sm text-muted">{greeting()}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{session.username}</h1>
         </header>
-        <p className="px-1 text-sm text-muted">
+        <p className="px-1 text-center text-sm text-muted">
           Join a friend&apos;s league with their code, or start your own and share it.
         </p>
         <LeagueActions />
@@ -243,14 +237,9 @@ export default async function HomePage({
       <PullToRefresh />
       <RememberLeague leagueId={activeId} />
 
-      <header className="reveal flex items-center justify-between px-1 pr-14 pt-1">
-        <div>
-          <p className="text-sm text-muted">{greeting()}</p>
-          <h1 className="text-2xl font-bold tracking-tight">{session.username}</h1>
-        </div>
-        <Link href="/me">
-          <Avatar name={session.username} size={40} />
-        </Link>
+      <header className="reveal pt-1 text-center">
+        <p className="text-sm text-muted">{greeting()}</p>
+        <h1 className="text-2xl font-bold tracking-tight">{session.username}</h1>
       </header>
 
       {mine.length > 1 ? (

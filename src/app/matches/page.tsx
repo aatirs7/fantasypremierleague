@@ -235,7 +235,7 @@ export default async function MatchesPage({
 
           {[...byDay.entries()].map(([day, dayRows]) => (
             <section key={day}>
-              <h2 className="sticky top-[env(safe-area-inset-top)] z-10 mb-2 -mx-1 bg-[var(--bg)]/80 px-1 py-1 text-center font-display text-lg tracking-wide text-muted backdrop-blur lg:top-16">
+              <h2 className="sticky top-0 z-10 mb-2 -mx-1 bg-[var(--bg)]/80 px-1 py-1 text-center font-display text-lg tracking-wide text-muted backdrop-blur">
                 {day}
               </h2>
               <div className="space-y-2">

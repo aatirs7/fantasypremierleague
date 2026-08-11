@@ -4,16 +4,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { TABS } from './tabs';
 
-// Deliberately dumb bottom bar: one fixed element pinned to bottom: 0,
-// an exact-height tab row (no minimums, no vertical padding), and a
-// separate spacer whose only job is to cover the home-indicator safe area
-// with the same background. Nothing here can stretch or drift per page.
+// A normal flex child at the bottom of the app shell (no position: fixed,
+// so iOS cannot misplace it on cold start). Exact-height tab row plus a
+// spacer that paints the home-indicator safe area.
 export default function BottomTabBar() {
   const pathname = usePathname();
   if (pathname === '/') return null;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-surface lg:hidden">
+    <nav className="z-40 shrink-0 border-t border-edge bg-surface lg:hidden">
       <div className="mx-auto grid h-[3.25rem] max-w-md grid-cols-5">
         {TABS.map((tab) => {
           const active = pathname === tab.href || pathname.startsWith(tab.href + '/');

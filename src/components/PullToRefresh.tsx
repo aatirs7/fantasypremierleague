@@ -18,11 +18,12 @@ export default function PullToRefresh() {
   const pullRef = useRef(0);
 
   useEffect(() => {
+    const scrollTop = () => document.getElementById('app-scroll')?.scrollTop ?? window.scrollY;
     const onStart = (e: TouchEvent) => {
-      startY.current = window.scrollY <= 0 ? e.touches[0].clientY : null;
+      startY.current = scrollTop() <= 0 ? e.touches[0].clientY : null;
     };
     const onMove = (e: TouchEvent) => {
-      if (startY.current == null || window.scrollY > 0) return;
+      if (startY.current == null || scrollTop() > 0) return;
       const dy = e.touches[0].clientY - startY.current;
       if (dy > 0) {
         const v = Math.min(dy * 0.5, MAX);

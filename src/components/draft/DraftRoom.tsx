@@ -413,21 +413,27 @@ export default function DraftRoom({
                 <span className="w-5 shrink-0 text-center text-sm font-semibold text-muted-2 tabular-nums">
                   {i + 1}
                 </span>
-                <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={38} />
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-bold">{p.webName}</span>
-                    {p.status !== 'a' ? (
-                      <span
-                        className={`h-2 w-2 shrink-0 rounded-full ${p.status === 'd' ? 'bg-gold' : 'bg-live'}`}
-                      />
-                    ) : null}
+                {/* Tap the player for their full stats page; draft with +. */}
+                <Link
+                  href={`/players/${p.fplId}`}
+                  className="flex min-w-0 flex-1 items-center gap-3 active:scale-[0.99]"
+                >
+                  <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={38} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-bold">{p.webName}</span>
+                      {p.status !== 'a' ? (
+                        <span
+                          className={`h-2 w-2 shrink-0 rounded-full ${p.status === 'd' ? 'bg-gold' : 'bg-live'}`}
+                        />
+                      ) : null}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted">
+                      {p.clubShort} <span className="text-muted-2">•</span> {p.position}
+                      <span className="text-muted-2"> · {p.totalPoints} pts</span>
+                    </span>
                   </span>
-                  <span className="mt-0.5 block text-xs text-muted">
-                    {p.clubShort} <span className="text-muted-2">•</span> {p.position}
-                    <span className="text-muted-2"> · {p.totalPoints} pts</span>
-                  </span>
-                </span>
+                </Link>
                 <span className="w-10 shrink-0 text-center text-sm font-bold tabular-nums">
                   {p.draftRank ?? '-'}
                 </span>

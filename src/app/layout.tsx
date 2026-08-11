@@ -49,12 +49,19 @@ export default async function RootLayout({
       data-theme={theme}
       className={`${body.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col pb-tabbar pt-[env(safe-area-inset-top)]">
+      {/* App shell: the body is exactly the viewport and never scrolls;
+          the main region scrolls internally and the tab bar is a normal
+          flex child pinned by layout, not position: fixed. This is what
+          keeps the bar glued to the bottom on iOS cold starts. */}
+      <body className="flex h-dvh flex-col overflow-hidden pt-[env(safe-area-inset-top)]">
         <div className="bg-atmosphere" aria-hidden />
         <AutoRefresh />
         <ThemeButton initial={theme} />
         <DesktopNav />
-        <main className="mx-auto w-full max-w-md flex-1 px-4 pt-6 lg:max-w-6xl lg:px-8 lg:pt-24">
+        <main
+          id="app-scroll"
+          className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-4 pb-8 pt-6 lg:max-w-6xl lg:px-8 lg:pt-24"
+        >
           {children}
         </main>
         <BottomTabBar />

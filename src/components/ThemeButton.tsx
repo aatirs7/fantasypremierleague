@@ -14,15 +14,14 @@ function useThemeToggle(initial: 'dark' | 'light') {
   return { theme, toggle };
 }
 
-// Floating toggle, desktop only (mobile uses the row in More, so nothing
-// collides with page headers).
+// Flat corner toggle, next to the help button.
 export default function ThemeButton({ initial }: { initial: 'dark' | 'light' }) {
   const { theme, toggle } = useThemeToggle(initial);
   return (
     <button
       onClick={toggle}
       aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-      className="glass fixed right-16 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50 hidden h-10 w-10 items-center justify-center rounded-full text-muted shadow-lg shadow-black/20 active:scale-95 lg:flex"
+      className="fixed right-12 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50 flex h-10 w-10 items-center justify-center text-muted active:scale-95"
     >
       {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
     </button>

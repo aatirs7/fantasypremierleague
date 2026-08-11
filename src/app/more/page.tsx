@@ -35,8 +35,8 @@ export default async function MorePage() {
 
   return (
     <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
-      <Link href="/me" className="flex items-center gap-3 px-1 pt-1">
-        <Avatar name={session.username} size={44} />
+      <Link href="/me" className="flex flex-col items-center gap-2 pt-1 text-center">
+        <Avatar name={session.username} size={48} />
         <span>
           <span className="block text-lg font-bold leading-tight">{session.username}</span>
           <span className="block text-xs text-muted">View profile</span>
