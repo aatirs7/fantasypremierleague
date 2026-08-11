@@ -47,6 +47,7 @@ export default function LineupEditor({
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<'pitch' | 'list'>('pitch');
 
   const byId = useMemo(() => new Map(players.map((p) => [p.fplId, p])), [players]);
   const starters = picks.filter((p) => p.starting);
@@ -201,20 +202,101 @@ export default function LineupEditor({
     );
   };
 
-  return (
-    <div className="space-y-3 pb-24">
-      {autoSet && !dirty ? (
-        <p className="rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-2 text-xs text-gold">
-          This lineup was set automatically. Tap players to swap, then save to make it yours.
-        </p>
-      ) : null}
-      <p className="text-xs text-muted">
-        Tap a starter, then a bench player, to swap them. Formation:{' '}
-        <span className={formationOk ? 'text-accent' : 'text-live'}>
-          {counts.DEF}-{counts.MID}-{counts.FWD}
+  // A player plate on the pitch or bench.
+  const Plate = ({ pick, benchIndex }: { pick: LineupPick; benchIndex?: number }) => {
+    const p = byId.get(pick.fplId);
+    if (!p) return null;
+    const sel = selected === pick.fplId;
+    return (
+      <button
+        onClick={() => tap(pick.fplId)}
+        className={`plate relative flex w-[4.7rem] flex-col items-center gap-0.5 px-1 pb-1.5 pt-2 ${
+          sel ? 'ring-2 ring-[var(--accent)]' : ''
+        }`}
+      >
+        {pick.isCaptain ? (
+          <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gold text-[0.6rem] font-bold text-black">
+            C
+          </span>
+        ) : pick.isVice ? (
+          <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-silver text-[0.6rem] font-bold text-black">
+            V
+          </span>
+        ) : null}
+        {benchIndex != null ? (
+          <span className="absolute -left-1 -top-1.5 rounded-full bg-white/[0.1] px-1.5 text-[0.55rem] font-bold text-muted">
+            {benchIndex + 1}
+          </span>
+        ) : null}
+        <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={38} />
+        <span className="w-full truncate text-center text-[0.62rem] font-bold leading-tight text-white">
+          {p.webName}
         </span>
-      </p>
+        <span className="text-[0.55rem] font-semibold text-white/60">
+          {p.clubShort}
+          {p.status !== 'a' ? (
+            <span
+              className={`ml-1 inline-block h-1.5 w-1.5 rounded-full ${p.status === 'd' ? 'bg-gold' : 'bg-live'}`}
+            />
+          ) : null}
+        </span>
+      </button>
+    );
+  };
 
+  const selectedPick = selected != null ? picks.find((p) => p.fplId === selected) : null;
+
+  const pitchView = (
+    <div className="space-y-3">
+      <div className="pitch space-y-4 px-2 pb-5 pt-4">
+        {POS_ORDER.map((pos) => {
+          const rows = starters.filter((p) => byId.get(p.fplId)?.position === pos);
+          if (!rows.length) return null;
+          return (
+            <div key={pos} className="relative z-10 flex justify-evenly">
+              {rows.map((p) => (
+                <Plate key={p.fplId} pick={p} />
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedPick?.starting ? (
+        <div className="card flex items-center gap-2 p-2.5">
+          <p className="min-w-0 flex-1 truncate pl-1 text-xs text-muted">
+            {byId.get(selectedPick.fplId)?.webName}: swap with a bench player, or
+          </p>
+          <button
+            onClick={() => setRole(selectedPick.fplId, 'captain')}
+            className="flex items-center gap-1 rounded-full bg-gold/15 px-3 py-1.5 text-xs font-bold text-gold"
+          >
+            <Crown className="h-3.5 w-3.5" /> Captain
+          </button>
+          <button
+            onClick={() => setRole(selectedPick.fplId, 'vice')}
+            className="flex items-center gap-1 rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-bold text-silver"
+          >
+            <Shield className="h-3.5 w-3.5" /> Vice
+          </button>
+        </div>
+      ) : null}
+
+      <div>
+        <p className="mb-1.5 text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          Bench
+        </p>
+        <div className="flex justify-evenly">
+          {bench.map((p, i) => (
+            <Plate key={p.fplId} pick={p} benchIndex={i} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const listView = (
+    <>
       {POS_ORDER.map((pos) => {
         const rows = starters.filter((p) => byId.get(p.fplId)?.position === pos);
         if (!rows.length) return null;
@@ -227,7 +309,6 @@ export default function LineupEditor({
           </div>
         );
       })}
-
       <div className="space-y-1.5">
         <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
           Bench (autosub order)
@@ -236,29 +317,58 @@ export default function LineupEditor({
           <Row key={p.fplId} pick={p} />
         ))}
       </div>
+    </>
+  );
+
+  return (
+    <div className="space-y-3 pb-24">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted">
+          Formation{' '}
+          <span className={`font-bold ${formationOk ? 'text-accent' : 'text-live'}`}>
+            {counts.DEF}-{counts.MID}-{counts.FWD}
+          </span>
+        </p>
+        <button
+          onClick={() => setView(view === 'pitch' ? 'list' : 'pitch')}
+          className="rounded-full border border-accent/40 px-3 py-1.5 text-xs font-bold text-accent"
+        >
+          {view === 'pitch' ? 'View Roster' : 'View Pitch'}
+        </button>
+      </div>
+
+      {autoSet && !dirty ? (
+        <p className="rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-2 text-center text-xs text-gold">
+          This lineup was set automatically. Tap a starter then a bench player to swap.
+        </p>
+      ) : null}
+
+      {view === 'pitch' ? pitchView : listView}
 
       {error ? (
-        <p className="rounded-xl border border-live/40 bg-live/[0.08] px-3 py-2 text-sm text-live">{error}</p>
+        <p className="rounded-xl border border-live/40 bg-live/[0.08] px-3 py-2 text-center text-sm text-live">
+          {error}
+        </p>
       ) : null}
 
       {dirty ? (
-        <div className="glass fixed inset-x-0 bottom-20 z-40 mx-auto flex max-w-md gap-2 rounded-2xl p-3 lg:bottom-6">
+        <div className="glass fixed inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md gap-2 rounded-full p-2 lg:bottom-6">
           <button
             onClick={() => {
               setPicks(initial);
               setDirty(false);
               setError(null);
             }}
-            className="min-h-11 flex-1 rounded-xl border border-edge text-sm font-bold text-muted"
+            className="min-h-11 flex-1 rounded-full border border-edge text-sm font-bold text-muted"
           >
             Reset
           </button>
           <button
             onClick={() => void save()}
             disabled={busy || !formationOk}
-            className="min-h-11 flex-[2] rounded-xl bg-accent text-sm font-bold text-[var(--accent-ink)] active:scale-95 disabled:opacity-40"
+            className="btn-primary min-h-11 flex-[2]"
           >
-            {busy ? 'Saving...' : formationOk ? 'Save lineup' : 'Invalid formation'}
+            {busy ? 'Saving...' : formationOk ? 'Save Lineup' : 'Invalid formation'}
           </button>
         </div>
       ) : null}
