@@ -175,18 +175,15 @@ export default async function HomePage({
   const lq = `?league=${activeId}`;
 
   return (
-    <div className="space-y-6 py-4 lg:mx-auto lg:max-w-2xl">
+    <div className="space-y-4 py-2 lg:mx-auto lg:max-w-2xl">
       <PullToRefresh />
       <RememberLeague leagueId={activeId} />
 
-      <header className="reveal flex flex-col items-center gap-2 pt-2 text-center">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent font-display text-2xl text-[var(--accent-ink)]">
+      <header className="reveal flex items-center justify-center gap-2.5 pt-1 text-center">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent font-display text-lg text-[var(--accent-ink)]">
           {session.username.slice(0, 1).toUpperCase()}
         </span>
-        <div className="min-w-0">
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">Welcome back</p>
-          <h1 className="truncate font-display text-3xl leading-none">{session.username}</h1>
-        </div>
+        <h1 className="truncate font-display text-2xl leading-none">{session.username}</h1>
       </header>
 
       {mine.length > 1 ? (
@@ -241,24 +238,26 @@ export default async function HomePage({
       ) : (
         <>
           {nextGw ? (
-            <section className="reveal card space-y-1 p-4 text-center" style={{ animationDelay: '60ms' }}>
-              <div className="inline-flex items-center justify-center gap-2 text-gold">
-                <Timer className="h-4 w-4" />
-                <span className="text-[0.7rem] font-bold uppercase tracking-[0.2em]">
-                  Gameweek {nextGw.gw} locks in
+            <Link
+              href="/squad"
+              className="reveal card flex min-h-12 items-center justify-center gap-2 px-4 py-2.5 text-center"
+              style={{ animationDelay: '60ms' }}
+            >
+              <Timer className="h-4 w-4 shrink-0 text-gold" />
+              <span className="text-sm">
+                <span className="font-bold">GW{nextGw.gw}</span>
+                <span className="text-muted"> locks in </span>
+                <span className="font-bold text-gold">
+                  <Countdown toIso={nextGw.deadline.toISOString()} doneText="moments" />
                 </span>
-              </div>
-              <p className="font-display text-4xl">
-                <Countdown toIso={nextGw.deadline.toISOString()} doneText="Locked" />
-              </p>
-              <p className="text-xs text-muted">Set your lineup before the deadline</p>
-            </section>
+              </span>
+            </Link>
           ) : null}
 
           <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
-            <div className="card flex flex-col items-center justify-between p-4 text-center">
+            <div className="card flex flex-col items-center justify-between p-3 text-center">
               <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Your rank</p>
-              <p className="mt-2 font-display text-4xl leading-none">
+              <p className="mt-1.5 font-display text-3xl leading-none">
                 {myRank ? (
                   <>
                     {ordinal(myRank)} <span className="text-muted">of {fieldSize}</span>
@@ -271,9 +270,9 @@ export default async function HomePage({
                 <p className="mt-1 max-w-full truncate text-xs text-muted">{active.name}</p>
               ) : null}
             </div>
-            <div className="card flex flex-col items-center justify-between p-4 text-center">
+            <div className="card flex flex-col items-center justify-between p-3 text-center">
               <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Points</p>
-              <p className="mt-2 font-display text-4xl leading-none text-accent">{seasonPoints}</p>
+              <p className="mt-1.5 font-display text-3xl leading-none text-accent">{seasonPoints}</p>
               {gwPoints != null ? (
                 <p className={`mt-1 text-[0.6rem] font-bold uppercase tracking-wider ${gwLive ? 'text-live' : 'text-muted'}`}>
                   {gwLive ? `● GW ${gwPoints} live` : `GW: ${gwPoints}`}
@@ -330,83 +329,28 @@ export default async function HomePage({
         </section>
       ) : null}
 
-      <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '140ms' }}>
-        <Link
-          href="/squad"
-          className="shine-sweep relative flex flex-col items-center gap-3 rounded-[1.1rem] border border-accent/30 bg-accent/10 p-4 text-center active:scale-[0.98]"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 ring-1 ring-accent/40">
-            <Shirt className="h-5 w-5 text-accent" strokeWidth={2.2} />
-          </span>
-          <span>
-            <span className="block font-display text-xl leading-none text-accent">My Squad</span>
-            <span className="mt-0.5 block text-xs text-muted">Set your lineup</span>
-          </span>
-        </Link>
-        <Link
-          href={`/league/${activeId}`}
-          className="shine-sweep-2 relative flex flex-col items-center gap-3 rounded-[1.1rem] border border-gold/30 bg-gold/10 p-4 text-center active:scale-[0.98]"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15 ring-1 ring-gold/40">
-            <ListOrdered className="h-5 w-5 text-gold" strokeWidth={2.2} />
-          </span>
-          <span>
-            <span className="block font-display text-xl leading-none text-gold">Table</span>
-            <span className="mt-0.5 block text-xs text-muted">The standings</span>
-          </span>
-        </Link>
+      <section className="reveal grid grid-cols-2 gap-2.5" style={{ animationDelay: '140ms' }}>
+        {[
+          { href: '/squad', label: 'My Squad', icon: Shirt },
+          { href: `/league/${activeId}`, label: 'Table', icon: ListOrdered },
+          ...(active?.draftStatus === 'complete'
+            ? [
+                { href: `/league/${activeId}/waivers`, label: 'Waivers', icon: Search },
+                { href: `/league/${activeId}/trades`, label: 'Trades', icon: ArrowLeftRight },
+              ]
+            : []),
+        ].map((t) => (
+          <Link
+            key={t.href}
+            href={t.href}
+            className="card flex min-h-12 items-center gap-2.5 px-3.5 active:scale-[0.98]"
+          >
+            <t.icon className="h-4.5 w-4.5 shrink-0 text-accent" strokeWidth={2.2} />
+            <span className="flex-1 truncate text-sm font-bold">{t.label}</span>
+            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-2" />
+          </Link>
+        ))}
       </section>
-
-      <section className="reveal space-y-3" style={{ animationDelay: '180ms' }}>
-        {active?.draftStatus === 'complete' ? (
-          <>
-            <Link
-              href={`/league/${activeId}/waivers`}
-              className="card flex items-center gap-3 p-4 active:scale-[0.99]"
-            >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 ring-1 ring-accent/30">
-                <Search className="h-5 w-5 text-accent" />
-              </span>
-              <span className="min-w-0 flex-1 text-left">
-                <span className="block font-display text-xl leading-none">Waivers</span>
-                <span className="mt-0.5 block text-xs text-muted">Claim free agents, work the wire</span>
-              </span>
-              <ArrowRight className="h-4 w-4 shrink-0 text-muted" />
-            </Link>
-            <Link
-              href={`/league/${activeId}/trades`}
-              className="card flex items-center gap-3 p-4 active:scale-[0.99]"
-            >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 ring-1 ring-accent/30">
-                <ArrowLeftRight className="h-5 w-5 text-accent" />
-              </span>
-              <span className="min-w-0 flex-1 text-left">
-                <span className="block font-display text-xl leading-none">Trades</span>
-                <span className="mt-0.5 block text-xs text-muted">Strike a deal with a rival</span>
-              </span>
-              <ArrowRight className="h-4 w-4 shrink-0 text-muted" />
-            </Link>
-          </>
-        ) : null}
-        <Link href="/players" className="card flex items-center gap-3 p-4 active:scale-[0.99]">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 ring-1 ring-accent/30">
-            <Search className="h-5 w-5 text-accent" />
-          </span>
-          <span className="min-w-0 flex-1 text-left">
-            <span className="block font-display text-xl leading-none">Scout players</span>
-            <span className="mt-0.5 block text-xs text-muted">Form, fixtures, and stats for all 577</span>
-          </span>
-          <ArrowRight className="h-4 w-4 shrink-0 text-muted" />
-        </Link>
-      </section>
-
-      <p className="reveal text-center text-xs text-muted-2" style={{ animationDelay: '220ms' }}>
-        Want to start or join another league? Head to{' '}
-        <Link href="/me" className="font-bold text-accent">
-          Me
-        </Link>
-        .
-      </p>
     </div>
   );
 }

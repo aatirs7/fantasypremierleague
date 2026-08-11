@@ -27,7 +27,7 @@ const POS_CLS: Record<string, string> = {
   GK: 'bg-gold/15 text-gold',
   DEF: 'bg-silver/15 text-silver',
   MID: 'bg-accent/15 text-accent',
-  FWD: 'bg-[#a78bfa]/15 text-[#a78bfa]',
+  FWD: 'bg-[#38bdf8]/15 text-[#38bdf8]',
 };
 
 // Any manager's squad, visible to everyone in the league: current lineup

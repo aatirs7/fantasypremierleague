@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Bebas_Neue, Hanken_Grotesk } from 'next/font/google';
+import { Space_Grotesk, Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 import BottomTabBar from '@/components/nav/BottomTabBar';
 import DesktopNav from '@/components/nav/DesktopNav';
@@ -8,13 +8,15 @@ import HelpButton from '@/components/HelpButton';
 import ThemeButton from '@/components/ThemeButton';
 import './globals.css';
 
-const display = Bebas_Neue({
+// Display and body faces. The CSS vars keep their historical names so the
+// token bridge in globals.css stays untouched.
+const display = Space_Grotesk({
   variable: '--font-bebas',
   subsets: ['latin'],
-  weight: '400',
+  weight: ['500', '700'],
 });
 
-const body = Hanken_Grotesk({
+const body = Inter({
   variable: '--font-hanken',
   subsets: ['latin'],
 });
@@ -55,8 +57,6 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col pb-tabbar pt-[env(safe-area-inset-top)]">
         <div className="bg-atmosphere" aria-hidden />
-        <div className="bg-pitch" aria-hidden />
-        <div className="bg-grain" aria-hidden />
         <AutoRefresh />
         <ThemeButton initial={theme} />
         <DesktopNav />

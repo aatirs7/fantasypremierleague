@@ -47,12 +47,12 @@ export default async function Landing({
       <div className="reveal space-y-5">
         <PLLion className="mx-auto h-24 w-auto text-foreground drop-shadow-[0_0_24px_rgba(0,229,140,0.25)]" />
         <div>
-          <p className="font-display text-lg tracking-[0.45em] text-accent">Premier League</p>
-          <h1 className="font-display text-7xl leading-[0.82] tracking-tight">
+          <p className="font-display text-sm uppercase tracking-[0.4em] text-accent">Premier League</p>
+          <h1 className="font-display text-6xl leading-[0.95] tracking-tight">
             Fantasy
-            <span className="shine block text-8xl">Draft</span>
+            <span className="shine block text-7xl">Draft</span>
           </h1>
-          <p className="mt-1 font-display text-2xl tracking-[0.3em] text-muted">2026-27 season</p>
+          <p className="mt-1.5 text-sm font-semibold tracking-[0.2em] text-muted">2026-27 SEASON</p>
         </div>
         <div className="mx-auto max-w-xs space-y-1">
           <p className="text-sm leading-relaxed text-muted">
