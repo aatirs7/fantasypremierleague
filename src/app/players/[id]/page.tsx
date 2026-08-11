@@ -116,7 +116,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
 
       {summary?.fixtures?.length ? (
         <div className="space-y-2">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
             Upcoming fixtures
           </p>
           <div className="card divide-y divide-[var(--line)] px-3">
@@ -143,7 +143,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
 
       {summary?.history?.length ? (
         <div className="space-y-2">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
             This season
           </p>
           <div className="card divide-y divide-[var(--line)] px-3">

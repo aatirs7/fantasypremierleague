@@ -32,7 +32,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
     return (
       <div className="space-y-4">
         <div className="card mx-auto mt-6 max-w-sm p-4 text-center">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">You are invited to</p>
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">You are invited to</p>
           <p className="font-display text-3xl">{league.name}</p>
           <p className="mt-1 text-xs text-muted">Sign in or create an account to join.</p>
         </div>

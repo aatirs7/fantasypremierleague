@@ -22,7 +22,7 @@ const POS_CLS: Record<string, string> = {
   GK: 'bg-gold/15 text-gold',
   DEF: 'bg-silver/15 text-silver',
   MID: 'bg-accent/15 text-accent',
-  FWD: 'bg-live/15 text-live',
+  FWD: 'bg-[#a78bfa]/15 text-[#a78bfa]',
 };
 
 // Tap-to-swap lineup setter. Tap a starter then a bench player (or vice
@@ -220,7 +220,7 @@ export default function LineupEditor({
         if (!rows.length) return null;
         return (
           <div key={pos} className="space-y-1.5">
-            <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">{pos}</p>
+            <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">{pos}</p>
             {rows.map((p) => (
               <Row key={p.fplId} pick={p} />
             ))}
@@ -229,7 +229,7 @@ export default function LineupEditor({
       })}
 
       <div className="space-y-1.5">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
           Bench (autosub order)
         </p>
         {bench.map((p) => (

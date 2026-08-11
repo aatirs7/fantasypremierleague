@@ -141,7 +141,7 @@ export default function HelpButton() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative">
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+              <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
                 How it works
               </p>
               <h2 className="font-display text-4xl">{topic.title}</h2>

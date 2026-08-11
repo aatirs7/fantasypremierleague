@@ -34,7 +34,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
       <RememberLeague leagueId={league.id} />
 
       <div className="text-center">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">League</p>
+        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">League</p>
         <h1 className="font-display text-4xl">{league.name}</h1>
         {league.isTest ? (
           <p className="mt-1 inline-block rounded-full bg-gold/20 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-gold">
@@ -46,7 +46,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
       {pending ? (
         <>
           <div className="card space-y-1 p-4 text-center">
-            <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Draft</p>
+            <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Draft</p>
             {league.draftTime ? (
               <>
                 <p className="font-display text-3xl">
@@ -95,25 +95,21 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
         </Link>
       ) : (
         <>
-          <div className="flex gap-2">
-            <Link
-              href={`/league/${league.id}/waivers`}
-              className="card flex min-h-11 flex-1 items-center justify-center gap-2 text-sm font-bold active:scale-[0.99]"
-            >
-              Waivers
-            </Link>
-            <Link
-              href={`/league/${league.id}/trades`}
-              className="card flex min-h-11 flex-1 items-center justify-center gap-2 text-sm font-bold active:scale-[0.99]"
-            >
-              Trades
-            </Link>
-            <Link
-              href={`/league/${league.id}/draft`}
-              className="card flex min-h-11 flex-1 items-center justify-center gap-2 text-sm font-bold active:scale-[0.99]"
-            >
-              Draft recap
-            </Link>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { href: `/league/${league.id}/waivers`, label: 'Waivers' },
+              { href: `/league/${league.id}/trades`, label: 'Trades' },
+              { href: `/league/${league.id}/stats`, label: 'Stats' },
+              { href: `/league/${league.id}/draft`, label: 'Draft recap' },
+            ].map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="card flex min-h-11 items-center justify-center gap-2 text-sm font-bold active:scale-[0.99]"
+              >
+                {l.label}
+              </Link>
+            ))}
           </div>
           <LeagueStandings league={league} viewerId={session.userId} members={members} />
         </>

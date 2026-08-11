@@ -113,7 +113,7 @@ export default async function SquadPage({
     <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
       <RememberLeague leagueId={leagueId} />
       <div className="space-y-1 text-center">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
           {league.name}
         </p>
         <h1 className="font-display text-4xl">Gameweek {editable.gw}</h1>

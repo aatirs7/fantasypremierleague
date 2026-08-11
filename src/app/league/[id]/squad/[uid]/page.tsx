@@ -16,6 +16,9 @@ import {
 } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { isLeagueMember } from '@/lib/leagues';
+import { squadContributions } from '@/lib/contributions';
+import { isNull } from 'drizzle-orm';
+import { squadPlayers } from '@/lib/schema';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +27,7 @@ const POS_CLS: Record<string, string> = {
   GK: 'bg-gold/15 text-gold',
   DEF: 'bg-silver/15 text-silver',
   MID: 'bg-accent/15 text-accent',
-  FWD: 'bg-live/15 text-live',
+  FWD: 'bg-[#a78bfa]/15 text-[#a78bfa]',
 };
 
 // Any manager's squad, visible to everyone in the league: current lineup
@@ -138,7 +141,7 @@ export default async function SquadViewPage({
       </Link>
 
       <div className="space-y-1 text-center">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Squad</p>
+        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Squad</p>
         <h1 className="font-display text-4xl">{owner.username}</h1>
         <p className="font-display text-2xl tabular-nums text-accent">
           {season?.totalPoints ?? 0}
@@ -151,7 +154,7 @@ export default async function SquadViewPage({
       {lineup ? (
         <>
           <div className="card px-3 py-2">
-            <p className="pb-1 pt-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+            <p className="pb-1 pt-1 text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
               {gwNames.get(lineup.gw) ?? `Gameweek ${lineup.gw}`} lineup
             </p>
             <div className="divide-y divide-[var(--line)]">
@@ -159,7 +162,7 @@ export default async function SquadViewPage({
                 <Row key={p.fplId} pick={p} />
               ))}
             </div>
-            <p className="pt-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Bench</p>
+            <p className="pt-2 text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Bench</p>
             <div className="divide-y divide-[var(--line)] opacity-70">
               {bench.map((p) => (
                 <Row key={p.fplId} pick={p} />
@@ -171,9 +174,11 @@ export default async function SquadViewPage({
         <p className="card p-4 text-sm text-muted">No lineup yet.</p>
       )}
 
+      <Contributions squadId={squad.id} leagueId={leagueId} />
+
       {history.length ? (
         <div className="space-y-2">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
             Gameweek history
           </p>
           <div className="card divide-y divide-[var(--line)] px-3">
@@ -205,6 +210,75 @@ export default async function SquadViewPage({
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+// Who has actually earned this squad its points: every current player with
+// the points they contributed while counting in the XI (captain doubling
+// attributed to whoever doubled), plus weeks counted.
+async function Contributions({ squadId, leagueId }: { squadId: string; leagueId: string }) {
+  const contrib = await squadContributions(squadId);
+  if (contrib.size === 0) return null;
+
+  const current = await db
+    .select({ fplId: squadPlayers.fplId })
+    .from(squadPlayers)
+    .where(
+      and(
+        eq(squadPlayers.squadId, squadId),
+        eq(squadPlayers.leagueId, leagueId),
+        isNull(squadPlayers.droppedGw),
+      ),
+    );
+  const ids = [...new Set([...current.map((c) => c.fplId), ...contrib.keys()])];
+  const players = await db
+    .select({
+      fplId: fplPlayers.fplId,
+      photoCode: fplPlayers.photoCode,
+      webName: fplPlayers.webName,
+      position: fplPlayers.position,
+      clubShort: fplPlayers.clubShort,
+    })
+    .from(fplPlayers)
+    .where(inArray(fplPlayers.fplId, ids));
+  const byId = new Map(players.map((p) => [p.fplId, p]));
+  const currentSet = new Set(current.map((c) => c.fplId));
+
+  const rows = ids
+    .map((id) => ({
+      p: byId.get(id),
+      c: contrib.get(id) ?? { fplId: id, points: 0, weeks: 0 },
+      onSquad: currentSet.has(id),
+    }))
+    .filter((r) => r.p && (r.onSquad || r.c.points !== 0))
+    .sort((a, b) => b.c.points - a.c.points);
+
+  return (
+    <div className="space-y-2">
+      <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+        Points for this squad
+      </p>
+      <div className="card divide-y divide-[var(--line)] px-3">
+        {rows.map(({ p, c, onSquad }) => (
+          <div key={p!.fplId} className={`flex min-h-11 items-center gap-2 py-1.5 ${onSquad ? '' : 'opacity-50'}`}>
+            <PlayerPhoto photoCode={p!.photoCode} name={p!.webName} size={30} />
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+              {p!.webName}
+              <span className="ml-1.5 text-xs text-muted">
+                {p!.clubShort}
+                {onSquad ? '' : ' · departed'}
+              </span>
+            </span>
+            <span className="shrink-0 text-xs text-muted">
+              {c.weeks} {c.weeks === 1 ? 'week' : 'weeks'}
+            </span>
+            <span className="w-14 shrink-0 text-right font-display text-xl tabular-nums text-accent">
+              {c.points}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -62,7 +62,7 @@ const POS_CLS: Record<string, string> = {
   GK: 'bg-gold/15 text-gold',
   DEF: 'bg-silver/15 text-silver',
   MID: 'bg-accent/15 text-accent',
-  FWD: 'bg-live/15 text-live',
+  FWD: 'bg-[#a78bfa]/15 text-[#a78bfa]',
 };
 
 export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; myUserId: string }) {
@@ -145,7 +145,7 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
     <div className="space-y-3">
       {win ? (
         <div className="card space-y-1 p-4">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
             Gameweek {win.upcomingGw} window
           </p>
           {win.opensNow ? (
@@ -183,7 +183,7 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
 
       {pending.length ? (
         <div className="card space-y-2 p-4">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
             My claims (processed top first)
           </p>
           {pending.map((c, i) => (
@@ -266,7 +266,7 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
       ) : null}
 
       <div className="card space-y-1.5 p-4">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Waiver priority</p>
+        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Waiver priority</p>
         {data.priority.map((p) => (
           <p key={p.userId} className="flex items-center gap-2 text-sm">
             <span className="w-5 text-center font-display text-lg text-muted">{p.priority}</span>
@@ -283,7 +283,7 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
 
       {data.results.length ? (
         <div className="card space-y-1.5 p-4">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Results</p>
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Results</p>
           {data.results.map((r) => (
             <p key={r.id} className="text-xs">
               <span className="font-bold">{r.username}</span>{' '}
@@ -309,7 +309,7 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+              <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
                 {mode === 'free_agent' ? 'Instant pickup' : 'Waiver claim'}
               </p>
               <h2 className="font-display text-3xl">

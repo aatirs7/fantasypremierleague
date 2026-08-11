@@ -68,7 +68,7 @@ const POS_CLS: Record<string, string> = {
   GK: 'bg-gold/15 text-gold',
   DEF: 'bg-silver/15 text-silver',
   MID: 'bg-accent/15 text-accent',
-  FWD: 'bg-live/15 text-live',
+  FWD: 'bg-[#a78bfa]/15 text-[#a78bfa]',
 };
 
 function QuotaDots({ squad }: { squad: SquadEntry[] }) {
@@ -474,7 +474,7 @@ export default function DraftRoom({
 
         {!introDone ? (
           <div className="card space-y-4 p-5 text-center">
-            <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+            <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
               How it works ({introIdx + 1}/3)
             </p>
             <p className="flex min-h-16 items-center justify-center text-lg font-semibold">
@@ -514,7 +514,7 @@ export default function DraftRoom({
         ) : null}
 
         <div className="card space-y-3 p-4 text-center">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
             {here} of {state.members.length} here
           </p>
           <div className="flex flex-wrap justify-center gap-2">
@@ -762,7 +762,7 @@ export default function DraftRoom({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+              <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
                 Pick {state.currentPick}
               </p>
               <div className="mt-2 flex justify-center">

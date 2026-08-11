@@ -40,7 +40,7 @@ const POS_CLS: Record<string, string> = {
   GK: 'bg-gold/15 text-gold',
   DEF: 'bg-silver/15 text-silver',
   MID: 'bg-accent/15 text-accent',
-  FWD: 'bg-live/15 text-live',
+  FWD: 'bg-[#a78bfa]/15 text-[#a78bfa]',
 };
 
 export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myUserId: string }) {
@@ -167,7 +167,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
 
       {inbox.length ? (
         <div className="space-y-2">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Inbox</p>
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Inbox</p>
           {inbox.map((t) => (
             <TradeCard
               key={t.id}
@@ -197,7 +197,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
 
       {outgoing.length ? (
         <div className="space-y-2">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Outgoing</p>
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Outgoing</p>
           {outgoing.map((t) => (
             <TradeCard
               key={t.id}
@@ -218,7 +218,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
 
       {vetoable.length ? (
         <div className="space-y-2">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
             Accepted (veto window)
           </p>
           {vetoable.map((t) => (
@@ -242,7 +242,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
       ) : null}
 
       <div className="card space-y-3 p-4">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
           Propose a trade
         </p>
         {partners.length === 0 ? (
@@ -316,7 +316,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
 
       {historic.length ? (
         <div className="card space-y-1.5 p-4">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">History</p>
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">History</p>
           {historic.map((t) => (
             <p key={t.id} className="text-xs text-muted">
               <span className="font-bold text-foreground">{t.proposerName}</span> to{' '}

@@ -11,7 +11,9 @@ import {
   Timer,
 } from 'lucide-react';
 import { db } from '@/lib/db';
-import { gameweeks, gwScores, leagues, squads } from '@/lib/schema';
+import { gameweeks, gwScores, leagues, squads, standingSnapshots, users } from '@/lib/schema';
+import { inArray } from 'drizzle-orm';
+import { TrendingDown, TrendingUp } from 'lucide-react';
 import { readSession } from '@/lib/auth';
 import { editableGw } from '@/lib/lineup';
 import { leagueTable } from '@/lib/scoring';
@@ -101,6 +103,75 @@ export default async function HomePage({
     }
   }
 
+  // Recap: movement since this gameweek's baseline snapshot, wc26 style.
+  // Only a UNIQUE top mover gets named; ties stay quiet.
+  type Recap = {
+    you: { rank: number; rankDelta: number; gained: number } | null;
+    climber: { name: string; up: number } | null;
+    gainer: { name: string; pts: number } | null;
+  };
+  let recap: Recap | null = null;
+  if (active?.draftStatus === 'complete') {
+    const snaps = await db
+      .select()
+      .from(standingSnapshots)
+      .where(eq(standingSnapshots.leagueId, activeId));
+    if (snaps.length) {
+      const table = await leagueTable(activeId, currentGw?.gw ?? null);
+      const combined = new Map(
+        table.map((r) => [
+          r.userId,
+          r.seasonTotal + (r.currentGwLive ? (r.currentGwPoints ?? 0) : 0),
+        ]),
+      );
+      const rankNow = new Map(table.map((r) => [r.userId, r.rank]));
+      const nameRows = await db
+        .select({ id: users.id, username: users.username })
+        .from(users)
+        .where(inArray(users.id, snaps.map((s) => s.userId)));
+      const nameOf = new Map(nameRows.map((n) => [n.id, n.username]));
+
+      let climber: Recap['climber'] = null;
+      let climberTies = 0;
+      let gainer: Recap['gainer'] = null;
+      let gainerTies = 0;
+      for (const s of snaps) {
+        if (s.userId === session.userId) continue;
+        const up = s.rank != null ? s.rank - (rankNow.get(s.userId) ?? s.rank) : 0;
+        const gained = (combined.get(s.userId) ?? s.points) - s.points;
+        if (up > 0) {
+          if (!climber || up > climber.up) {
+            climber = { name: nameOf.get(s.userId) ?? '?', up };
+            climberTies = 1;
+          } else if (up === climber.up) climberTies++;
+        }
+        if (gained > 0) {
+          if (!gainer || gained > gainer.pts) {
+            gainer = { name: nameOf.get(s.userId) ?? '?', pts: gained };
+            gainerTies = 1;
+          } else if (gained === gainer.pts) gainerTies++;
+        }
+      }
+      const mySnap = snaps.find((s) => s.userId === session.userId);
+      const you =
+        mySnap && rankNow.has(session.userId)
+          ? {
+              rank: rankNow.get(session.userId)!,
+              rankDelta: mySnap.rank != null ? mySnap.rank - rankNow.get(session.userId)! : 0,
+              gained: (combined.get(session.userId) ?? mySnap.points) - mySnap.points,
+            }
+          : null;
+      const built: Recap = {
+        you,
+        climber: climberTies === 1 ? climber : null,
+        gainer: gainerTies === 1 ? gainer : null,
+      };
+      if (built.you?.rankDelta || built.you?.gained || built.climber || built.gainer) {
+        recap = built;
+      }
+    }
+  }
+
   const lq = `?league=${activeId}`;
 
   return (
@@ -186,7 +257,7 @@ export default async function HomePage({
 
           <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
             <div className="card flex flex-col items-center justify-between p-4 text-center">
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Your rank</p>
+              <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Your rank</p>
               <p className="mt-2 font-display text-4xl leading-none">
                 {myRank ? (
                   <>
@@ -201,7 +272,7 @@ export default async function HomePage({
               ) : null}
             </div>
             <div className="card flex flex-col items-center justify-between p-4 text-center">
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Points</p>
+              <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Points</p>
               <p className="mt-2 font-display text-4xl leading-none text-accent">{seasonPoints}</p>
               {gwPoints != null ? (
                 <p className={`mt-1 text-[0.6rem] font-bold uppercase tracking-wider ${gwLive ? 'text-live' : 'text-muted'}`}>
@@ -214,6 +285,50 @@ export default async function HomePage({
           </section>
         </>
       )}
+
+      {recap ? (
+        <section className="reveal card space-y-2 p-4 text-center" style={{ animationDelay: '120ms' }}>
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+            This gameweek so far
+          </p>
+          {recap.you ? (
+            <p className="flex items-center justify-center gap-2 text-sm">
+              {recap.you.rankDelta > 0 ? (
+                <TrendingUp className="h-4 w-4 text-accent" />
+              ) : recap.you.rankDelta < 0 ? (
+                <TrendingDown className="h-4 w-4 text-live" />
+              ) : null}
+              <span>
+                You are <span className="font-bold">{ordinal(recap.you.rank)}</span>
+                {recap.you.rankDelta !== 0 ? (
+                  <span className={recap.you.rankDelta > 0 ? 'text-accent' : 'text-live'}>
+                    {' '}
+                    ({recap.you.rankDelta > 0 ? 'up' : 'down'} {Math.abs(recap.you.rankDelta)}{' '}
+                    {Math.abs(recap.you.rankDelta) === 1 ? 'spot' : 'spots'})
+                  </span>
+                ) : null}
+                {recap.you.gained !== 0 ? (
+                  <span className="text-muted">
+                    , {recap.you.gained > 0 ? `+${recap.you.gained}` : recap.you.gained} pts
+                  </span>
+                ) : null}
+              </span>
+            </p>
+          ) : null}
+          {recap.climber ? (
+            <p className="text-xs text-muted">
+              Biggest climber: <span className="font-bold text-accent">{recap.climber.name}</span> up{' '}
+              {recap.climber.up} {recap.climber.up === 1 ? 'spot' : 'spots'}
+            </p>
+          ) : null}
+          {recap.gainer ? (
+            <p className="text-xs text-muted">
+              Most points today: <span className="font-bold text-gold">{recap.gainer.name}</span> +
+              {recap.gainer.pts}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '140ms' }}>
         <Link

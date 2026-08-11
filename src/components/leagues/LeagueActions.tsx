@@ -47,7 +47,7 @@ export default function LeagueActions() {
         </p>
       ) : null}
       <div className="card space-y-3 p-4">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Join a league</p>
+        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Join a league</p>
         <div className="flex gap-2">
           <input
             className={`${INPUT_CLS} font-mono uppercase tracking-[0.2em]`}
@@ -67,7 +67,7 @@ export default function LeagueActions() {
         </div>
       </div>
       <div className="card space-y-3 p-4">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Start a new league</p>
+        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Start a new league</p>
         <div className="flex gap-2">
           <input
             className={INPUT_CLS}
