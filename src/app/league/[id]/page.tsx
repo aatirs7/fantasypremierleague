@@ -45,7 +45,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
 
       {pending ? (
         <>
-          <div className="card space-y-1 p-4">
+          <div className="card space-y-1 p-4 text-center">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Draft</p>
             {league.draftTime ? (
               <>
@@ -120,7 +120,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
       )}
 
       <div className="space-y-2">
-        <p className="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+        <p className="flex items-center justify-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
           <Users className="h-3.5 w-3.5" />
           Managers ({members.length})
         </p>

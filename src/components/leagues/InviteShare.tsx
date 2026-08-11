@@ -36,7 +36,7 @@ export default function InviteShare({ code, leagueName }: { code: string; league
 
   return (
     <div className="card space-y-3 p-4">
-      <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Invite code</p>
+      <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Invite code</p>
       <button
         onClick={() => copy(code, 'code')}
         className="flex w-full items-center justify-center gap-3 rounded-xl border border-edge bg-white/[0.03] py-3 active:scale-[0.99]"

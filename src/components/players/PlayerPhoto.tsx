@@ -16,7 +16,17 @@ export default function PlayerPhoto({
   size?: number;
   className?: string;
 }) {
-  const [failed, setFailed] = useState(false);
+  // Fallback chain: the big headshot, then the smaller legacy size the CDN
+  // sometimes has when 250x250 is missing, then an initial disc.
+  const [attempt, setAttempt] = useState(0);
+  const sources =
+    photoCode == null
+      ? []
+      : [
+          `https://resources.premierleague.com/premierleague/photos/players/250x250/p${photoCode}.png`,
+          `https://resources.premierleague.com/premierleague/photos/players/110x140/p${photoCode}.png`,
+        ];
+  const failed = attempt >= sources.length;
   if (photoCode == null || failed) {
     return (
       <span
@@ -31,12 +41,12 @@ export default function PlayerPhoto({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={`https://resources.premierleague.com/premierleague/photos/players/250x250/p${photoCode}.png`}
+      src={sources[attempt]}
       alt={name}
       width={size}
       height={size}
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => setAttempt(attempt + 1)}
       className={`shrink-0 rounded-full bg-white/[0.04] object-cover object-top ring-1 ring-[var(--line)] ${className}`}
       style={{ width: size, height: size }}
     />

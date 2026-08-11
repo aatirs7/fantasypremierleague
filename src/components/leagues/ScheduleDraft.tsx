@@ -51,7 +51,7 @@ export default function ScheduleDraft({
 
   return (
     <div className="card space-y-3 p-4">
-      <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+      <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
         {currentIso ? 'Reschedule draft' : 'Schedule the draft'}
       </p>
       <div className="flex gap-2">

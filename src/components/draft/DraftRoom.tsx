@@ -473,11 +473,13 @@ export default function DraftRoom({
         <h1 className="text-center font-display text-4xl">Draft lobby</h1>
 
         {!introDone ? (
-          <div className="card space-y-4 p-5">
+          <div className="card space-y-4 p-5 text-center">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
               How it works ({introIdx + 1}/3)
             </p>
-            <p className="min-h-16 text-lg font-semibold">{intro[introIdx]}</p>
+            <p className="flex min-h-16 items-center justify-center text-lg font-semibold">
+              {intro[introIdx]}
+            </p>
             <div className="flex items-center gap-2">
               {intro.map((_, i) => (
                 <span
@@ -511,11 +513,11 @@ export default function DraftRoom({
           </div>
         ) : null}
 
-        <div className="card space-y-3 p-4">
+        <div className="card space-y-3 p-4 text-center">
           <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
             {here} of {state.members.length} here
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {state.members.map((m) => (
               <span
                 key={m.userId}
@@ -532,7 +534,7 @@ export default function DraftRoom({
             ))}
           </div>
           {state.draftTime ? (
-            <p className="text-sm text-muted">
+            <p className="text-center text-sm text-muted">
               Scheduled for{' '}
               {new Date(state.draftTime).toLocaleString('en-GB', {
                 weekday: 'short',
@@ -636,7 +638,7 @@ export default function DraftRoom({
           </span>
           {state.isTest ? <span className={myTurn ? '' : 'text-gold'}>Test</span> : null}
         </div>
-        <p className="font-display text-3xl leading-none">
+        <p className="text-center font-display text-3xl leading-none">
           {myTurn ? 'YOUR PICK' : `${state.currentPicker?.username ?? '...'} is picking...`}
         </p>
         <div className="h-1.5 overflow-hidden rounded-full bg-black/20">

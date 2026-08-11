@@ -78,6 +78,7 @@ export type BootstrapElement = {
 
 export type BootstrapTeam = {
   id: number;
+  code?: number;
   name?: string;
   short_name?: string;
 };

@@ -34,6 +34,9 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  // Extend the page under the status bar / notch in the installed app, so
+  // the backdrop is continuous instead of a cut-off colored strip.
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({
@@ -50,7 +53,7 @@ export default async function RootLayout({
       data-theme={theme}
       className={`${display.variable} ${body.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col pb-tabbar">
+      <body className="min-h-full flex flex-col pb-tabbar pt-[env(safe-area-inset-top)]">
         <div className="bg-atmosphere" aria-hidden />
         <div className="bg-pitch" aria-hidden />
         <div className="bg-grain" aria-hidden />

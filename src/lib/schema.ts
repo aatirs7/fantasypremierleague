@@ -96,6 +96,9 @@ export const fplPlayers = pgTable('fpl_players', {
   webName: text('web_name').notNull(),
   fullName: text('full_name').notNull(),
   clubId: integer('club_id').notNull(),
+  // FPL's stable club code; badges live at
+  // resources.premierleague.com/premierleague/badges/50/t{code}.png
+  clubCode: integer('club_code'),
   clubName: text('club_name').notNull(),
   clubShort: text('club_short').notNull(),
   // GK | DEF | MID | FWD

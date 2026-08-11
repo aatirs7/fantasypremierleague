@@ -108,6 +108,7 @@ async function syncBootstrap(report: SyncReport): Promise<void> {
       webName: el.web_name ?? `Player ${el.id}`,
       fullName: [el.first_name, el.second_name].filter(Boolean).join(' ') || (el.web_name ?? ''),
       clubId: el.team ?? 0,
+      clubCode: team?.code ?? null,
       clubName: team?.name ?? 'Unknown',
       clubShort: team?.short_name ?? '???',
       position: positionName(el.element_type, typeNames),
