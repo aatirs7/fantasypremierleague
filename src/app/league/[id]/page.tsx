@@ -94,7 +94,29 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
           Draft is LIVE, jump in
         </Link>
       ) : (
-        <LeagueStandings league={league} viewerId={session.userId} members={members} />
+        <>
+          <div className="flex gap-2">
+            <Link
+              href={`/league/${league.id}/waivers`}
+              className="card flex min-h-11 flex-1 items-center justify-center gap-2 text-sm font-bold active:scale-[0.99]"
+            >
+              Waivers
+            </Link>
+            <Link
+              href={`/league/${league.id}/trades`}
+              className="card flex min-h-11 flex-1 items-center justify-center gap-2 text-sm font-bold active:scale-[0.99]"
+            >
+              Trades
+            </Link>
+            <Link
+              href={`/league/${league.id}/draft`}
+              className="card flex min-h-11 flex-1 items-center justify-center gap-2 text-sm font-bold active:scale-[0.99]"
+            >
+              Draft recap
+            </Link>
+          </div>
+          <LeagueStandings league={league} viewerId={session.userId} members={members} />
+        </>
       )}
 
       <div className="space-y-2">

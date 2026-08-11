@@ -414,6 +414,24 @@ export async function runSync(opts: { dry?: boolean; force?: boolean } = {}): Pr
     }
   }
 
+  // Waivers: process any window whose close time has passed.
+  try {
+    const { processDueWaivers, waiverWindow, cleanWaiverLocks } = await import('./waivers');
+    await processDueWaivers(report.notes);
+    const win = await waiverWindow();
+    if (win) await cleanWaiverLocks(win.upcomingGw);
+  } catch (e) {
+    report.notes.push(`waivers FAILED: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // Trades: execute due accepted trades, expire stale ones.
+  try {
+    const { runTradeCron } = await import('./trades');
+    await runTradeCron(report.notes);
+  } catch (e) {
+    report.notes.push(`trades FAILED: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
   // Housekeeping: drop login attempt rows older than an hour.
   await db.delete(loginAttempts).where(lt(loginAttempts.at, new Date(now - 60 * 60 * 1000)));
 

@@ -119,6 +119,21 @@ export async function finalizeGw(gw: number, notes: string[]): Promise<void> {
   }
   notes.push(`final gw${gw}: ${scored} squads scored`);
   await rollupSeasonScores();
+
+  // Waiver priority follows the fresh standings (reverse order) for every
+  // real league.
+  const leagueRows = await db
+    .select({ id: leagues.id })
+    .from(leagues)
+    .where(and(eq(leagues.draftStatus, 'complete'), eq(leagues.isTest, false)));
+  const { recomputePriorityFromStandings } = await import('./waivers');
+  for (const l of leagueRows) {
+    try {
+      await recomputePriorityFromStandings(l.id);
+    } catch (e) {
+      notes.push(`waiver priority league ${l.id} FAILED: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
 }
 
 // Season totals from final gw_scores only. GW wins are counted per league:
