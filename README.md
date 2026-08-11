@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EPL Fantasy Draft
 
-## Getting Started
+Season-long fantasy Premier League for friend groups: snake draft before kickoff, official FPL scoring every gameweek, live points during matches, waivers and trades all season.
 
-First, run the development server:
+## Stack
 
-```bash
+Next.js App Router + TypeScript, Tailwind v4 (tokens in `globals.css`), Neon Postgres + Drizzle ORM, Vercel + one self-gating Vercel cron. Mobile-first PWA, dark theme, bottom tab nav.
+
+## Setup
+
+```
+npm install
+vercel env pull .env.local   # DATABASE_URL and friends from the Vercel project
+npm run db:migrate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Env vars (all set on the Vercel project): `DATABASE_URL`, `SESSION_SECRET` (32+ chars), `CRON_SECRET`, `ADMIN_USERNAMES` (comma-separated usernames allowed to use the dev test-draft endpoints).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How data flows
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- All FPL API calls (classic + draft) live in `src/lib/fpl.ts` and are invoked only from the sync path. Pages and clients read Neon exclusively.
+- `/api/cron` runs every minute (Vercel cron, `Authorization: Bearer CRON_SECRET`). `src/lib/sync.ts` self-gates each section: bootstrap hourly, draft ranks daily, fixtures hourly (2 min while live), live points every 2 min during matches, GW finalization when FPL marks `data_checked`, waiver processing at window close, trade execution and expiry, login-attempt cleanup.
+- `POST /api/sync?dry=1` (same secret) fetches and reports without writing; `?force=1` ignores the cadence floors.
+- `gw_player_points.total_points` is FPL's own number, verbatim. Points are never recomputed from raw stats.
+- Scoring (`src/lib/scoring.ts` over pure rules in `scoring-rules.ts` / `lineup-rules.ts`) recomputes from scratch and stays idempotent.
+- Multi-statement transactions (draft picks, waivers, trades) use `withTransaction` in `src/lib/db.ts` (WebSocket driver) with `pg_advisory_xact_lock` per league; simple reads/writes use the shared neon-http client.
 
-## Learn More
+## Draft dry run
 
-To learn more about Next.js, take a look at the following resources:
+Sign in as an admin username and `POST /api/dev/test-draft {"managers":8,"bot_speed_ms":4000}` (or run `node scripts/test-draft.js` against a dev server) to rehearse a full bot draft through the real pick transaction. Delete it from the room's TEST MODE banner afterwards.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tests
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`npm test` covers snake order math, lineup validation and auto-generation, autosubs, captain/vice doubling, and provisional scoring.
 
-## Deploy on Vercel
+## House rules
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- No em dashes anywhere in code, copy, or comments.
+- No hardcoded season dates: gameweek deadlines come from the API mirror.
+- One Vercel cron only; nothing always-on.
+- Test leagues (`is_test`) and bot users are excluded from crons and cross-league queries.
