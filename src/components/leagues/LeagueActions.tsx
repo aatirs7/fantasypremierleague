@@ -84,7 +84,7 @@ export default function LeagueActions() {
             {busy === 'create' ? '...' : 'Create'}
           </button>
         </div>
-        <p className="text-xs text-muted">4 to 12 managers. Share the join code before the draft.</p>
+        <p className="text-xs text-muted">4 managers minimum. Share the join code before the draft.</p>
       </div>
     </div>
   );

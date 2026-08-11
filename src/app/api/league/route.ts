@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { and, eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { leagueMembers, leagues } from '@/lib/schema';
 import { currentUserId } from '@/lib/auth';
-import { MAX_MANAGERS, generateJoinCode } from '@/lib/leagues';
+import { generateJoinCode } from '@/lib/leagues';
 
 const Body = z.discriminatedUnion('action', [
   z.object({
@@ -59,18 +59,6 @@ export async function POST(req: Request) {
     if (!league) return NextResponse.json({ error: 'No league with that code' }, { status: 404 });
     if (league.draftStatus !== 'pending') {
       return NextResponse.json({ error: 'This league has already drafted' }, { status: 409 });
-    }
-    const [count] = await db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(leagueMembers)
-      .where(eq(leagueMembers.leagueId, league.id));
-    const already = await db
-      .select({ userId: leagueMembers.userId })
-      .from(leagueMembers)
-      .where(and(eq(leagueMembers.leagueId, league.id), eq(leagueMembers.userId, userId)))
-      .limit(1);
-    if (already.length === 0 && (count?.n ?? 0) >= MAX_MANAGERS) {
-      return NextResponse.json({ error: `League is full (${MAX_MANAGERS} managers max)` }, { status: 409 });
     }
     await db
       .insert(leagueMembers)

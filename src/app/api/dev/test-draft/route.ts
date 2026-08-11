@@ -31,7 +31,7 @@ const ADJECTIVES = ['swift', 'calm', 'bold', 'lucky', 'sly', 'keen', 'wild', 'br
 const ANIMALS = ['falcon', 'otter', 'lynx', 'heron', 'badger', 'viper', 'stoat', 'raven', 'ibex', 'wolf'];
 
 const Body = z.object({
-  managers: z.number().int().min(4).max(12).default(8),
+  managers: z.number().int().min(4).max(30).default(8),
   bot_speed_ms: z.number().int().min(500).max(60_000).default(4000),
   bot_variance: z.boolean().default(false),
 });

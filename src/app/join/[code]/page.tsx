@@ -1,10 +1,9 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { eq, sql, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { leagueMembers, leagues } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
-import { MAX_MANAGERS } from '@/lib/leagues';
 import Onboard from '@/components/auth/Onboard';
 
 export const dynamic = 'force-dynamic';
@@ -54,31 +53,9 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
     );
   }
 
-  const already = await db
-    .select({ userId: leagueMembers.userId })
-    .from(leagueMembers)
-    .where(and(eq(leagueMembers.leagueId, league.id), eq(leagueMembers.userId, session.userId)))
-    .limit(1);
-  if (already.length === 0) {
-    const [count] = await db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(leagueMembers)
-      .where(eq(leagueMembers.leagueId, league.id));
-    if ((count?.n ?? 0) >= MAX_MANAGERS) {
-      return (
-        <div className="card mx-auto mt-16 max-w-sm space-y-2 p-6 text-center">
-          <h1 className="font-display text-3xl">League full</h1>
-          <p className="text-sm text-muted">This league already has {MAX_MANAGERS} managers.</p>
-          <Link href="/home" className="inline-block pt-2 text-sm font-bold text-accent">
-            Go home
-          </Link>
-        </div>
-      );
-    }
-    await db
-      .insert(leagueMembers)
-      .values({ leagueId: league.id, userId: session.userId })
-      .onConflictDoNothing();
-  }
+  await db
+    .insert(leagueMembers)
+    .values({ leagueId: league.id, userId: session.userId })
+    .onConflictDoNothing();
   redirect(`/league/${league.id}`);
 }

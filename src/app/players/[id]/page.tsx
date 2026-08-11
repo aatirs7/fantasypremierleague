@@ -62,7 +62,6 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
 
   const stats: [string, string | number][] = [
     ['Draft rank', p.draftRank ?? '-'],
-    ['Price', p.price ? `${p.price}m` : '-'],
     ['Total points', p.totalPoints],
     ['Form', p.form ?? '-'],
     ['PPG', p.ppg ?? '-'],
@@ -83,14 +82,14 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
         <ArrowLeft className="h-4 w-4" /> Players
       </Link>
 
-      <div className="card flex items-center gap-4 p-4">
-        <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={76} />
+      <div className="card flex flex-col items-center gap-3 p-5 text-center">
+        <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={88} />
         <div className="min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <h1 className="font-display text-4xl">{p.webName}</h1>
           <StatusDot status={p.status} />
         </div>
-        <p className="mt-1 flex items-center gap-2 text-sm text-muted">
+        <p className="mt-1 flex items-center justify-center gap-2 text-sm text-muted">
           {p.clubName}
           <span className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-bold ${POS_COLORS[p.position] ?? ''}`}>
             {p.position}
@@ -106,7 +105,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      <div className="card grid grid-cols-3 gap-x-2 gap-y-3 p-4">
+      <div className="card grid grid-cols-3 gap-x-2 gap-y-3 p-4 text-center">
         {stats.map(([label, value]) => (
           <div key={label}>
             <p className="text-[0.6rem] font-bold uppercase tracking-wider text-muted-2">{label}</p>

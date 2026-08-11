@@ -43,7 +43,7 @@ export default async function Landing({
   }
 
   return (
-    <div className="mx-auto flex min-h-[88vh] max-w-md flex-col items-center justify-center gap-7 py-12 text-center">
+    <div className="mx-auto flex max-w-md flex-col items-center gap-7 py-6 text-center">
       <div className="reveal space-y-5">
         <PLLion className="mx-auto h-24 w-auto text-foreground drop-shadow-[0_0_24px_rgba(0,229,140,0.25)]" />
         <div>

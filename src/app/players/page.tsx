@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import PlayerSearch from '@/components/players/PlayerSearch';
 import { and, asc, desc, ilike, or, eq, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { fplPlayers } from '@/lib/schema';
@@ -15,7 +16,6 @@ const SORTS: Record<string, { label: string; order: SQL[] }> = {
   form: { label: 'Form', order: [sql`${fplPlayers.form} desc nulls last`] },
   ppg: { label: 'PPG', order: [sql`${fplPlayers.ppg} desc nulls last`] },
   owned: { label: 'Owned', order: [sql`${fplPlayers.ownership} desc nulls last`] },
-  price: { label: 'Price', order: [sql`${fplPlayers.price} desc nulls last`] },
   xg: { label: 'xG', order: [sql`${fplPlayers.xg} desc nulls last`] },
   xa: { label: 'xA', order: [sql`${fplPlayers.xa} desc nulls last`] },
   ict: { label: 'ICT', order: [sql`${fplPlayers.ictIndex} desc nulls last`] },
@@ -69,75 +69,84 @@ export default async function PlayersPage({
       <PullToRefresh />
       <h1 className="text-center font-display text-4xl">Players</h1>
 
-      <form action="/players" className="flex gap-2">
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="Search players"
-          className="min-h-11 w-full rounded-xl border border-edge bg-white/[0.03] px-3.5 text-sm outline-none placeholder:text-muted-2 focus:border-accent/60"
+      <div className="card space-y-3 p-3.5">
+        <PlayerSearch
+          initial={q}
+          hiddenParams={{
+            ...(pos !== 'ALL' ? { pos } : {}),
+            ...(sortKey !== 'draft' ? { sort: sortKey } : {}),
+            ...(club ? { club } : {}),
+          }}
         />
-        {pos !== 'ALL' ? <input type="hidden" name="pos" value={pos} /> : null}
-        {sortKey !== 'draft' ? <input type="hidden" name="sort" value={sortKey} /> : null}
-        {club ? <input type="hidden" name="club" value={club} /> : null}
-      </form>
 
-      <div className="flex gap-1.5">
-        {POSITIONS.map((p) => (
-          <Link
-            key={p}
-            href={href({ pos: p })}
-            className={`min-h-9 flex-1 rounded-full border px-2 py-1.5 text-center text-xs font-bold ${
-              pos === p
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-edge bg-white/[0.02] text-muted'
-            }`}
-          >
-            {p}
-          </Link>
-        ))}
-      </div>
-
-      <div className="-mx-4 overflow-x-auto px-4">
-        <div className="flex w-max gap-1.5 pb-1">
-          {Object.entries(SORTS).map(([key, s]) => (
+        <div className="flex rounded-xl border border-edge bg-white/[0.02] p-1">
+          {POSITIONS.map((p) => (
             <Link
-              key={key}
-              href={href({ sort: key })}
-              className={`rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap ${
-                sortKey === key
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-edge bg-white/[0.02] text-muted'
+              key={p}
+              href={href({ pos: p })}
+              className={`min-h-9 flex-1 rounded-lg py-1.5 text-center text-xs font-bold transition-colors ${
+                pos === p ? 'bg-accent text-[var(--accent-ink)]' : 'text-muted'
               }`}
             >
-              {s.label}
+              {p}
             </Link>
           ))}
         </div>
-      </div>
 
-      <div className="-mx-4 overflow-x-auto px-4">
-        <div className="flex w-max gap-1.5 pb-1">
-          <Link
-            href={href({ club: '' })}
-            className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
-              !club ? 'border-accent bg-accent/10 text-accent' : 'border-edge bg-white/[0.02] text-muted'
-            }`}
-          >
-            All clubs
-          </Link>
-          {clubs.map((c) => (
-            <Link
-              key={c.clubShort}
-              href={href({ club: c.clubShort })}
-              className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                club === c.clubShort
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-edge bg-white/[0.02] text-muted'
-              }`}
-            >
-              {c.clubShort}
-            </Link>
-          ))}
+        <div>
+          <p className="mb-1.5 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-muted-2">
+            Sort by
+          </p>
+          <div className="-mx-3.5 overflow-x-auto px-3.5">
+            <div className="flex w-max gap-1.5">
+              {Object.entries(SORTS).map(([key, s]) => (
+                <Link
+                  key={key}
+                  href={href({ sort: key })}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
+                    sortKey === key
+                      ? 'bg-accent text-[var(--accent-ink)]'
+                      : 'border border-edge bg-white/[0.02] text-muted'
+                  }`}
+                >
+                  {s.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-muted-2">
+            Club
+          </p>
+          <div className="-mx-3.5 overflow-x-auto px-3.5">
+            <div className="flex w-max gap-1.5">
+              <Link
+                href={href({ club: '' })}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
+                  !club
+                    ? 'bg-accent text-[var(--accent-ink)]'
+                    : 'border border-edge bg-white/[0.02] text-muted'
+                }`}
+              >
+                All
+              </Link>
+              {clubs.map((c) => (
+                <Link
+                  key={c.clubShort}
+                  href={href({ club: c.clubShort })}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
+                    club === c.clubShort
+                      ? 'bg-accent text-[var(--accent-ink)]'
+                      : 'border border-edge bg-white/[0.02] text-muted'
+                  }`}
+                >
+                  {c.clubShort}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

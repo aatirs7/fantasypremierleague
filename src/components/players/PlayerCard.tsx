@@ -57,9 +57,7 @@ export default function PlayerCard({ p }: { p: PlayerCardData }) {
       </span>
       <span className="shrink-0 text-right">
         <span className="block text-sm font-bold tabular-nums">{p.totalPoints} pts</span>
-        <span className="block text-xs text-muted tabular-nums">
-          {p.form ?? '0.0'} form · {p.price ?? '?'}m
-        </span>
+        <span className="block text-xs text-muted tabular-nums">{p.form ?? '0.0'} form</span>
       </span>
     </Link>
   );

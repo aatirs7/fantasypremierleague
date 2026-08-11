@@ -3,6 +3,7 @@ import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { withTransaction, type Tx } from './db';
 import {
   draftPicks,
+  draftQueues,
   fplPlayers,
   leagueMembers,
   leagues,
@@ -167,15 +168,37 @@ async function insertPick(
   });
 }
 
-// Best available player at the picker's neediest position: lowest draft_rank
-// (nulls last), tiebreak highest total points. bot_variance samples the top
-// five so repeated test drafts differ.
+// Timed-out picks first honor the manager's own pre-draft queue: highest
+// ranked queued player who is still free and fits a position they still
+// need. Otherwise: best available at the neediest position by draft_rank
+// (nulls last), tiebreak total points. bot_variance samples the top five so
+// repeated test drafts differ.
 async function chooseAutoPick(
   tx: Tx,
   league: LeagueRow,
   squadId: string,
+  userId: string,
 ): Promise<number> {
   const counts = await positionCounts(tx, league.id, squadId);
+
+  const queued = await tx
+    .select({ fplId: draftQueues.fplId, position: fplPlayers.position })
+    .from(draftQueues)
+    .innerJoin(fplPlayers, eq(fplPlayers.fplId, draftQueues.fplId))
+    .where(
+      sql`${draftQueues.leagueId} = ${league.id}
+        and ${draftQueues.userId} = ${userId}
+        and not exists (
+          select 1 from squad_players sp
+          where sp.league_id = ${league.id}
+            and sp.fpl_id = ${draftQueues.fplId}
+            and sp.dropped_gw is null
+        )`,
+    )
+    .orderBy(asc(draftQueues.rank));
+  for (const q of queued) {
+    if (counts[q.position] < QUOTAS[q.position]) return q.fplId;
+  }
   let bestPositions: string[] = [];
   let bestDeficit = -1;
   for (const pos of Object.keys(QUOTAS)) {
@@ -231,7 +254,7 @@ async function executeOverduePicks(
   ) {
     const picker = members[pickerIndex(current.currentPick, members.length)];
     const squadId = await squadIdFor(tx, current.id, picker.userId);
-    const fplId = await chooseAutoPick(tx, current, squadId);
+    const fplId = await chooseAutoPick(tx, current, squadId, picker.userId);
     await insertPick(tx, current, members, picker.userId, fplId, true);
     current = await advance(tx, current, members, new Date());
   }

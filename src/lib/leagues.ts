@@ -5,7 +5,6 @@ import { db } from './db';
 import { leagueMembers, leagues, users } from './schema';
 
 export const MIN_MANAGERS = 4;
-export const MAX_MANAGERS = 12;
 
 // Unambiguous join-code alphabet: no 0/O/1/I/L.
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';

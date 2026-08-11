@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronDown, ChevronRight, Search, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Search, Star, Trash2, X } from 'lucide-react';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
 
 // The draft room. Renders purely from the polled state payload so every
@@ -117,23 +117,44 @@ export default function DraftRoom({
   const [boardOpen, setBoardOpen] = useState(true);
   const [clockSkew, setClockSkew] = useState(0);
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const [queue, setQueue] = useState<number[]>([]);
   const wasMyTurn = useRef(false);
 
-  // Load the full pool once; drafted players are removed via takenIds.
+  // Load the full pool and my queue once; drafted players vanish via takenIds.
   useEffect(() => {
     void (async () => {
       try {
-        const res = await fetch('/api/players/pool');
-        if (res.ok) {
-          const data = (await res.json()) as { players: PoolPlayer[] };
+        const [pres, qres] = await Promise.all([
+          fetch('/api/players/pool'),
+          fetch(`/api/draft/${leagueId}/queue`),
+        ]);
+        if (pres.ok) {
+          const data = (await pres.json()) as { players: PoolPlayer[] };
           setPool(data.players);
         }
+        if (qres.ok) {
+          const data = (await qres.json()) as { fplIds: number[] };
+          setQueue(data.fplIds);
+        }
       } catch {
-        // pool retries on next mount; state polling continues regardless
+        // retries on next mount; state polling continues regardless
       }
     })();
     setIntroDone(localStorage.getItem('epld_draft_intro') === 'done');
-  }, []);
+  }, [leagueId]);
+
+  const saveQueue = (next: number[]) => {
+    setQueue(next);
+    void fetch(`/api/draft/${leagueId}/queue`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ fplIds: next }),
+    }).catch(() => {});
+  };
+
+  const toggleQueue = (fplId: number) => {
+    saveQueue(queue.includes(fplId) ? queue.filter((id) => id !== fplId) : [...queue, fplId]);
+  };
 
   const poll = useCallback(async () => {
     try {
@@ -271,6 +292,169 @@ export default function DraftRoom({
     </button>
   ) : null;
 
+  const poolById = new Map(pool.map((p) => [p.fplId, p]));
+  const queuedAvailable = queue.filter((id) => !taken.has(id) && poolById.has(id));
+
+  // My draft plan: ordered wishlist. Timed-out picks take the top available
+  // queued player first, so the plan is a safety net, not just a note.
+  const queuePanel =
+    queuedAvailable.length > 0 || state.draftStatus === 'pending' ? (
+      <div className="card space-y-2 p-3.5">
+        <p className="flex items-center justify-center gap-1.5 text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          <Star className="h-3.5 w-3.5 text-gold" />
+          My draft plan
+        </p>
+        {queuedAvailable.length === 0 ? (
+          <p className="text-center text-xs text-muted-2">
+            Tap the star on players below to queue them. If your timer runs out, we draft from
+            your plan first.
+          </p>
+        ) : (
+          queuedAvailable.map((id, i) => {
+            const p = poolById.get(id)!;
+            return (
+              <div key={id} className="flex items-center gap-2 text-sm">
+                <span className="w-5 text-center font-display text-lg text-muted">{i + 1}</span>
+                <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={28} />
+                <span className="min-w-0 flex-1 truncate font-semibold">
+                  {p.webName}
+                  <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold ${POS_CLS[p.position] ?? ''}`}>
+                    {p.position}
+                  </span>
+                </span>
+                <button
+                  onClick={() => {
+                    const next = queuedAvailable.slice();
+                    if (i > 0) [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                    saveQueue(next);
+                  }}
+                  disabled={i === 0}
+                  className="p-1.5 text-muted disabled:opacity-20"
+                  aria-label="move up"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    const next = queuedAvailable.slice();
+                    if (i < next.length - 1) [next[i + 1], next[i]] = [next[i], next[i + 1]];
+                    saveQueue(next);
+                  }}
+                  disabled={i === queuedAvailable.length - 1}
+                  className="p-1.5 text-muted disabled:opacity-20"
+                  aria-label="move down"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => toggleQueue(id)}
+                  className="p-1.5 text-live"
+                  aria-label="remove from plan"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+    ) : null;
+
+  const poolSection = (interactive: boolean) => (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search players"
+          className="min-h-12 w-full rounded-xl border border-edge bg-white/[0.03] pl-9 pr-3.5 text-sm outline-none placeholder:text-muted-2 focus:border-accent/60"
+        />
+      </div>
+      <div className="flex gap-1.5">
+        {POSITIONS.map((p) => {
+          const full = p !== 'ALL' && myCounts[p] >= QUOTAS[p];
+          return (
+            <button
+              key={p}
+              onClick={() => setPos(p)}
+              className={`min-h-9 flex-1 rounded-full border px-2 text-center text-xs font-bold ${
+                pos === p
+                  ? 'border-accent bg-accent/10 text-accent'
+                  : full && interactive
+                    ? 'border-edge text-muted-2 opacity-50'
+                    : 'border-edge bg-white/[0.02] text-muted'
+              }`}
+            >
+              {p}
+              {p !== 'ALL' && interactive ? ` ${myCounts[p]}/${QUOTAS[p]}` : ''}
+            </button>
+          );
+        })}
+      </div>
+      <div className="space-y-1.5">
+        {visiblePool.map((p) => {
+          const full = myCounts[p.position] >= QUOTAS[p.position];
+          const starred = queue.includes(p.fplId);
+          return (
+            <div
+              key={p.fplId}
+              className={`card flex w-full items-center gap-3 px-3 py-2.5 ${
+                interactive && full ? 'opacity-40' : ''
+              }`}
+            >
+              <button
+                onClick={() => interactive && myTurn && !full && setConfirm(p)}
+                disabled={interactive && (!myTurn || full)}
+                className={`flex min-w-0 flex-1 items-center gap-3 text-left ${
+                  interactive && myTurn && !full ? 'active:scale-[0.99]' : ''
+                }`}
+              >
+                <span className="w-7 shrink-0 text-center font-display text-base text-muted">
+                  {p.draftRank ?? '-'}
+                </span>
+                <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={38} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5">
+                    <span className="truncate font-bold">{p.webName}</span>
+                    {p.status !== 'a' ? (
+                      <span
+                        className={`h-2 w-2 shrink-0 rounded-full ${p.status === 'd' ? 'bg-gold' : 'bg-live'}`}
+                      />
+                    ) : null}
+                  </span>
+                  <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
+                    {p.clubShort}
+                    <span className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-bold ${POS_CLS[p.position] ?? ''}`}>
+                      {p.position}
+                    </span>
+                    {p.setPieceNotes ? <span className="truncate text-muted-2">{p.setPieceNotes}</span> : null}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right text-xs text-muted tabular-nums">
+                  <span className="block text-sm font-bold text-foreground">{p.totalPoints} pts</span>
+                  {p.form ?? '0.0'} form
+                </span>
+              </button>
+              <button
+                onClick={() => toggleQueue(p.fplId)}
+                aria-label={starred ? 'remove from plan' : 'add to plan'}
+                className="shrink-0 p-1"
+              >
+                <Star
+                  className={`h-5 w-5 ${starred ? 'fill-[var(--gold)] text-gold' : 'text-muted-2'}`}
+                />
+              </button>
+            </div>
+          );
+        })}
+        {visiblePool.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted">No available players match.</p>
+        ) : null}
+      </div>
+    </div>
+  );
+
   // ------------------------------------------------------------------ lobby
   if (state.draftStatus === 'pending') {
     const here = state.members.filter((m) => m.present).length;
@@ -376,6 +560,10 @@ export default function DraftRoom({
             Waiting for the owner to start the draft. Keep this page open.
           </p>
         )}
+
+        {/* Plan ahead while you wait. */}
+        {queuePanel}
+        {poolSection(false)}
       </div>
     );
   }
@@ -557,83 +745,9 @@ export default function DraftRoom({
         ) : null}
       </div>
 
-      {/* Player pool. */}
-      <div className="space-y-2">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search players"
-            className="min-h-12 w-full rounded-xl border border-edge bg-white/[0.03] pl-9 pr-3.5 text-sm outline-none placeholder:text-muted-2 focus:border-accent/60"
-          />
-        </div>
-        <div className="flex gap-1.5">
-          {POSITIONS.map((p) => {
-            const full = p !== 'ALL' && myCounts[p] >= QUOTAS[p];
-            return (
-              <button
-                key={p}
-                onClick={() => setPos(p)}
-                className={`min-h-9 flex-1 rounded-full border px-2 text-center text-xs font-bold ${
-                  pos === p
-                    ? 'border-accent bg-accent/10 text-accent'
-                    : full
-                      ? 'border-edge text-muted-2 opacity-50'
-                      : 'border-edge bg-white/[0.02] text-muted'
-                }`}
-              >
-                {p}
-                {p !== 'ALL' ? ` ${myCounts[p]}/${QUOTAS[p]}` : ''}
-              </button>
-            );
-          })}
-        </div>
-        <div className="space-y-1.5">
-          {visiblePool.map((p) => {
-            const full = myCounts[p.position] >= QUOTAS[p.position];
-            return (
-              <button
-                key={p.fplId}
-                onClick={() => myTurn && !full && setConfirm(p)}
-                disabled={!myTurn || full}
-                className={`card flex w-full items-center gap-3 px-3 py-2.5 text-left ${
-                  myTurn && !full ? 'active:scale-[0.99]' : 'opacity-80'
-                } ${full ? 'opacity-40' : ''}`}
-              >
-                <span className="w-7 shrink-0 text-center font-display text-base text-muted">
-                  {p.draftRank ?? '-'}
-                </span>
-                <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={38} />
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5">
-                    <span className="truncate font-bold">{p.webName}</span>
-                    {p.status !== 'a' ? (
-                      <span
-                        className={`h-2 w-2 shrink-0 rounded-full ${p.status === 'd' ? 'bg-gold' : 'bg-live'}`}
-                      />
-                    ) : null}
-                  </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
-                    {p.clubShort}
-                    <span className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-bold ${POS_CLS[p.position] ?? ''}`}>
-                      {p.position}
-                    </span>
-                    {p.setPieceNotes ? <span className="truncate text-muted-2">{p.setPieceNotes}</span> : null}
-                  </span>
-                </span>
-                <span className="shrink-0 text-right text-xs text-muted tabular-nums">
-                  <span className="block text-sm font-bold text-foreground">{p.totalPoints} pts</span>
-                  {p.price ?? '?'}m
-                </span>
-              </button>
-            );
-          })}
-          {visiblePool.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted">No available players match.</p>
-          ) : null}
-        </div>
-      </div>
+      {/* My plan + player pool. */}
+      {queuePanel}
+      {poolSection(true)}
 
       {/* Confirm sheet. */}
       {confirm ? (

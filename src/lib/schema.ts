@@ -207,6 +207,20 @@ export const squadPlayers = pgTable('squad_players', {
   droppedGw: integer('dropped_gw'),
 });
 
+// Pre-draft plan: each manager's private ranked wishlist. During the draft
+// the room surfaces it, and a timed-out manager auto-picks their highest
+// available queued player before falling back to draft_rank.
+export const draftQueues = pgTable(
+  'draft_queues',
+  {
+    leagueId: uuid('league_id').notNull(),
+    userId: uuid('user_id').notNull(),
+    fplId: integer('fpl_id').notNull(),
+    rank: integer('rank').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.leagueId, t.userId, t.fplId] })],
+);
+
 export const draftPicks = pgTable(
   'draft_picks',
   {

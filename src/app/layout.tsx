@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { Bebas_Neue, Hanken_Grotesk } from 'next/font/google';
+import { cookies } from 'next/headers';
 import BottomTabBar from '@/components/nav/BottomTabBar';
 import DesktopNav from '@/components/nav/DesktopNav';
 import AutoRefresh from '@/components/AutoRefresh';
 import HelpButton from '@/components/HelpButton';
+import ThemeButton from '@/components/ThemeButton';
 import './globals.css';
 
 const display = Bebas_Neue({
@@ -34,20 +36,28 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Floodlit Night is the default; only an explicit cookie switches to day.
+  const jar = await cookies();
+  const theme = jar.get('epld_theme')?.value === 'light' ? 'light' : 'dark';
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      data-theme={theme}
+      className={`${display.variable} ${body.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col pb-tabbar">
         <div className="bg-atmosphere" aria-hidden />
         <div className="bg-pitch" aria-hidden />
         <div className="bg-grain" aria-hidden />
         <AutoRefresh />
+        <ThemeButton initial={theme} />
         <DesktopNav />
-        <main className="mx-auto w-full max-w-md flex-1 px-4 pt-14 lg:max-w-6xl lg:px-8 lg:pt-24">
+        <main className="mx-auto w-full max-w-md flex-1 px-4 pt-6 lg:max-w-6xl lg:px-8 lg:pt-24">
           {children}
         </main>
         <BottomTabBar />

@@ -285,14 +285,13 @@ export default async function HomePage({
         </Link>
       </section>
 
-      <details className="reveal" style={{ animationDelay: '220ms' }}>
-        <summary className="cursor-pointer list-none text-center text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted-2">
-          Start or join another league
-        </summary>
-        <div className="pt-3">
-          <LeagueActions />
-        </div>
-      </details>
+      <p className="reveal text-center text-xs text-muted-2" style={{ animationDelay: '220ms' }}>
+        Want to start or join another league? Head to{' '}
+        <Link href="/me" className="font-bold text-accent">
+          Me
+        </Link>
+        .
+      </p>
     </div>
   );
 }
