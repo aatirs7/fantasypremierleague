@@ -90,6 +90,9 @@ export const leagueMembers = pgTable(
 
 export const fplPlayers = pgTable('fpl_players', {
   fplId: integer('fpl_id').primaryKey(),
+  // FPL's stable photo/opta code; headshots live at
+  // resources.premierleague.com/premierleague/photos/players/250x250/p{code}.png
+  photoCode: integer('photo_code'),
   webName: text('web_name').notNull(),
   fullName: text('full_name').notNull(),
   clubId: integer('club_id').notNull(),

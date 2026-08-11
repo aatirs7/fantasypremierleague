@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Crown, Shield } from 'lucide-react';
+import PlayerPhoto from '@/components/players/PlayerPhoto';
 import { XI_MAX, XI_MIN } from '@/lib/lineup-rules';
 import type { LineupPick } from '@/lib/schema';
 
 type PlayerInfo = {
   fplId: number;
+  photoCode: number | null;
   webName: string;
   position: string;
   clubShort: string;
@@ -153,6 +155,7 @@ export default function LineupEditor({
         }`}
       >
         <button onClick={() => tap(pick.fplId)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+          <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={34} />
           <span className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-bold ${POS_CLS[p.position] ?? ''}`}>
             {p.position}
           </span>

@@ -7,6 +7,7 @@ import { fplPlayers, gameweeks } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { fetchElementSummary } from '@/lib/fpl';
 import { POS_COLORS, StatusDot } from '@/components/players/PlayerCard';
+import PlayerPhoto from '@/components/players/PlayerPhoto';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,7 +83,9 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
         <ArrowLeft className="h-4 w-4" /> Players
       </Link>
 
-      <div className="card p-4">
+      <div className="card flex items-center gap-4 p-4">
+        <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={76} />
+        <div className="min-w-0">
         <div className="flex items-center gap-2">
           <h1 className="font-display text-4xl">{p.webName}</h1>
           <StatusDot status={p.status} />
@@ -100,6 +103,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
             {p.chanceNext != null ? ` (${p.chanceNext}% chance next round)` : ''}
           </p>
         ) : null}
+        </div>
       </div>
 
       <div className="card grid grid-cols-3 gap-x-2 gap-y-3 p-4">

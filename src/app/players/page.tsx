@@ -67,7 +67,7 @@ export default async function PlayersPage({
   return (
     <div className="reveal space-y-3 py-4 lg:mx-auto lg:max-w-2xl">
       <PullToRefresh />
-      <h1 className="font-display text-4xl">Players</h1>
+      <h1 className="text-center font-display text-4xl">Players</h1>
 
       <form action="/players" className="flex gap-2">
         <input

@@ -18,7 +18,7 @@ export default async function TradesPage({ params }: { params: Promise<{ id: str
       <Link href={`/league/${id}`} className="flex items-center gap-1 text-sm font-semibold text-muted">
         <ArrowLeft className="h-4 w-4" /> League
       </Link>
-      <h1 className="font-display text-4xl">Trades</h1>
+      <h1 className="text-center font-display text-4xl">Trades</h1>
       <TradeHub leagueId={id} myUserId={session.userId} />
     </div>
   );

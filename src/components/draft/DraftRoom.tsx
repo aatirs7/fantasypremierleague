@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronDown, ChevronRight, Search, Trash2, X } from 'lucide-react';
+import PlayerPhoto from '@/components/players/PlayerPhoto';
 
 // The draft room. Renders purely from the polled state payload so every
 // device shows identical truth; the countdown renders from the server
@@ -11,6 +12,7 @@ import { ChevronDown, ChevronRight, Search, Trash2, X } from 'lucide-react';
 
 type PoolPlayer = {
   fplId: number;
+  photoCode: number | null;
   webName: string;
   clubShort: string;
   position: string;
@@ -284,7 +286,7 @@ export default function DraftRoom({
     return (
       <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
         {testBanner}
-        <h1 className="font-display text-4xl">Draft lobby</h1>
+        <h1 className="text-center font-display text-4xl">Draft lobby</h1>
 
         {!introDone ? (
           <div className="card space-y-4 p-5">
@@ -599,9 +601,10 @@ export default function DraftRoom({
                   myTurn && !full ? 'active:scale-[0.99]' : 'opacity-80'
                 } ${full ? 'opacity-40' : ''}`}
               >
-                <span className="w-8 shrink-0 text-center font-display text-lg text-muted">
+                <span className="w-7 shrink-0 text-center font-display text-base text-muted">
                   {p.draftRank ?? '-'}
                 </span>
+                <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={38} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5">
                     <span className="truncate font-bold">{p.webName}</span>
@@ -646,7 +649,10 @@ export default function DraftRoom({
               <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
                 Pick {state.currentPick}
               </p>
-              <h2 className="font-display text-4xl">Draft {confirm.webName}?</h2>
+              <div className="mt-2 flex justify-center">
+                <PlayerPhoto photoCode={confirm.photoCode} name={confirm.webName} size={96} />
+              </div>
+              <h2 className="mt-2 font-display text-4xl">Draft {confirm.webName}?</h2>
               <p className="mt-1 text-sm text-muted">
                 {confirm.clubShort} · {confirm.position} · rank {confirm.draftRank ?? '?'} ·{' '}
                 {confirm.totalPoints} pts last season

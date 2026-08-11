@@ -1,0 +1,1 @@
+ALTER TABLE "fpl_players" ADD COLUMN "photo_code" integer;

@@ -104,6 +104,7 @@ async function syncBootstrap(report: SyncReport): Promise<void> {
     const team = teams.get(el.team ?? -1);
     return {
       fplId: el.id,
+      photoCode: el.code ?? null,
       webName: el.web_name ?? `Player ${el.id}`,
       fullName: [el.first_name, el.second_name].filter(Boolean).join(' ') || (el.web_name ?? ''),
       clubId: el.team ?? 0,

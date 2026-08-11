@@ -14,7 +14,7 @@ export default async function MePage() {
 
   return (
     <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
-      <h1 className="font-display text-4xl">Me</h1>
+      <h1 className="text-center font-display text-4xl">Me</h1>
       <div className="card p-4">
         <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Signed in as</p>
         <p className="mt-1 text-xl font-bold">{session.username}</p>

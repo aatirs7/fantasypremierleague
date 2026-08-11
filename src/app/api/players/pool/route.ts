@@ -13,6 +13,7 @@ export async function GET() {
   const players = await db
     .select({
       fplId: fplPlayers.fplId,
+      photoCode: fplPlayers.photoCode,
       webName: fplPlayers.webName,
       clubShort: fplPlayers.clubShort,
       position: fplPlayers.position,

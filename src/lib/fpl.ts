@@ -41,6 +41,7 @@ async function fplGet<T>(url: string): Promise<T> {
 
 export type BootstrapElement = {
   id: number;
+  code?: number;
   web_name?: string;
   first_name?: string;
   second_name?: string;

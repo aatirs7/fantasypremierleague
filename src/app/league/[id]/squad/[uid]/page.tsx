@@ -16,6 +16,7 @@ import {
 } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { isLeagueMember } from '@/lib/leagues';
+import PlayerPhoto from '@/components/players/PlayerPhoto';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,7 +74,7 @@ export default async function SquadViewPage({
   let bench: typeof starters = [];
   let playerById = new Map<
     number,
-    { fplId: number; webName: string; position: string; clubShort: string }
+    { fplId: number; photoCode: number | null; webName: string; position: string; clubShort: string }
   >();
   let pointsById = new Map<number, number>();
   if (lineup) {
@@ -83,6 +84,7 @@ export default async function SquadViewPage({
     const players = await db
       .select({
         fplId: fplPlayers.fplId,
+        photoCode: fplPlayers.photoCode,
         webName: fplPlayers.webName,
         position: fplPlayers.position,
         clubShort: fplPlayers.clubShort,
@@ -112,6 +114,7 @@ export default async function SquadViewPage({
     const pts = pointsById.get(pick.fplId);
     return (
       <div className="flex min-h-11 items-center gap-2 py-1.5">
+        <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={30} />
         <span className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-bold ${POS_CLS[p.position] ?? ''}`}>
           {p.position}
         </span>
@@ -134,15 +137,15 @@ export default async function SquadViewPage({
         <ArrowLeft className="h-4 w-4" /> {league.name}
       </Link>
 
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Squad</p>
-          <h1 className="font-display text-4xl">{owner.username}</h1>
-        </div>
-        <div className="text-right">
-          <p className="font-display text-3xl tabular-nums">{season?.totalPoints ?? 0}</p>
-          <p className="text-[0.6rem] font-bold uppercase tracking-wider text-muted-2">season pts</p>
-        </div>
+      <div className="space-y-1 text-center">
+        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Squad</p>
+        <h1 className="font-display text-4xl">{owner.username}</h1>
+        <p className="font-display text-2xl tabular-nums text-accent">
+          {season?.totalPoints ?? 0}
+          <span className="ml-1.5 text-[0.6rem] font-bold uppercase tracking-wider text-muted-2">
+            season pts
+          </span>
+        </p>
       </div>
 
       {lineup ? (

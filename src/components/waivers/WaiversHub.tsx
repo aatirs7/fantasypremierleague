@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Search, X } from 'lucide-react';
+import PlayerPhoto from '@/components/players/PlayerPhoto';
 
 // Waivers hub: pool with search/filters, claim queue with reorder, the
 // visible priority order, and the results feed. During free agency the same
@@ -9,6 +10,7 @@ import { ArrowDown, ArrowUp, Search, X } from 'lucide-react';
 
 type PoolPlayer = {
   fplId: number;
+  photoCode: number | null;
   webName: string;
   clubShort: string;
   position: string;
@@ -241,7 +243,7 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
                   disabled={isLocked}
                   className={`card flex w-full items-center gap-3 px-3 py-2.5 text-left active:scale-[0.99] ${isLocked ? 'opacity-40' : ''}`}
                 >
-                  <span className="w-8 shrink-0 text-center font-display text-lg text-muted">{p.draftRank ?? '-'}</span>
+                  <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={38} />
                   <span className="min-w-0 flex-1">
                     <span className="truncate font-bold">{p.webName}</span>
                     <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">

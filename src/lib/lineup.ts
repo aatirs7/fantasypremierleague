@@ -107,6 +107,7 @@ export async function playersByIds(ids: number[]) {
   return db
     .select({
       fplId: fplPlayers.fplId,
+      photoCode: fplPlayers.photoCode,
       webName: fplPlayers.webName,
       position: fplPlayers.position,
       clubShort: fplPlayers.clubShort,

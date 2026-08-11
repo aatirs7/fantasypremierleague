@@ -25,7 +25,7 @@ export default async function SquadPage({
   if (!leagueId) {
     return (
       <div className="reveal space-y-4 py-4 text-center lg:mx-auto lg:max-w-2xl">
-        <h1 className="font-display text-4xl">Squad</h1>
+        <h1 className="text-center font-display text-4xl">Squad</h1>
         <p className="text-sm text-muted">Join a league first, then draft your squad.</p>
         <Link href="/home" className="font-bold text-accent">
           Go home
@@ -67,7 +67,7 @@ export default async function SquadPage({
     return (
       <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
         <RememberLeague leagueId={leagueId} />
-        <h1 className="font-display text-4xl">Squad</h1>
+        <h1 className="text-center font-display text-4xl">Squad</h1>
         {switcher}
         <div className="card space-y-2 p-4 text-center">
           <p className="text-sm text-muted">
@@ -87,7 +87,7 @@ export default async function SquadPage({
   if (!editable) {
     return (
       <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
-        <h1 className="font-display text-4xl">Squad</h1>
+        <h1 className="text-center font-display text-4xl">Squad</h1>
         <p className="text-sm text-muted">The season is over. See the league table for the final story.</p>
       </div>
     );
@@ -97,7 +97,7 @@ export default async function SquadPage({
   if (!picks) {
     return (
       <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
-        <h1 className="font-display text-4xl">Squad</h1>
+        <h1 className="text-center font-display text-4xl">Squad</h1>
         <p className="text-sm text-muted">Squad incomplete. Finish the draft first.</p>
       </div>
     );
@@ -112,16 +112,13 @@ export default async function SquadPage({
   return (
     <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
       <RememberLeague leagueId={leagueId} />
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-            {league.name}
-          </p>
-          <h1 className="font-display text-4xl">Gameweek {editable.gw}</h1>
-        </div>
-        <p className="text-right text-xs text-muted">
-          Locks in
-          <br />
+      <div className="space-y-1 text-center">
+        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          {league.name}
+        </p>
+        <h1 className="font-display text-4xl">Gameweek {editable.gw}</h1>
+        <p className="text-xs text-muted">
+          Locks in{' '}
           <span className="font-bold text-foreground">
             <Countdown toIso={editable.deadline.toISOString()} doneText="Locked" />
           </span>

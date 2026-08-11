@@ -18,7 +18,7 @@ export default async function WaiversPage({ params }: { params: Promise<{ id: st
       <Link href={`/league/${id}`} className="flex items-center gap-1 text-sm font-semibold text-muted">
         <ArrowLeft className="h-4 w-4" /> League
       </Link>
-      <h1 className="font-display text-4xl">Waivers</h1>
+      <h1 className="text-center font-display text-4xl">Waivers</h1>
       <WaiversHub leagueId={id} myUserId={session.userId} />
     </div>
   );
