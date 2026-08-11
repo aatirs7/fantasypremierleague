@@ -1,0 +1,264 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Crown, Shield } from 'lucide-react';
+import { XI_MAX, XI_MIN } from '@/lib/lineup-rules';
+import type { LineupPick } from '@/lib/schema';
+
+type PlayerInfo = {
+  fplId: number;
+  webName: string;
+  position: string;
+  clubShort: string;
+  form: string | null;
+  status: string;
+};
+
+const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
+const POS_CLS: Record<string, string> = {
+  GK: 'bg-gold/15 text-gold',
+  DEF: 'bg-silver/15 text-silver',
+  MID: 'bg-accent/15 text-accent',
+  FWD: 'bg-live/15 text-live',
+};
+
+// Tap-to-swap lineup setter. Tap a starter then a bench player (or vice
+// versa) to swap them; captain and vice set with the C/V buttons. Saves via
+// a sticky bar; the server revalidates formation and the deadline.
+export default function LineupEditor({
+  squadId,
+  gw,
+  initial,
+  players,
+  autoSet,
+}: {
+  squadId: string;
+  gw: number;
+  initial: LineupPick[];
+  players: PlayerInfo[];
+  autoSet: boolean;
+}) {
+  const router = useRouter();
+  const [picks, setPicks] = useState<LineupPick[]>(initial);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const byId = useMemo(() => new Map(players.map((p) => [p.fplId, p])), [players]);
+  const starters = picks.filter((p) => p.starting);
+  const bench = picks.filter((p) => !p.starting).sort((a, b) => a.slot - b.slot);
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+    for (const p of starters) {
+      const pos = byId.get(p.fplId)?.position;
+      if (pos) c[pos]++;
+    }
+    return c;
+  }, [starters, byId]);
+
+  const formationOk = POS_ORDER.every(
+    (pos) => counts[pos] >= XI_MIN[pos] && counts[pos] <= XI_MAX[pos],
+  );
+
+  const renumber = (next: LineupPick[]): LineupPick[] => {
+    // Keep slots canonical: XI ordered GK/DEF/MID/FWD 1-11, bench 12-15 in
+    // current bench order.
+    const posOrder: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
+    const xi = next
+      .filter((p) => p.starting)
+      .sort(
+        (a, b) =>
+          posOrder[byId.get(a.fplId)?.position ?? 'MID'] -
+            posOrder[byId.get(b.fplId)?.position ?? 'MID'] || a.fplId - b.fplId,
+      );
+    const bn = next.filter((p) => !p.starting).sort((a, b) => a.slot - b.slot);
+    return [
+      ...xi.map((p, i) => ({ ...p, slot: i + 1 })),
+      ...bn.map((p, i) => ({ ...p, slot: 12 + i, isCaptain: false, isVice: false })),
+    ];
+  };
+
+  const tap = (fplId: number) => {
+    setError(null);
+    if (selected == null) {
+      setSelected(fplId);
+      return;
+    }
+    if (selected === fplId) {
+      setSelected(null);
+      return;
+    }
+    const a = picks.find((p) => p.fplId === selected)!;
+    const b = picks.find((p) => p.fplId === fplId)!;
+    if (a.starting === b.starting) {
+      // Same side: treat as re-selection.
+      setSelected(fplId);
+      return;
+    }
+    const next = picks.map((p) => {
+      if (p.fplId === a.fplId) return { ...p, starting: !a.starting, slot: b.slot };
+      if (p.fplId === b.fplId) return { ...p, starting: !b.starting, slot: a.slot };
+      return p;
+    });
+    setPicks(renumber(next));
+    setSelected(null);
+    setDirty(true);
+  };
+
+  const setRole = (fplId: number, role: 'captain' | 'vice') => {
+    setPicks(
+      picks.map((p) => ({
+        ...p,
+        isCaptain: role === 'captain' ? p.fplId === fplId : p.isCaptain && p.fplId !== fplId,
+        isVice: role === 'vice' ? p.fplId === fplId : p.isVice && p.fplId !== fplId,
+      })),
+    );
+    setDirty(true);
+  };
+
+  const save = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/lineup', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ squadId, gw, picks: renumber(picks) }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? 'Save failed');
+      } else {
+        setDirty(false);
+        router.refresh();
+      }
+    } catch {
+      setError('Network error, try again');
+    }
+    setBusy(false);
+  };
+
+  const Row = ({ pick }: { pick: LineupPick }) => {
+    const p = byId.get(pick.fplId);
+    if (!p) return null;
+    const sel = selected === pick.fplId;
+    return (
+      <div
+        className={`card flex min-h-13 items-center gap-2 px-3 py-2 ${
+          sel ? 'border-accent bg-accent/[0.08]' : ''
+        }`}
+      >
+        <button onClick={() => tap(pick.fplId)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+          <span className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-bold ${POS_CLS[p.position] ?? ''}`}>
+            {p.position}
+          </span>
+          <span className="min-w-0">
+            <span className="flex items-center gap-1.5">
+              <span className="truncate text-sm font-bold">{p.webName}</span>
+              {p.status !== 'a' ? (
+                <span className={`h-1.5 w-1.5 rounded-full ${p.status === 'd' ? 'bg-gold' : 'bg-live'}`} />
+              ) : null}
+            </span>
+            <span className="block text-[0.65rem] text-muted">
+              {p.clubShort} · form {p.form ?? '0.0'}
+            </span>
+          </span>
+        </button>
+        {pick.starting ? (
+          <span className="flex shrink-0 gap-1">
+            <button
+              onClick={() => setRole(pick.fplId, 'captain')}
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-[0.65rem] font-bold ${
+                pick.isCaptain ? 'bg-gold text-black' : 'bg-white/[0.05] text-muted'
+              }`}
+              aria-label="captain"
+            >
+              <Crown className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setRole(pick.fplId, 'vice')}
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-[0.65rem] font-bold ${
+                pick.isVice ? 'bg-silver text-black' : 'bg-white/[0.05] text-muted'
+              }`}
+              aria-label="vice captain"
+            >
+              <Shield className="h-3.5 w-3.5" />
+            </button>
+          </span>
+        ) : (
+          <span className="shrink-0 text-[0.6rem] font-bold uppercase tracking-wider text-muted-2">
+            Bench {pick.slot - 11}
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-3 pb-24">
+      {autoSet && !dirty ? (
+        <p className="rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-2 text-xs text-gold">
+          This lineup was set automatically. Tap players to swap, then save to make it yours.
+        </p>
+      ) : null}
+      <p className="text-xs text-muted">
+        Tap a starter, then a bench player, to swap them. Formation:{' '}
+        <span className={formationOk ? 'text-accent' : 'text-live'}>
+          {counts.DEF}-{counts.MID}-{counts.FWD}
+        </span>
+      </p>
+
+      {POS_ORDER.map((pos) => {
+        const rows = starters.filter((p) => byId.get(p.fplId)?.position === pos);
+        if (!rows.length) return null;
+        return (
+          <div key={pos} className="space-y-1.5">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">{pos}</p>
+            {rows.map((p) => (
+              <Row key={p.fplId} pick={p} />
+            ))}
+          </div>
+        );
+      })}
+
+      <div className="space-y-1.5">
+        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+          Bench (autosub order)
+        </p>
+        {bench.map((p) => (
+          <Row key={p.fplId} pick={p} />
+        ))}
+      </div>
+
+      {error ? (
+        <p className="rounded-xl border border-live/40 bg-live/[0.08] px-3 py-2 text-sm text-live">{error}</p>
+      ) : null}
+
+      {dirty ? (
+        <div className="glass fixed inset-x-0 bottom-20 z-40 mx-auto flex max-w-md gap-2 rounded-2xl p-3 lg:bottom-6">
+          <button
+            onClick={() => {
+              setPicks(initial);
+              setDirty(false);
+              setError(null);
+            }}
+            className="min-h-11 flex-1 rounded-xl border border-edge text-sm font-bold text-muted"
+          >
+            Reset
+          </button>
+          <button
+            onClick={() => void save()}
+            disabled={busy || !formationOk}
+            className="min-h-11 flex-[2] rounded-xl bg-accent text-sm font-bold text-[var(--accent-ink)] active:scale-95 disabled:opacity-40"
+          >
+            {busy ? 'Saving...' : formationOk ? 'Save lineup' : 'Invalid formation'}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}

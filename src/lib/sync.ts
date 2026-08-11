@@ -360,6 +360,24 @@ export async function runSync(opts: { dry?: boolean; force?: boolean } = {}): Pr
     }
   }
 
+  // Deadline passed for a GW that has no lineups ensured yet? Generate the
+  // missing ones (copy-forward or auto) exactly once per GW.
+  const deadlinePassed = await db
+    .select({ gw: gameweeks.gw })
+    .from(gameweeks)
+    .where(lt(gameweeks.deadline, new Date()));
+  for (const row of deadlinePassed) {
+    const key = `lineupsEnsured:${row.gw}`;
+    if ((await getMetaMs(key)) > 0) continue;
+    try {
+      const { ensureLineupsForGw } = await import('./lineup');
+      await ensureLineupsForGw(row.gw, report.notes);
+      await setMeta(key, String(now));
+    } catch (e) {
+      report.notes.push(`ensure lineups gw${row.gw} FAILED: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
   // Live points pull + provisional scores, 2min floor while live.
   const gw = await currentGw();
   if (live && gw != null && (force || now - (await getMetaMs('lastLiveSync')) > LIVE_FLOOR_MS)) {
