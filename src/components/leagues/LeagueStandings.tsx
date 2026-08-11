@@ -83,9 +83,6 @@ export default async function LeagueStandings({
 
   return (
     <div className="space-y-2">
-      <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-        Table
-      </p>
       {anyLive ? (
         <p className="rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-2 text-xs text-gold">
           Matches are live. GW points are provisional: autosubs and final bonus land when the

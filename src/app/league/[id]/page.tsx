@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
-import { Swords, Users } from 'lucide-react';
+import { Swords, Trophy, Users } from 'lucide-react';
 import { db } from '@/lib/db';
 import { leagues } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
@@ -11,6 +11,7 @@ import LeagueStandings from '@/components/leagues/LeagueStandings';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
+import Avatar from '@/components/Avatar';
 import PullToRefresh from '@/components/PullToRefresh';
 
 export const dynamic = 'force-dynamic';
@@ -33,15 +34,40 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
       <PullToRefresh />
       <RememberLeague leagueId={league.id} />
 
-      <div className="text-center">
-        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">League</p>
-        <h1 className="font-display text-4xl">{league.name}</h1>
+      <div className="flex flex-col items-center gap-2 pt-2 text-center">
+        <span
+          className="flex h-16 w-16 items-center justify-center rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(245,183,61,0.18), transparent 70%)' }}
+        >
+          <Trophy className="h-9 w-9 text-gold" strokeWidth={1.6} />
+        </span>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{league.name}</h1>
+          <p className="text-sm text-muted">2026-27 Season</p>
+        </div>
         {league.isTest ? (
-          <p className="mt-1 inline-block rounded-full bg-gold/20 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-gold">
+          <p className="inline-block rounded-full bg-gold/20 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-gold">
             Test mode
           </p>
         ) : null}
       </div>
+
+      {!pending && league.draftStatus === 'complete' ? (
+        <div className="flex justify-center gap-7 border-b border-edge">
+          <span data-active="true" className="tab-underline">
+            Standings
+          </span>
+          <Link href={`/league/${league.id}/stats`} className="tab-underline">
+            Stats
+          </Link>
+          <Link href={`/league/${league.id}/waivers`} className="tab-underline">
+            Waivers
+          </Link>
+          <Link href={`/league/${league.id}/trades`} className="tab-underline">
+            Trades
+          </Link>
+        </div>
+      ) : null}
 
       {pending ? (
         <>
@@ -95,23 +121,13 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
         </Link>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { href: `/league/${league.id}/waivers`, label: 'Waivers' },
-              { href: `/league/${league.id}/trades`, label: 'Trades' },
-              { href: `/league/${league.id}/stats`, label: 'Stats' },
-              { href: `/league/${league.id}/draft`, label: 'Draft recap' },
-            ].map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="card flex min-h-11 items-center justify-center gap-2 text-sm font-bold active:scale-[0.99]"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </div>
           <LeagueStandings league={league} viewerId={session.userId} members={members} />
+          <Link
+            href={`/league/${league.id}/draft`}
+            className="btn-outline mx-auto w-full max-w-xs"
+          >
+            View Draft Recap
+          </Link>
         </>
       )}
 
@@ -122,9 +138,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
         </p>
         {members.map((m) => (
           <div key={m.userId} className="card flex min-h-12 items-center gap-3 px-3 py-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.04] text-sm font-bold text-muted">
-              {m.username.slice(0, 1).toUpperCase()}
-            </span>
+            <Avatar name={m.username} size={32} />
             <span className="flex-1 truncate text-sm font-semibold">
               {m.username}
               {m.userId === session.userId ? (
