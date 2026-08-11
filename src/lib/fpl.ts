@@ -182,10 +182,14 @@ export function fetchElementSummary(playerId: number): Promise<ElementSummary> {
 }
 
 const POSITIONS: Record<number, string> = { 1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD' };
+// FPL's own short names vary ('GKP' for goalkeepers); ours are canonical.
+const POSITION_ALIASES: Record<string, string> = { GKP: 'GK', GK: 'GK', DEF: 'DEF', MID: 'MID', FWD: 'FWD' };
 
 export function positionName(elementType: number | undefined, fromApi?: Map<number, string>): string {
   if (elementType == null) return 'MID';
-  return fromApi?.get(elementType) ?? POSITIONS[elementType] ?? 'MID';
+  const raw = fromApi?.get(elementType);
+  if (raw && POSITION_ALIASES[raw]) return POSITION_ALIASES[raw];
+  return POSITIONS[elementType] ?? 'MID';
 }
 
 // "Corners #1 · Pens #2" style summary from the set-piece order fields.
