@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Search, Star, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Plus, Search, Star, Trash2, X } from 'lucide-react';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
+import Avatar from '@/components/Avatar';
+import RingTimer from '@/components/RingTimer';
 
 // The draft room. Renders purely from the polled state payload so every
 // device shows identical truth; the countdown renders from the server
@@ -36,6 +38,7 @@ type SquadEntry = { fplId: number; webName: string; position: string; clubShort:
 
 type DraftState = {
   stateVersion: number;
+  leagueName: string;
   draftStatus: 'pending' | 'active' | 'complete';
   isTest: boolean;
   draftTime: string | null;
@@ -361,93 +364,98 @@ export default function DraftRoom({
     ) : null;
 
   const poolSection = (interactive: boolean) => (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search players"
-          className="min-h-12 w-full rounded-xl border border-edge bg-white/[0.03] pl-9 pr-3.5 text-sm outline-none placeholder:text-muted-2 focus:border-accent/60"
+          className="min-h-12 w-full rounded-full border border-edge bg-white/[0.03] pl-11 pr-4 text-sm outline-none placeholder:text-muted-2 focus:border-accent/60"
         />
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex gap-2">
         {POSITIONS.map((p) => {
           const full = p !== 'ALL' && myCounts[p] >= QUOTAS[p];
           return (
             <button
               key={p}
               onClick={() => setPos(p)}
-              className={`min-h-9 flex-1 rounded-full border px-2 text-center text-xs font-bold ${
+              className={`min-h-9 flex-1 rounded-full border text-center text-xs font-bold transition-colors ${
                 pos === p
-                  ? 'border-accent bg-accent/10 text-accent'
+                  ? 'border-accent bg-accent/15 text-accent'
                   : full && interactive
                     ? 'border-edge text-muted-2 opacity-50'
                     : 'border-edge bg-white/[0.02] text-muted'
               }`}
             >
-              {p}
-              {p !== 'ALL' && interactive ? ` ${myCounts[p]}/${QUOTAS[p]}` : ''}
+              {p === 'ALL' ? 'All' : p}
             </button>
           );
         })}
       </div>
-      <div className="space-y-1.5">
-        {visiblePool.map((p) => {
-          const full = myCounts[p.position] >= QUOTAS[p.position];
-          const starred = queue.includes(p.fplId);
-          return (
-            <div
-              key={p.fplId}
-              className={`card flex w-full items-center gap-3 px-3 py-2.5 ${
-                interactive && full ? 'opacity-40' : ''
-              }`}
-            >
-              <button
-                onClick={() => interactive && myTurn && !full && setConfirm(p)}
-                disabled={interactive && (!myTurn || full)}
-                className={`flex min-w-0 flex-1 items-center gap-3 text-left ${
-                  interactive && myTurn && !full ? 'active:scale-[0.99]' : ''
-                }`}
+      <div className="card px-3.5">
+        <div className="flex min-h-8 items-center gap-3 py-1.5 text-[0.62rem] font-semibold uppercase tracking-wider text-muted-2">
+          <span className="w-5" />
+          <span className="flex-1 pl-11">Player</span>
+          <span className="w-10 text-center">Rank</span>
+          <span className="w-9" />
+        </div>
+        <div className="divide-y divide-[var(--line)]">
+          {visiblePool.map((p, i) => {
+            const full = myCounts[p.position] >= QUOTAS[p.position];
+            const starred = queue.includes(p.fplId);
+            return (
+              <div
+                key={p.fplId}
+                className={`flex min-h-14 items-center gap-3 py-2 ${interactive && full ? 'opacity-40' : ''}`}
               >
-                <span className="w-7 shrink-0 text-center font-display text-base text-muted">
-                  {p.draftRank ?? '-'}
+                <span className="w-5 shrink-0 text-center text-sm font-semibold text-muted-2 tabular-nums">
+                  {i + 1}
                 </span>
                 <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={38} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5">
-                    <span className="truncate font-bold">{p.webName}</span>
+                    <span className="truncate text-sm font-bold">{p.webName}</span>
                     {p.status !== 'a' ? (
                       <span
                         className={`h-2 w-2 shrink-0 rounded-full ${p.status === 'd' ? 'bg-gold' : 'bg-live'}`}
                       />
                     ) : null}
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
-                    {p.clubShort}
-                    <span className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-bold ${POS_CLS[p.position] ?? ''}`}>
-                      {p.position}
-                    </span>
-                    {p.setPieceNotes ? <span className="truncate text-muted-2">{p.setPieceNotes}</span> : null}
+                  <span className="mt-0.5 block text-xs text-muted">
+                    {p.clubShort} <span className="text-muted-2">•</span> {p.position}
+                    <span className="text-muted-2"> · {p.totalPoints} pts</span>
                   </span>
                 </span>
-                <span className="shrink-0 text-right text-xs text-muted tabular-nums">
-                  <span className="block text-sm font-bold text-foreground">{p.totalPoints} pts</span>
-                  {p.form ?? '0.0'} form
+                <span className="w-10 shrink-0 text-center text-sm font-bold tabular-nums">
+                  {p.draftRank ?? '-'}
                 </span>
-              </button>
-              <button
-                onClick={() => toggleQueue(p.fplId)}
-                aria-label={starred ? 'remove from plan' : 'add to plan'}
-                className="shrink-0 p-1"
-              >
-                <Star
-                  className={`h-5 w-5 ${starred ? 'fill-[var(--gold)] text-gold' : 'text-muted-2'}`}
-                />
-              </button>
-            </div>
-          );
-        })}
+                <span className="flex w-9 shrink-0 items-center justify-end gap-0.5">
+                  {interactive && myTurn && !full ? (
+                    <button
+                      onClick={() => setConfirm(p)}
+                      aria-label={`draft ${p.webName}`}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white active:scale-90"
+                    >
+                      <Plus className="h-4.5 w-4.5" strokeWidth={2.6} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => toggleQueue(p.fplId)}
+                      aria-label={starred ? 'remove from plan' : 'add to plan'}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.05]"
+                    >
+                      <Star
+                        className={`h-4 w-4 ${starred ? 'fill-[var(--gold)] text-gold' : 'text-muted-2'}`}
+                      />
+                    </button>
+                  )}
+                </span>
+              </div>
+            );
+          })}
+        </div>
         {visiblePool.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted">No available players match.</p>
         ) : null}
@@ -470,7 +478,10 @@ export default function DraftRoom({
     return (
       <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
         {testBanner}
-        <h1 className="text-center font-display text-4xl">Draft lobby</h1>
+        <header className="pt-1 text-center">
+          <h1 className="text-xl font-bold tracking-tight">Draft Room</h1>
+          <p className="text-xs text-muted">{state.leagueName}</p>
+        </header>
 
         {!introDone ? (
           <div className="card space-y-4 p-5 text-center">
@@ -550,12 +561,8 @@ export default function DraftRoom({
         {errorBanner}
 
         {isOwner ? (
-          <button
-            onClick={() => void startDraft()}
-            disabled={busy || !canStart}
-            className="min-h-13 w-full rounded-xl bg-accent text-base font-bold text-[var(--accent-ink)] active:scale-95 disabled:opacity-30"
-          >
-            {canStart ? 'Start the draft' : 'Draft opens at the scheduled time'}
+          <button onClick={() => void startDraft()} disabled={busy || !canStart} className="btn-primary w-full">
+            {canStart ? 'Start the Draft' : 'Draft opens at the scheduled time'}
           </button>
         ) : (
           <p className="text-center text-sm text-muted">
@@ -604,10 +611,7 @@ export default function DraftRoom({
             </div>
           </div>
         ))}
-        <Link
-          href={`/league/${leagueId}`}
-          className="flex min-h-13 items-center justify-center rounded-xl bg-accent text-base font-bold text-[var(--accent-ink)] active:scale-95"
-        >
+        <Link href={`/league/${leagueId}`} className="btn-primary w-full">
           Go to league home
           <ChevronRight className="h-5 w-5" />
         </Link>
@@ -620,75 +624,62 @@ export default function DraftRoom({
   const serverNowMs = nowTick + clockSkew;
   const remainMs = deadlineMs != null ? Math.max(0, deadlineMs - serverNowMs) : 0;
   const pickWindowMs = state.currentPicker?.isBot ? 5000 : 90_000;
-  const remainPct = Math.min(100, (remainMs / pickWindowMs) * 100);
-  const chipOrder = [
-    ...state.members.filter((m) => m.userId === myUserId),
-    ...state.members.filter((m) => m.userId !== myUserId),
-  ];
+  // Pick number as Round.PickInRound, e.g. 7.01.
+  const fmtPick = (pick: number) => {
+    const round = Math.ceil(pick / state.managers);
+    const within = ((pick - 1) % state.managers) + 1;
+    return `${round}.${String(within).padStart(2, '0')}`;
+  };
+  const nextUpMembers = state.nextUp
+    .map((name, i) => ({
+      member: state.members.find((m) => m.username === name),
+      pick: (state.currentPick ?? 0) + i + 1,
+    }))
+    .filter((x) => x.member);
 
   return (
-    <div className="reveal space-y-3 pb-6">
-      {/* Status strip, sticky and impossible to miss on your turn. */}
-      <div
-        className={`glass sticky top-[calc(env(safe-area-inset-top)+0.5rem)] z-30 space-y-2 rounded-2xl p-3 ${myTurn ? 'your-pick' : ''}`}
-      >
-        <div className="flex items-center justify-between text-[0.65rem] font-bold uppercase tracking-[0.2em]">
-          <span className={myTurn ? '' : 'text-muted'}>
-            Round {state.round} of 15 · Pick {state.currentPick} of {state.totalPicks}
-          </span>
-          {state.isTest ? <span className={myTurn ? '' : 'text-gold'}>Test</span> : null}
-        </div>
-        <p className="text-center font-display text-3xl leading-none">
-          {myTurn ? 'YOUR PICK' : `${state.currentPicker?.username ?? '...'} is picking...`}
-        </p>
-        <div className="h-1.5 overflow-hidden rounded-full bg-black/20">
-          <div
-            className={`h-full rounded-full transition-[width] duration-200 ease-linear ${
-              myTurn ? 'bg-[var(--bg)]' : remainPct < 25 ? 'bg-live' : 'bg-accent'
-            }`}
-            style={{ width: `${remainPct}%` }}
-          />
-        </div>
-        <div className="flex items-center justify-between text-xs font-semibold">
-          <span className={myTurn ? '' : 'text-muted'}>
-            {Math.ceil(remainMs / 1000)}s left
-          </span>
-          {state.nextUp.length ? (
-            <span className={myTurn ? '' : 'text-muted'}>
-              Then: {state.nextUp.map((n) => (n === state.members.find((m) => m.userId === myUserId)?.username ? 'You' : n)).join(', then ')}
-            </span>
-          ) : null}
-        </div>
-      </div>
+    <div className="reveal space-y-4 pb-6">
+      {/* Header */}
+      <header className="pt-1 text-center">
+        <h1 className="text-xl font-bold tracking-tight">Draft Room</h1>
+        <p className="text-xs text-muted">{state.leagueName}</p>
+      </header>
 
       {testBanner}
       {errorBanner}
 
-      {/* Squad tracker chips, own chip pinned first. */}
+      {/* Manager avatar row, draft order; tap for their roster. */}
       <div className="-mx-4 overflow-x-auto px-4">
-        <div className="flex w-max gap-2">
-          {chipOrder.map((m) => (
-            <button
-              key={m.userId}
-              onClick={() => setOpenChip(openChip === m.userId ? null : m.userId)}
-              className={`card flex flex-col gap-1 px-3 py-2 text-left ${
-                state.currentPicker?.userId === m.userId ? 'border-gold/60' : ''
-              } ${m.userId === myUserId ? 'border-accent/50' : ''}`}
-            >
-              <span className="text-xs font-bold">
-                {m.userId === myUserId ? 'You' : m.username}
-                {m.isBot ? ' 🤖' : ''}
-              </span>
-              <QuotaDots squad={state.squads[m.userId] ?? []} />
-            </button>
-          ))}
+        <div className="mx-auto flex w-max gap-4 px-1">
+          {state.members.map((m) => {
+            const onClock = state.currentPicker?.userId === m.userId;
+            return (
+              <button
+                key={m.userId}
+                onClick={() => setOpenChip(openChip === m.userId ? null : m.userId)}
+                className="flex w-14 flex-col items-center gap-1.5"
+              >
+                <Avatar name={m.username} size={44} ring={onClock} />
+                <span
+                  className={`w-full truncate text-center text-[0.62rem] font-semibold ${
+                    onClock ? 'text-accent' : m.userId === myUserId ? 'text-foreground' : 'text-muted'
+                  }`}
+                >
+                  {m.userId === myUserId ? 'You' : m.username}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
       {openChip ? (
-        <div className="card space-y-2 p-3">
-          <p className="text-xs font-bold text-muted">
-            {state.members.find((m) => m.userId === openChip)?.username}&apos;s squad so far
-          </p>
+        <div className="card space-y-2 p-3.5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold">
+              {state.members.find((m) => m.userId === openChip)?.username}&apos;s roster
+            </p>
+            <QuotaDots squad={state.squads[openChip] ?? []} />
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {(state.squads[openChip] ?? []).length === 0 ? (
               <span className="text-xs text-muted-2">No picks yet</span>
@@ -706,41 +697,83 @@ export default function DraftRoom({
         </div>
       ) : null}
 
-      {/* Live pick feed. */}
+      {/* The clock. */}
+      {myTurn ? (
+        <section className="card flex flex-col items-center gap-2 border-accent/40 p-5 text-center">
+          <p className="text-base font-bold text-accent">You&apos;re on the clock!</p>
+          <p className="text-sm text-muted">Pick {fmtPick(state.currentPick ?? 1)}</p>
+          <RingTimer remainMs={remainMs} totalMs={pickWindowMs} size={96} />
+          <p className="text-xs text-muted">Round {state.round} of 15</p>
+        </section>
+      ) : (
+        <section className="card flex items-center gap-4 p-4">
+          <Avatar name={state.currentPicker?.username ?? '?'} size={52} />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted">On the Clock</p>
+            <p className="truncate text-lg font-bold">{state.currentPicker?.username ?? '...'}</p>
+            <p className="text-xs text-muted">
+              Pick {fmtPick(state.currentPick ?? 1)} · Round {state.round} of 15
+            </p>
+          </div>
+          <RingTimer remainMs={remainMs} totalMs={pickWindowMs} size={72} />
+        </section>
+      )}
+
+      {/* Up next. */}
+      {nextUpMembers.length ? (
+        <div className="card flex items-center justify-center gap-8 py-3">
+          <p className="text-[0.62rem] font-semibold uppercase tracking-wider text-muted-2">
+            Up Next
+          </p>
+          {nextUpMembers.map(({ member, pick }) => (
+            <div key={pick} className="flex flex-col items-center gap-1">
+              <span className="text-[0.6rem] font-semibold text-muted-2">{fmtPick(pick)}</span>
+              <Avatar name={member!.username} size={34} />
+              <span className="max-w-14 truncate text-[0.6rem] font-semibold text-muted">
+                {member!.userId === myUserId ? 'You' : member!.username}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Draft log. */}
       <div className="card">
         <button
           onClick={() => setBoardOpen(!boardOpen)}
-          className="flex w-full items-center justify-between px-3 py-2.5"
+          className="flex w-full items-center justify-between px-4 py-3"
         >
-          <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-            Pick feed
-          </span>
-          <ChevronDown className={`h-4 w-4 text-muted transition-transform ${boardOpen ? '' : '-rotate-90'}`} />
+          <span className="text-sm font-bold">Draft Log</span>
+          <ChevronDown
+            className={`h-4 w-4 text-muted transition-transform ${boardOpen ? '' : '-rotate-90'}`}
+          />
         </button>
         {boardOpen ? (
-          <div className="max-h-48 space-y-0.5 overflow-y-auto px-3 pb-3">
+          <div className="max-h-56 overflow-y-auto px-4 pb-2">
             {state.picks.length === 0 ? (
-              <p className="py-2 text-center text-xs text-muted-2">First pick incoming...</p>
+              <p className="py-3 text-center text-xs text-muted-2">First pick incoming...</p>
             ) : (
               state.picks.map((p) => (
-                <p key={p.pickNumber} className="reveal flex items-baseline gap-2 text-sm">
-                  <span className="w-14 shrink-0 text-[0.65rem] font-bold text-muted-2">
-                    Pick {p.pickNumber}
+                <div
+                  key={p.pickNumber}
+                  className="reveal flex min-h-11 items-center gap-3 border-t border-edge py-1.5 first:border-t-0"
+                >
+                  <Avatar name={p.username} size={30} />
+                  <span className="w-16 shrink-0 truncate text-xs font-semibold text-muted">
+                    {p.username}
                   </span>
-                  <span className="min-w-0 flex-1 truncate">
-                    <span className="font-semibold">{p.username}</span>
-                    <span className="text-muted"> drafted </span>
-                    <span className="font-semibold text-accent">{p.player?.webName ?? '?'}</span>
-                    <span className="text-xs text-muted">
-                      {' '}({p.player?.position}, {p.player?.clubShort})
-                    </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold">
+                    {p.player?.webName ?? '?'}
                   </span>
                   {p.autoPicked ? (
                     <span className="rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[0.55rem] font-bold uppercase text-muted">
                       auto
                     </span>
                   ) : null}
-                </p>
+                  <span className="shrink-0 text-xs text-muted">
+                    {p.player?.clubShort} <span className="text-muted-2">•</span> {p.player?.position}
+                  </span>
+                </div>
               ))
             )}
           </div>
@@ -775,16 +808,12 @@ export default function DraftRoom({
                 {confirm.setPieceNotes ? ` · ${confirm.setPieceNotes}` : ''}
               </p>
             </div>
-            <button
-              onClick={() => void submitPick(confirm)}
-              disabled={busy}
-              className="min-h-13 w-full rounded-xl bg-accent text-base font-bold text-[var(--accent-ink)] active:scale-95 disabled:opacity-40"
-            >
+            <button onClick={() => void submitPick(confirm)} disabled={busy} className="btn-primary w-full">
               {busy ? 'Drafting...' : `Draft ${confirm.webName}`}
             </button>
             <button
               onClick={() => setConfirm(null)}
-              className="min-h-11 w-full rounded-xl border border-edge text-sm font-bold text-muted"
+              className="min-h-11 w-full rounded-full border border-edge text-sm font-bold text-muted"
             >
               Cancel
             </button>

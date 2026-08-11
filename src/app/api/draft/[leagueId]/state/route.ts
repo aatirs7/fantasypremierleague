@@ -149,6 +149,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ leagueId: strin
 
   return NextResponse.json({
     stateVersion: league.stateVersion,
+    leagueName: league.name,
     draftStatus: league.draftStatus,
     isTest: league.isTest,
     draftTime: league.draftTime?.toISOString() ?? null,
