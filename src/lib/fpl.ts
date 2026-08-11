@@ -109,6 +109,7 @@ export type DraftBootstrap = {
 
 export type FplFixture = {
   id: number;
+  stats?: { identifier: string; a: { value: number; element: number }[]; h: { value: number; element: number }[] }[];
   event?: number | null;
   kickoff_time?: string | null;
   team_h?: number;

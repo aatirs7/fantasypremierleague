@@ -40,7 +40,7 @@ function MatchCard({ f, clubById }: { f: FixtureRow; clubById: Map<number, Club>
   };
 
   return (
-    <div className="card p-3">
+    <Link href={`/matches/${f.fplFixtureId}`} className="card block p-3 active:scale-[0.99]">
       <div className="flex items-stretch gap-3">
         <div className="min-w-0 flex-1 space-y-2">
           <Side clubId={f.homeClub} score={f.homeScore} isWinner={homeWin} />
@@ -65,7 +65,7 @@ function MatchCard({ f, clubById }: { f: FixtureRow; clubById: Map<number, Club>
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 

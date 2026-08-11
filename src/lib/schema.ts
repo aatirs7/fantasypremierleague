@@ -144,8 +144,17 @@ export const gameweeks = pgTable('gameweeks', {
   finalizedAt: timestamp('finalized_at', { withTimezone: true }),
 });
 
+export type FixtureStat = {
+  identifier: string;
+  a: { value: number; element: number }[];
+  h: { value: number; element: number }[];
+};
+
 export const fixtures = pgTable('fixtures', {
   fplFixtureId: integer('fpl_fixture_id').primaryKey(),
+  // FPL's per-fixture stat arrays (goals, assists, cards, saves, bonus),
+  // stored verbatim for the match detail page.
+  stats: jsonb('stats').$type<FixtureStat[]>(),
   gw: integer('gw'),
   kickoff: timestamp('kickoff', { withTimezone: true }),
   homeClub: integer('home_club').notNull(),

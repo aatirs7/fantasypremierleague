@@ -222,6 +222,7 @@ async function syncFixtures(report: SyncReport): Promise<void> {
     })
     .map((f) => ({
       fplFixtureId: f.id,
+      stats: f.started ? (f.stats ?? []) : [],
       gw: f.event ?? null,
       kickoff: f.kickoff_time ? new Date(f.kickoff_time) : null,
       homeClub: f.team_h!,
