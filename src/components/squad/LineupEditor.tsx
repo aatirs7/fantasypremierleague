@@ -352,7 +352,7 @@ export default function LineupEditor({
       ) : null}
 
       {dirty ? (
-        <div className="glass sticky bottom-2 z-40 mx-auto flex max-w-md gap-2 rounded-full p-2">
+        <div className="glass sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md gap-2 rounded-full p-2 lg:bottom-6">
           <button
             onClick={() => {
               setPicks(initial);

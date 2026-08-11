@@ -99,7 +99,6 @@ body {
   -webkit-tap-highlight-color: transparent;
   position: relative;
   letter-spacing: 0.01em;
-  overscroll-behavior-y: none;
 }
 
 /* Deep plum wash from the top, settling to near-black. */
@@ -218,9 +217,16 @@ body {
   border-radius: 0.7rem;
 }
 
-/* Legacy: the tab bar is a flex child now, so no reserved padding needed. */
+/* Room for the fixed bottom bar (icon + label + padding), plus the iOS
+   safe area on browsers that report one. Dropped at lg, where the desktop
+   top nav takes over and the bar is hidden. */
 .pb-tabbar {
-  padding-bottom: 0;
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 1024px) {
+  .pb-tabbar {
+    padding-bottom: 2.5rem;
+  }
 }
 
 /* Surfaces: flat, clean, softly shadowed in the light theme. */

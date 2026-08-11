@@ -4,16 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { TABS } from './tabs';
 
-// A normal flex child at the bottom of the app shell (no position: fixed,
-// so iOS cannot misplace it on cold start). Exact-height tab row plus a
-// spacer that paints the home-indicator safe area.
+// Fixed to the bottom edge, exactly like wc26-general's bar: the web view
+// is already inset by iOS (no viewport-fit: cover), so bottom-0 IS the
+// bottom of the safe area. The env() padding is a no-op there and only
+// matters on browsers that do report an inset.
 export default function BottomTabBar() {
   const pathname = usePathname();
   if (pathname === '/') return null;
 
   return (
-    <nav className="z-40 shrink-0 border-t border-edge bg-surface lg:hidden">
-      <div className="mx-auto grid h-[3.25rem] max-w-md grid-cols-6">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-6 px-1 py-2">
         {TABS.map((tab) => {
           const active = pathname === tab.href || pathname.startsWith(tab.href + '/');
           const Icon = tab.icon;
@@ -21,7 +22,7 @@ export default function BottomTabBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-col items-center justify-center gap-0.5 text-[0.6rem] font-semibold leading-none ${
+              className={`flex flex-col items-center justify-center gap-1 text-[0.6rem] font-semibold leading-none ${
                 active ? 'text-accent' : 'text-muted-2'
               }`}
             >
@@ -31,7 +32,6 @@ export default function BottomTabBar() {
           );
         })}
       </div>
-      <div style={{ height: 'env(safe-area-inset-bottom)' }} aria-hidden />
     </nav>
   );
 }

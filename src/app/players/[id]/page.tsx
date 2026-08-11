@@ -255,7 +255,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
       />
 
       {watchlist ? (
-        <div className="sticky bottom-2 pt-1">
+        <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] pt-1 lg:bottom-6">
           <WatchlistButton
             leagueId={watchlist.leagueId}
             fplId={fplId}
