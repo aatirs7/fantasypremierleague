@@ -372,6 +372,8 @@ export async function runSync(opts: { dry?: boolean; force?: boolean } = {}): Pr
     try {
       const { ensureLineupsForGw } = await import('./lineup');
       await ensureLineupsForGw(row.gw, report.notes);
+      const { snapshotStandingsForGw } = await import('./standings');
+      await snapshotStandingsForGw(row.gw, report.notes);
       await setMeta(key, String(now));
     } catch (e) {
       report.notes.push(`ensure lineups gw${row.gw} FAILED: ${e instanceof Error ? e.message : String(e)}`);

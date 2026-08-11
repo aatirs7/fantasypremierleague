@@ -253,6 +253,8 @@ export const gwScores = pgTable(
     captainBonus: integer('captain_bonus').notNull().default(0),
     totalPoints: integer('total_points').notNull().default(0),
     autosubs: jsonb('autosubs').$type<AutoSub[]>().notNull().default([]),
+    // Goals scored by the counting XI this GW, for the season tiebreak.
+    goals: integer('goals').notNull().default(0),
     // false while provisional (LIVE), true once the GW is data_checked.
     final: boolean('final').notNull().default(false),
   },

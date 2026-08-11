@@ -7,6 +7,7 @@ import { leagues } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { MIN_MANAGERS, isLeagueMember, leagueMemberList } from '@/lib/leagues';
 import InviteShare from '@/components/leagues/InviteShare';
+import LeagueStandings from '@/components/leagues/LeagueStandings';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
@@ -93,9 +94,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
           Draft is LIVE, jump in
         </Link>
       ) : (
-        <div className="card p-4 text-sm text-muted">
-          Table and scores land here once scoring ships.
-        </div>
+        <LeagueStandings league={league} viewerId={session.userId} members={members} />
       )}
 
       <div className="space-y-2">
