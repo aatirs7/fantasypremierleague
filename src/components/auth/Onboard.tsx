@@ -61,13 +61,7 @@ export default function Onboard({ next }: { next?: string }) {
   };
 
   return (
-    <div className="reveal mx-auto flex w-full max-w-sm flex-col gap-5 py-10">
-      <div className="text-center">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">2026-27 season</p>
-        <h1 className="font-display text-5xl">EPL Fantasy Draft</h1>
-        <p className="mt-1 text-sm text-muted">Draft your squad. See who knows ball.</p>
-      </div>
-
+    <div className="reveal mx-auto flex w-full max-w-sm flex-col gap-5">
       <div className="card flex p-1">
         {(['login', 'register'] as Mode[]).map((m) => (
           <button
