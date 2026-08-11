@@ -29,16 +29,25 @@ export const metadata: Metadata = {
   },
 };
 
+// theme-color is what iOS paints the status bar area with in an installed
+// app, so it has to follow the user's chosen theme or you get a black strip
+// above a light page. Read the same cookie the shell uses.
+//
 // No viewport-fit: cover on purpose. Letting iOS inset the web view itself
 // keeps env(safe-area-inset-*) at 0, which is what makes a plain
-// `fixed bottom-0` tab bar land exactly on the bottom edge in the installed
-// app. Opting into the full-bleed viewport is what made the bar drift.
-export const viewport: Viewport = {
-  themeColor: '#0a0912',
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-};
+// `fixed bottom-0` tab bar land exactly on the bottom edge.
+export const THEME_COLORS = { dark: '#0a0912', light: '#f2f3f8' } as const;
+
+export async function generateViewport(): Promise<Viewport> {
+  const jar = await cookies();
+  const theme = jar.get('epld_theme')?.value === 'light' ? 'light' : 'dark';
+  return {
+    themeColor: THEME_COLORS[theme],
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  };
+}
 
 export default async function RootLayout({
   children,

@@ -11,10 +11,10 @@ export default function Welcome({ next, kickoffLine }: { next?: string; kickoffL
 
   if (mode !== 'hidden') {
     return (
-      <div className="reveal mx-auto w-full max-w-sm space-y-5 py-6">
+      <div className="reveal mx-auto w-full max-w-sm space-y-5 py-6 text-center">
         <button
           onClick={() => setMode('hidden')}
-          className="text-sm font-semibold text-muted"
+          className="block text-sm font-semibold text-muted"
           aria-label="back"
         >
           &larr; Back

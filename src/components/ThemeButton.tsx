@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
+// Keep this in sync with THEME_COLORS in app/layout.tsx.
+const THEME_COLORS = { dark: '#0a0912', light: '#f2f3f8' } as const;
+
 function useThemeToggle(initial: 'dark' | 'light') {
   const [theme, setTheme] = useState(initial);
   const toggle = () => {
@@ -10,6 +13,10 @@ function useThemeToggle(initial: 'dark' | 'light') {
     setTheme(next);
     document.documentElement.dataset.theme = next;
     document.cookie = `epld_theme=${next}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    // Repaint the iOS status bar area immediately, without a reload.
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', THEME_COLORS[next]);
   };
   return { theme, toggle };
 }

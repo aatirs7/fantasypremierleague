@@ -40,7 +40,9 @@ export default function PinInput({
 
   return (
     <div>
-      <p className="mb-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">{label}</p>
+      <p className="mb-2 text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+        {label}
+      </p>
       <div className="flex justify-center gap-3">
         {[0, 1, 2, 3].map((i) => (
           <input

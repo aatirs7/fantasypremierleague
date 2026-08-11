@@ -85,11 +85,11 @@ export default function Onboard({
         ))}
       </div>
 
-      <div className="card flex flex-col gap-4 p-4">
+      <div className="card flex flex-col gap-4 p-4 text-center">
         <div>
           <p className="mb-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Username</p>
           <input
-            className={INPUT_CLS}
+            className={`${INPUT_CLS} text-center`}
             placeholder="e.g. rayyan_10"
             value={username}
             name="draft-nickname"
