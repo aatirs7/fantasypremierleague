@@ -21,7 +21,11 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: 'EPL Draft',
-    statusBarStyle: 'black-translucent',
+    // 'default' lets iOS paint the status bar area with the page's own
+    // background in both themes. 'black-translucent' is only right when the
+    // page draws under the status bar (viewport-fit: cover), which we do
+    // not do, so it left a black strip up top.
+    statusBarStyle: 'default',
   },
 };
 

@@ -14,7 +14,7 @@ export default function BottomTabBar() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-6 px-1 pb-4 pt-3">
+      <div className="mx-auto grid max-w-md grid-cols-6 px-1 pb-7 pt-4">
         {TABS.map((tab) => {
           const active = pathname === tab.href || pathname.startsWith(tab.href + '/');
           const Icon = tab.icon;
@@ -22,11 +22,11 @@ export default function BottomTabBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-col items-center justify-center gap-1.5 text-[0.68rem] font-semibold leading-none ${
+              className={`flex flex-col items-center justify-center gap-1.5 text-[0.72rem] font-semibold leading-none ${
                 active ? 'text-accent' : 'text-muted-2'
               }`}
             >
-              <Icon className="h-6 w-6" strokeWidth={2.2} />
+              <Icon className="h-[1.65rem] w-[1.65rem]" strokeWidth={2.2} />
               {tab.label}
             </Link>
           );

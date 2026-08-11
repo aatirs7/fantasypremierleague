@@ -221,7 +221,7 @@ body {
    safe area on browsers that report one. Dropped at lg, where the desktop
    top nav takes over and the bar is hidden. */
 .pb-tabbar {
-  padding-bottom: calc(6.25rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(7.5rem + env(safe-area-inset-bottom));
 }
 @media (min-width: 1024px) {
   .pb-tabbar {
