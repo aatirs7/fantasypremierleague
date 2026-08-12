@@ -7,8 +7,11 @@
   token architecture unchanged; the look is its own.
 */
 :root {
-  --bg: #08080b;
-  --bg-2: #101017;
+  /* Exactly #000 so it matches an opaque black iOS status bar pixel for
+     pixel, whichever style the installed app has cached. Depth comes from
+     the elevated surfaces, not from lifting the page background. */
+  --bg: #000000;
+  --bg-2: #0b0b10;
   --surface: #17171d;
   --surface-raised: #202027;
   --line: rgba(255, 255, 255, 0.08);

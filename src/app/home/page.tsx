@@ -31,6 +31,7 @@ import LeagueActions from '@/components/leagues/LeagueActions';
 import LeagueSwitcher from '@/components/leagues/LeagueSwitcher';
 import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
+import NoScroll from '@/components/NoScroll';
 
 export const dynamic = 'force-dynamic';
 
@@ -259,14 +260,15 @@ export default async function HomePage({
   }
 
   return (
-    <div className="space-y-4 py-2 lg:mx-auto lg:max-w-2xl">
+    <div className="space-y-3 py-1 lg:mx-auto lg:max-w-2xl">
+      <NoScroll />
       <RememberLeague leagueId={activeId} />
 
-      <header className="reveal pb-1 pt-1 text-center">
-        <p className="text-[0.58rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+      <header className="reveal text-center">
+        <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
           {greeting().replace(',', '')}
         </p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">{session.username}</h1>
+        <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">{session.username}</h1>
       </header>
 
       {mine.length > 1 ? (
@@ -297,17 +299,17 @@ export default async function HomePage({
 
       {/* Gameweek panel. */}
       {nextGw ? (
-        <section className="hero-gw reveal px-5 pb-4 pt-5 text-center" style={{ animationDelay: '40ms' }}>
-          <p className="text-[0.58rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+        <section className="hero-gw reveal px-5 pb-3 pt-4 text-center" style={{ animationDelay: '40ms' }}>
+          <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
             {active?.draftStatus === 'complete' ? 'Next deadline' : 'Season opener'}
           </p>
-          <p className="mt-1 text-xl font-semibold tracking-tight">Gameweek {nextGw.gw}</p>
-          <div className="mb-4 mt-4">
+          <p className="mt-0.5 text-lg font-semibold tracking-tight">Gameweek {nextGw.gw}</p>
+          <div className="mb-3 mt-3">
             <CountdownBlocks toIso={nextGw.deadline.toISOString()} doneText="Underway" />
           </div>
           <Link
             href="/matches"
-            className="flex items-center justify-center gap-1 border-t border-edge pt-3 text-sm font-medium text-muted"
+            className="flex items-center justify-center gap-1 border-t border-edge pt-2.5 text-sm font-medium text-muted"
           >
             View fixtures
             <ChevronRight className="h-4 w-4" />
@@ -348,11 +350,11 @@ export default async function HomePage({
 
       {/* Draft state card (pre-draft / live). */}
       {active?.draftStatus === 'pending' ? (
-        <section className="tile reveal space-y-3 p-4 text-center" style={{ animationDelay: '70ms' }}>
-          <p className="text-[0.58rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+        <section className="tile reveal space-y-2.5 p-3.5 text-center" style={{ animationDelay: '70ms' }}>
+          <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
             Draft night
           </p>
-          <p className="text-lg font-semibold tracking-tight">
+          <p className="text-base font-semibold tracking-tight">
             {active.draftTime ? (
               <>
                 Starts in{' '}
@@ -384,9 +386,9 @@ export default async function HomePage({
       <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
         <Link
           href="/squad"
-          className="tile flex aspect-square max-h-[12.5rem] flex-col items-center justify-center gap-3 p-4 text-center active:scale-[0.98]"
+          className="tile flex aspect-square max-h-[10.5rem] flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
         >
-          <Shirt className="h-9 w-9 text-muted" strokeWidth={1.4} />
+          <Shirt className="h-8 w-8 text-muted" strokeWidth={1.4} />
           <span className="min-w-0 w-full">
             <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
               My Team
@@ -409,9 +411,9 @@ export default async function HomePage({
 
         <Link
           href={`/league/${activeId}`}
-          className="tile flex aspect-square max-h-[12.5rem] flex-col items-center justify-center gap-3 p-4 text-center active:scale-[0.98]"
+          className="tile flex aspect-square max-h-[10.5rem] flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
         >
-          <Trophy className="h-9 w-9 text-muted" strokeWidth={1.4} />
+          <Trophy className="h-8 w-8 text-muted" strokeWidth={1.4} />
           <span className="min-w-0 w-full">
             <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
               League

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
 // Keep this in sync with THEME_COLORS in app/layout.tsx.
-const THEME_COLORS = { dark: '#0a0912', light: '#f2f3f8' } as const;
+const THEME_COLORS = { dark: '#000000', light: '#f6f6f7' } as const;
 
 function useThemeToggle(initial: 'dark' | 'light') {
   const [theme, setTheme] = useState(initial);
