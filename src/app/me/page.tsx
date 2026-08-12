@@ -15,8 +15,8 @@ export default async function MePage() {
   const mine = await myLeagues(session.userId);
 
   return (
-    <div className="reveal space-y-7 py-4 lg:mx-auto lg:max-w-2xl">
-      <header className="flex flex-col items-center gap-2 pt-2 text-center">
+    <div className="reveal space-y-7 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
+      <header className="flex flex-col items-center gap-2 text-center">
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent font-display text-3xl text-[var(--accent-ink)]">
           {session.username.slice(0, 1).toUpperCase()}
         </span>

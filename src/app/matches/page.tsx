@@ -126,10 +126,10 @@ export default async function MatchesPage({
   }
 
   return (
-    <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
+    <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
       {anyLive ? <LivePoller /> : null}
 
-      <header className="flex flex-col items-center gap-3 pt-2">
+      <header className="flex flex-col items-center gap-3">
         <h1 className="font-display text-4xl leading-none">Matches</h1>
         <div className="flex rounded-full border border-edge bg-white/[0.03] p-1 text-xs font-bold">
           <Link

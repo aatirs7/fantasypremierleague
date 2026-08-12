@@ -67,7 +67,7 @@ export default async function HomePage({
 
   if (mine.length === 0) {
     return (
-      <div className="reveal mx-auto max-w-md space-y-6 py-6">
+      <div className="reveal mx-auto max-w-md space-y-5 pb-6 pt-2">
         <header className="text-center">
           <p className="text-sm text-muted">{greeting()}</p>
           <h1 className="text-2xl font-bold tracking-tight">{session.username}</h1>
@@ -260,7 +260,7 @@ export default async function HomePage({
   }
 
   return (
-    <div className="space-y-3 py-1 lg:mx-auto lg:max-w-2xl">
+    <div className="space-y-3 pb-2 lg:mx-auto lg:max-w-2xl">
       <NoScroll />
       <RememberLeague leagueId={activeId} />
 

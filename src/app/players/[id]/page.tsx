@@ -178,7 +178,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
   );
 
   return (
-    <div className="reveal space-y-5 py-2 lg:mx-auto lg:max-w-2xl">
+    <div className="reveal space-y-5 pb-3 pt-1 lg:mx-auto lg:max-w-2xl">
       {/* Hero */}
       <div className="relative min-h-52 overflow-hidden">
         <div className="absolute right-0 top-0 h-52 w-52 opacity-95">

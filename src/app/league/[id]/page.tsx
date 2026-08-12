@@ -39,10 +39,10 @@ export default async function LeaguePage({
   const pending = league.draftStatus === 'pending';
 
   return (
-    <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
+    <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
       <RememberLeague leagueId={league.id} />
 
-      <div className="flex flex-col items-center gap-2 pt-2 text-center">
+      <div className="flex flex-col items-center gap-2 text-center">
         <span
           className="flex h-16 w-16 items-center justify-center rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(245,183,61,0.18), transparent 70%)' }}

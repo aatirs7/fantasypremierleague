@@ -24,7 +24,7 @@ export default async function SquadPage({
   const leagueId = await resolveActiveLeagueId(session.userId, explicit);
   if (!leagueId) {
     return (
-      <div className="reveal space-y-4 py-4 text-center lg:mx-auto lg:max-w-2xl">
+      <div className="reveal space-y-4 pb-4 pt-1 text-center lg:mx-auto lg:max-w-2xl">
         <h1 className="text-center font-display text-4xl">Squad</h1>
         <p className="text-sm text-muted">Join a league first, then draft your squad.</p>
         <Link href="/home" className="font-bold text-accent">
@@ -65,7 +65,7 @@ export default async function SquadPage({
 
   if (!squad || league?.draftStatus !== 'complete') {
     return (
-      <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
+      <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
         <RememberLeague leagueId={leagueId} />
         <h1 className="text-center font-display text-4xl">Squad</h1>
         {switcher}
@@ -86,7 +86,7 @@ export default async function SquadPage({
   const editable = await editableGw();
   if (!editable) {
     return (
-      <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
+      <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
         <h1 className="text-center font-display text-4xl">Squad</h1>
         <p className="text-sm text-muted">The season is over. See the league table for the final story.</p>
       </div>
@@ -96,7 +96,7 @@ export default async function SquadPage({
   const picks = await ensureLineup(squad.id, editable.gw);
   if (!picks) {
     return (
-      <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
+      <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
         <h1 className="text-center font-display text-4xl">Squad</h1>
         <p className="text-sm text-muted">Squad incomplete. Finish the draft first.</p>
       </div>
@@ -110,7 +110,7 @@ export default async function SquadPage({
     .limit(1);
 
   return (
-    <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
+    <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
       <RememberLeague leagueId={leagueId} />
       <div className="space-y-1 text-center">
         <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">

@@ -14,7 +14,7 @@ export default async function WaiversPage({ params }: { params: Promise<{ id: st
   if (!(await isLeagueMember(session.userId, id))) notFound();
 
   return (
-    <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
+    <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
       <Link href={`/league/${id}`} className="flex items-center gap-1 text-sm font-semibold text-muted">
         <ArrowLeft className="h-4 w-4" /> League
       </Link>

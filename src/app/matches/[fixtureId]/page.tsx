@@ -101,7 +101,7 @@ export default async function MatchDetailPage({
   const scorersAway = goals ? renderSide(goals.a) : [];
 
   return (
-    <div className="reveal space-y-4 py-2 lg:mx-auto lg:max-w-2xl">
+    <div className="reveal space-y-4 pb-3 pt-1 lg:mx-auto lg:max-w-2xl">
       {live ? <LivePoller /> : null}
       <Link
         href="/matches"

@@ -119,7 +119,7 @@ export default async function LeagueStatsPage({ params }: { params: Promise<{ id
   );
 
   return (
-    <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
+    <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
       <Link href={`/league/${id}`} className="flex items-center gap-1 text-sm font-semibold text-muted">
         <ArrowLeft className="h-4 w-4" /> {league.name}
       </Link>

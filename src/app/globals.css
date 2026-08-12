@@ -138,11 +138,9 @@ body {
 /* Where floating chrome (theme, help) sits, clear of the status bar. In the
    dark theme the page runs under a translucent status bar, so chrome starts
    lower; in light the strip is opaque and chrome can sit near the top. */
-:root {
-  --chrome-top: 3.4rem;
-}
+:root,
 [data-theme='light'] {
-  --chrome-top: 0.6rem;
+  --chrome-top: 0.4rem;
 }
 @media (min-width: 1024px) {
   :root,
