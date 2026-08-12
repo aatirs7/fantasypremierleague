@@ -135,7 +135,7 @@ export default function HelpButton() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Help"
-        className="fixed right-2 top-[calc(env(safe-area-inset-top)+0.35rem)] z-50 flex h-10 w-10 items-center justify-center text-muted-2 active:scale-95 lg:top-[calc(env(safe-area-inset-top)+0.75rem)] lg:right-3"
+        className="fixed right-3 top-[calc(env(safe-area-inset-top)+0.6rem)] z-50 flex h-10 w-10 items-center justify-center text-muted-2 active:scale-95"
       >
         <HelpCircle className="h-5 w-5" />
       </button>

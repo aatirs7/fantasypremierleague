@@ -28,6 +28,7 @@ import { editableGw } from '@/lib/lineup';
 import { leagueTable } from '@/lib/scoring';
 import { myLeagues, resolveActiveLeagueId } from '@/lib/leagues';
 import LeagueActions from '@/components/leagues/LeagueActions';
+import LeagueSwitcher from '@/components/leagues/LeagueSwitcher';
 import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
 import PullToRefresh from '@/components/PullToRefresh';
@@ -271,23 +272,7 @@ export default async function HomePage({
       </header>
 
       {mine.length > 1 ? (
-        <div className="-mx-4 overflow-x-auto px-4">
-          <div className="flex w-max gap-1.5">
-            {mine.map((l) => (
-              <Link
-                key={l.id}
-                href={`/home?league=${l.id}`}
-                className={`rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap ${
-                  l.id === activeId
-                    ? 'border-accent bg-accent/10 text-accent'
-                    : 'border-edge bg-white/[0.02] text-muted'
-                }`}
-              >
-                {l.name}
-              </Link>
-            ))}
-          </div>
-        </div>
+        <LeagueSwitcher leagues={mine.map((l) => ({ id: l.id, name: l.name }))} activeId={activeId} />
       ) : null}
 
       {/* Live matches card. */}
@@ -401,10 +386,10 @@ export default async function HomePage({
       <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
         <Link
           href="/squad"
-          className="tile flex aspect-square max-h-[12.5rem] flex-col justify-between p-4 active:scale-[0.98]"
+          className="tile flex aspect-square max-h-[12.5rem] flex-col items-center justify-center gap-3 p-4 text-center active:scale-[0.98]"
         >
-          <Shirt className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
-          <span className="min-w-0">
+          <Shirt className="h-9 w-9 text-muted" strokeWidth={1.4} />
+          <span className="min-w-0 w-full">
             <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
               My Team
             </span>
@@ -426,10 +411,10 @@ export default async function HomePage({
 
         <Link
           href={`/league/${activeId}`}
-          className="tile flex aspect-square max-h-[12.5rem] flex-col justify-between p-4 active:scale-[0.98]"
+          className="tile flex aspect-square max-h-[12.5rem] flex-col items-center justify-center gap-3 p-4 text-center active:scale-[0.98]"
         >
-          <Trophy className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
-          <span className="min-w-0">
+          <Trophy className="h-9 w-9 text-muted" strokeWidth={1.4} />
+          <span className="min-w-0 w-full">
             <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
               League
             </span>
@@ -447,84 +432,9 @@ export default async function HomePage({
           </span>
         </Link>
 
-        {/* Last draft, once drafted. */}
-        {active?.draftStatus === 'complete' && firstPick ? (
-          <Link
-            href={`/draft?league=${activeId}`}
-            className="tile flex aspect-square max-h-[12.5rem] flex-col justify-between p-4 active:scale-[0.98]"
-          >
-            <Swords className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
-            <span className="min-w-0">
-              <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
-                Last Draft
-              </span>
-              <span className="mt-1 block truncate text-base font-semibold tracking-tight">
-                {firstPick}
-              </span>
-              <span className="block text-xs text-muted">your first pick</span>
-            </span>
-          </Link>
-        ) : null}
-
-        <Link
-          href="/players"
-          className="tile flex aspect-square max-h-[12.5rem] flex-col justify-between p-4 active:scale-[0.98]"
-        >
-          <Search className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
-          <span className="min-w-0">
-            <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
-              Scout
-            </span>
-            <span className="mt-1 block truncate text-base font-semibold tracking-tight">
-              Players
-            </span>
-            <span className="block text-xs text-muted">form and fixtures</span>
-          </span>
-        </Link>
       </section>
 
-      {/* Movement recap, only when something moved. */}
-      {recap ? (
-        <section className="reveal card space-y-1.5 p-4 text-center" style={{ animationDelay: '190ms' }}>
-          <p className="text-xs text-muted">This gameweek so far</p>
-          {recap.you ? (
-            <p className="flex items-center gap-2 text-sm">
-              {recap.you.rankDelta > 0 ? (
-                <TrendingUp className="h-4 w-4 text-accent" />
-              ) : recap.you.rankDelta < 0 ? (
-                <TrendingDown className="h-4 w-4 text-live" />
-              ) : null}
-              <span>
-                You are <span className="font-bold">{ordinal(recap.you.rank)}</span>
-                {recap.you.rankDelta !== 0 ? (
-                  <span className={recap.you.rankDelta > 0 ? 'text-accent' : 'text-live'}>
-                    {' '}
-                    ({recap.you.rankDelta > 0 ? 'up' : 'down'} {Math.abs(recap.you.rankDelta)}{' '}
-                    {Math.abs(recap.you.rankDelta) === 1 ? 'spot' : 'spots'})
-                  </span>
-                ) : null}
-                {recap.you.gained !== 0 ? (
-                  <span className="text-muted">
-                    , {recap.you.gained > 0 ? `+${recap.you.gained}` : recap.you.gained} pts
-                  </span>
-                ) : null}
-              </span>
-            </p>
-          ) : null}
-          {recap.climber ? (
-            <p className="text-xs text-muted">
-              Biggest climber: <span className="font-bold text-accent">{recap.climber.name}</span>{' '}
-              up {recap.climber.up} {recap.climber.up === 1 ? 'spot' : 'spots'}
-            </p>
-          ) : null}
-          {recap.gainer ? (
-            <p className="text-xs text-muted">
-              Most points today: <span className="font-bold text-gold">{recap.gainer.name}</span> +
-              {recap.gainer.pts}
-            </p>
-          ) : null}
-        </section>
-      ) : null}
+      {/* Recap lives on the league page; home stays to one screen. */}
     </div>
   );
 }

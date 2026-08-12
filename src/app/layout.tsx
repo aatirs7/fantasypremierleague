@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 import BottomTabBar from '@/components/nav/BottomTabBar';
 import DesktopNav from '@/components/nav/DesktopNav';
-import TopBar from '@/components/nav/TopBar';
 import AutoRefresh from '@/components/AutoRefresh';
 import HelpButton from '@/components/HelpButton';
 import ThemeButton from '@/components/ThemeButton';
@@ -80,8 +79,7 @@ export default async function RootLayout({
         <AutoRefresh />
         <ThemeButton initial={theme} />
         <DesktopNav />
-        <TopBar />
-        <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 lg:max-w-6xl lg:px-8 lg:pt-24">
+        <main className="mx-auto w-full max-w-md flex-1 px-4 pt-6 lg:max-w-6xl lg:px-8 lg:pt-24">
           {children}
         </main>
         <BottomTabBar />
