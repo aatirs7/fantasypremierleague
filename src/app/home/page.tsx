@@ -263,9 +263,11 @@ export default async function HomePage({
       <PullToRefresh />
       <RememberLeague leagueId={activeId} />
 
-      <header className="reveal pt-1 text-center">
-        <p className="text-sm text-muted">{greeting()}</p>
-        <h1 className="text-2xl font-bold tracking-tight">{session.username}</h1>
+      <header className="reveal pb-1 pt-1 text-center">
+        <p className="text-[0.58rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+          {greeting().replace(',', '')}
+        </p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">{session.username}</h1>
       </header>
 
       {mine.length > 1 ? (
@@ -292,43 +294,39 @@ export default async function HomePage({
       {liveFixtures.length ? (
         <Link
           href={liveFixtures.length === 1 ? `/matches/${liveFixtures[0].fplFixtureId}` : '/matches'}
-          className="tile tile-pink reveal flex flex-col items-center gap-1.5 border-live/40 p-4 text-center active:scale-[0.99]"
+          className="tile reveal flex flex-col items-center gap-1.5 p-4 text-center active:scale-[0.99]"
         >
-          <span className="flex items-center gap-1.5 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-live">
-            <span className="live-dot h-2 w-2 rounded-full bg-live" />
+          <span className="flex items-center gap-1.5 text-[0.58rem] font-medium uppercase tracking-[0.22em] text-live">
+            <span className="live-dot h-1.5 w-1.5 rounded-full bg-live" />
             Live now
           </span>
           {liveFixtures.map((f) => (
-            <span key={f.fplFixtureId} className="text-xl font-bold tabular-nums">
-              {liveClubShort.get(f.homeClub) ?? '?'}{' '}
-              <span className="text-live">
-                {f.homeScore ?? 0} - {f.awayScore ?? 0}
-              </span>{' '}
+            <span key={f.fplFixtureId} className="text-lg font-semibold tracking-tight tabular-nums">
+              {liveClubShort.get(f.homeClub) ?? '?'} {f.homeScore ?? 0} - {f.awayScore ?? 0}{' '}
               {liveClubShort.get(f.awayClub) ?? '?'}
             </span>
           ))}
-          <span className="text-xs font-bold text-accent">
+          <span className="text-xs text-muted">
             {liveFixtures.length === 1 ? 'Open match' : 'All live matches'}
           </span>
         </Link>
       ) : null}
 
-      {/* Gameweek hero. */}
+      {/* Gameweek panel. */}
       {nextGw ? (
-        <section className="hero-gw reveal p-5 text-center" style={{ animationDelay: '40ms' }}>
-          <p className="text-[0.6rem] font-bold uppercase tracking-[0.25em] opacity-75">
-            {active?.draftStatus === 'complete' ? 'Deadline' : 'Season opener'}
+        <section className="hero-gw reveal px-5 pb-4 pt-5 text-center" style={{ animationDelay: '40ms' }}>
+          <p className="text-[0.58rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+            {active?.draftStatus === 'complete' ? 'Next deadline' : 'Season opener'}
           </p>
-          <p className="mt-0.5 text-2xl font-bold tracking-tight">Gameweek {nextGw.gw}</p>
-          <p className="mb-4 text-xs opacity-75">
-            {active?.draftStatus === 'complete' ? 'Lineups lock in' : 'Kicks off in'}
-          </p>
-          <CountdownBlocks toIso={nextGw.deadline.toISOString()} doneText="Underway" />
+          <p className="mt-1 text-xl font-semibold tracking-tight">Gameweek {nextGw.gw}</p>
+          <div className="mb-4 mt-4">
+            <CountdownBlocks toIso={nextGw.deadline.toISOString()} doneText="Underway" />
+          </div>
           <Link
             href="/matches"
-            className="mt-4 flex items-center justify-center gap-1.5 border-t border-white/20 pt-3 text-sm font-bold"
+            className="flex items-center justify-center gap-1 border-t border-edge pt-3 text-sm font-medium text-muted"
           >
-            View Fixtures
+            View fixtures
             <ChevronRight className="h-4 w-4" />
           </Link>
         </section>
@@ -348,18 +346,18 @@ export default async function HomePage({
               ],
             ] as [string, string, string][]
           ).map(([label, value, sub], i) => (
-            <div key={label} className="card px-2 py-3 text-center">
-              <p className="text-[0.55rem] font-bold uppercase tracking-[0.15em] text-muted-2">
+            <div key={label} className="tile px-2 py-3 text-center">
+              <p className="text-[0.55rem] font-medium uppercase tracking-[0.18em] text-muted-2">
                 {label}
               </p>
               <p
-                className={`text-xl font-bold leading-tight ${
-                  i === 1 ? 'text-accent' : i === 2 && gwLive ? 'text-live' : ''
+                className={`mt-1 text-2xl font-semibold leading-none tracking-tight ${
+                  i === 2 && gwLive ? 'text-live' : ''
                 }`}
               >
                 {value}
               </p>
-              <p className="text-[0.6rem] text-muted">{sub}</p>
+              <p className="mt-1 text-[0.6rem] text-muted-2">{sub}</p>
             </div>
           ))}
         </section>
@@ -367,12 +365,11 @@ export default async function HomePage({
 
       {/* Draft state card (pre-draft / live). */}
       {active?.draftStatus === 'pending' ? (
-        <section
-          className="tile tile-violet reveal space-y-2 p-4 text-center"
-          style={{ animationDelay: '70ms' }}
-        >
-          <p className="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-muted">Draft night</p>
-          <p className="text-lg font-bold">
+        <section className="tile reveal space-y-3 p-4 text-center" style={{ animationDelay: '70ms' }}>
+          <p className="text-[0.58rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+            Draft night
+          </p>
+          <p className="text-lg font-semibold tracking-tight">
             {active.draftTime ? (
               <>
                 Starts in{' '}
@@ -404,22 +401,24 @@ export default async function HomePage({
       <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
         <Link
           href="/squad"
-          className="tile tile-violet flex aspect-square flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
+          className="tile flex aspect-square flex-col justify-between p-4 active:scale-[0.98]"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/15 ring-1 ring-accent/30">
-            <Shirt className="h-6 w-6 text-accent" strokeWidth={2} />
-          </span>
+          <Shirt className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
           <span className="min-w-0">
-            <span className="block text-[0.65rem] text-muted">My Team</span>
-            <span className="block truncate text-sm font-bold">{teamName}</span>
-            <span className="block text-[0.65rem] text-muted">
+            <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
+              My Team
+            </span>
+            <span className="mt-1 block truncate text-base font-semibold tracking-tight">
+              {teamName}
+            </span>
+            <span className="block truncate text-xs text-muted">
               {formation ?? (active?.draftStatus === 'complete' ? 'Set your lineup' : 'Drafts soon')}
             </span>
             {gwPoints != null ? (
               <span
-                className={`block text-[0.65rem] font-bold ${gwLive ? 'text-live' : 'text-muted'}`}
+                className={`block text-xs font-medium ${gwLive ? 'text-live' : 'text-muted-2'}`}
               >
-                {gwLive ? `● ${gwPoints} pts live` : `GW: ${gwPoints} pts`}
+                {gwLive ? `${gwPoints} pts live` : `${gwPoints} pts`}
               </span>
             ) : null}
           </span>
@@ -427,19 +426,21 @@ export default async function HomePage({
 
         <Link
           href={`/league/${activeId}`}
-          className="tile tile-gold flex aspect-square flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
+          className="tile flex aspect-square flex-col justify-between p-4 active:scale-[0.98]"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/15 ring-1 ring-gold/30">
-            <Trophy className="h-6 w-6 text-gold" strokeWidth={1.9} />
-          </span>
+          <Trophy className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
           <span className="min-w-0">
-            <span className="block text-[0.65rem] text-muted">League</span>
-            <span className="block truncate text-sm font-bold">{active?.name}</span>
-            <span className="block text-[0.65rem] text-muted">
-              {teamCount} {teamCount === 1 ? 'Team' : 'Teams'}
+            <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
+              League
+            </span>
+            <span className="mt-1 block truncate text-base font-semibold tracking-tight">
+              {active?.name}
+            </span>
+            <span className="block text-xs text-muted">
+              {teamCount} {teamCount === 1 ? 'team' : 'teams'}
             </span>
             {myRank ? (
-              <span className="block text-[0.65rem] font-bold text-accent">
+              <span className="block text-xs font-medium text-muted-2">
                 {ordinal(myRank)} of {fieldSize}
               </span>
             ) : null}
@@ -450,30 +451,34 @@ export default async function HomePage({
         {active?.draftStatus === 'complete' && firstPick ? (
           <Link
             href={`/draft?league=${activeId}`}
-            className="tile tile-pink flex aspect-square flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
+            className="tile flex aspect-square flex-col justify-between p-4 active:scale-[0.98]"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-live/15 ring-1 ring-live/30">
-              <Swords className="h-6 w-6 text-live" strokeWidth={1.9} />
-            </span>
+            <Swords className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
             <span className="min-w-0">
-              <span className="block text-[0.65rem] text-muted">Last Draft</span>
-              <span className="block truncate text-sm font-bold">{firstPick}</span>
-              <span className="block text-[0.65rem] text-muted">your first pick</span>
+              <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
+                Last Draft
+              </span>
+              <span className="mt-1 block truncate text-base font-semibold tracking-tight">
+                {firstPick}
+              </span>
+              <span className="block text-xs text-muted">your first pick</span>
             </span>
           </Link>
         ) : null}
 
         <Link
           href="/players"
-          className="tile tile-cyan flex aspect-square flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
+          className="tile flex aspect-square flex-col justify-between p-4 active:scale-[0.98]"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#38bdf8]/15 ring-1 ring-[#38bdf8]/30">
-            <Search className="h-6 w-6 text-[#38bdf8]" strokeWidth={2} />
-          </span>
+          <Search className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
           <span className="min-w-0">
-            <span className="block text-[0.65rem] text-muted">Scout</span>
-            <span className="block truncate text-sm font-bold">Players</span>
-            <span className="block text-[0.65rem] text-muted">form and fixtures</span>
+            <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
+              Scout
+            </span>
+            <span className="mt-1 block truncate text-base font-semibold tracking-tight">
+              Players
+            </span>
+            <span className="block text-xs text-muted">form and fixtures</span>
           </span>
         </Link>
       </section>

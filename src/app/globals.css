@@ -7,59 +7,69 @@
   token architecture unchanged; the look is its own.
 */
 :root {
-  --bg: #0a0912;
-  --bg-2: #171029;
-  --surface: #131020;
-  --surface-raised: #1b1730;
-  --line: rgba(255, 255, 255, 0.06);
-  --line-strong: rgba(255, 255, 255, 0.14);
-  --fg: #f5f4fa;
-  --muted: #9d99b0;
-  --muted-2: #6b6780;
+  /* True black so the iOS status bar (drawn black in this theme) meets the
+     page with no seam. All depth comes from the elevated surfaces. */
+  --bg: #000000;
+  --bg-2: #000000;
+  --surface: #121216;
+  --surface-raised: #1b1b21;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --fg: #f4f4f6;
+  --muted: #9b9aa3;
+  --muted-2: #6a6972;
 
-  --accent: #8b5cf6;
-  --accent-2: #6d28d9;
-  --accent-ink: #ffffff;
+  /* Colour is an accent, never a fill. */
+  --accent: #a78bfa;
+  --accent-2: #8b5cf6;
+  --accent-ink: #000000;
 
-  --gold: #f5b73d;
-  --silver: #c9d2e3;
-  --bronze: #e08e57;
-  --slate: #6b7896;
+  /* Primary actions are ink-on-paper, not a candy gradient. */
+  --btn-bg: #f4f4f6;
+  --btn-fg: #000000;
 
-  --live: #fb3d80;
-  --glow-1: rgba(124, 58, 237, 0.22);
-  --glow-2: rgba(139, 92, 246, 0.08);
-  --glass-bg: rgba(14, 12, 24, 0.85);
-  --card-shadow: none;
+  --gold: #e3b25f;
+  --silver: #c9cbd3;
+  --bronze: #c98b5c;
+  --slate: #6a6972;
+
+  --live: #f43f6e;
+  --glow-1: rgba(255, 255, 255, 0.035);
+  --glow-2: rgba(167, 139, 250, 0.05);
+  --glass-bg: rgba(14, 14, 18, 0.88);
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 24px -18px rgba(0, 0, 0, 0.9);
 }
 
 /* Day theme: crisp white cards on a soft cool ground. Toggled by the theme
    button (cookie epld_theme); dark stays the default. */
 [data-theme='light'] {
-  --bg: #f2f3f8;
-  --bg-2: #e9ebf4;
+  --bg: #f6f6f7;
+  --bg-2: #efeff1;
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --line: rgba(23, 26, 38, 0.1);
-  --line-strong: rgba(23, 26, 38, 0.2);
-  --fg: #171a26;
-  --muted: #5a6076;
-  --muted-2: #8a90a6;
+  --line: rgba(16, 16, 20, 0.1);
+  --line-strong: rgba(16, 16, 20, 0.2);
+  --fg: #16161a;
+  --muted: #5d5d67;
+  --muted-2: #8b8b95;
 
-  --accent: #6d28d9;
-  --accent-2: #5b21b6;
+  --accent: #5b21b6;
+  --accent-2: #4c1d95;
   --accent-ink: #ffffff;
 
-  --gold: #b07b16;
-  --silver: #8a93a8;
-  --bronze: #a9622f;
-  --slate: #7e8696;
+  --btn-bg: #16161a;
+  --btn-fg: #ffffff;
 
-  --live: #d61f69;
-  --glow-1: rgba(109, 40, 217, 0.08);
-  --glow-2: rgba(214, 31, 105, 0.05);
-  --glass-bg: rgba(255, 255, 255, 0.88);
-  --card-shadow: 0 1px 2px rgba(23, 26, 38, 0.05), 0 4px 16px rgba(23, 26, 38, 0.04);
+  --gold: #9a7325;
+  --silver: #83838d;
+  --bronze: #9a6238;
+  --slate: #7b7b85;
+
+  --live: #c81e57;
+  --glow-1: rgba(16, 16, 20, 0.03);
+  --glow-2: rgba(91, 33, 182, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --card-shadow: 0 1px 2px rgba(16, 16, 20, 0.06), 0 8px 24px -16px rgba(16, 16, 20, 0.18);
 }
 
 @theme inline {
@@ -101,15 +111,16 @@ body {
   letter-spacing: 0.01em;
 }
 
-/* Deep plum wash from the top, settling to near-black. */
+/* Flat ground. Any lift sits low in the page so the top edge is exactly
+   --bg and meets the status bar seamlessly. */
 .bg-atmosphere {
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(140% 55% at 50% -8%, var(--glow-1), transparent 62%),
-    linear-gradient(180deg, var(--bg-2), var(--bg) 45%);
+    radial-gradient(120% 55% at 50% 118%, var(--glow-2), transparent 60%),
+    var(--bg);
 }
 
 /* Display type: same face as body, heavier and tighter. */
@@ -119,19 +130,20 @@ body {
   font-weight: 700;
 }
 
-/* Primary action: full violet gradient pill. */
+/* Primary action: solid ink on paper. High contrast, no gradient. */
 .btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   min-height: 3rem;
-  border-radius: 9999px;
+  border-radius: 0.85rem;
   padding-inline: 1.5rem;
-  background: linear-gradient(100deg, #8b5cf6, #6d28d9);
-  color: #ffffff;
-  font-weight: 700;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: 600;
   font-size: 0.9rem;
+  letter-spacing: -0.01em;
 }
 .btn-primary:active {
   transform: scale(0.97);
@@ -140,19 +152,20 @@ body {
   opacity: 0.4;
 }
 
-/* Secondary action: outlined pill. */
+/* Secondary action: hairline outline, no colour fill. */
 .btn-outline {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   min-height: 3rem;
-  border-radius: 9999px;
+  border-radius: 0.85rem;
   padding-inline: 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  color: var(--accent);
-  font-weight: 700;
+  border: 1px solid var(--line-strong);
+  color: var(--fg);
+  font-weight: 600;
   font-size: 0.9rem;
+  letter-spacing: -0.01em;
 }
 .btn-outline:active {
   transform: scale(0.97);
@@ -229,49 +242,39 @@ body {
   }
 }
 
-/* Home dashboard: tinted tiles with a soft corner wash and a matching
-   glow, so the grid reads as a designed board instead of grey boxes. */
+/* Home tiles: one restrained surface treatment, no colour fills. The tile-*
+   modifiers now only tint the small icon, kept so markup stays stable. */
 .tile {
   position: relative;
   overflow: hidden;
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   border: 1px solid var(--line);
-  background: var(--surface);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
   box-shadow: var(--card-shadow);
 }
-.tile::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(105% 75% at 50% 118%, var(--tile-wash), transparent 68%);
+[data-theme='light'] .tile {
+  background: var(--surface);
 }
-.tile > * {
-  position: relative;
-}
-.tile-violet { --tile-wash: rgba(139, 92, 246, 0.28); }
-.tile-gold { --tile-wash: rgba(245, 183, 61, 0.22); }
-.tile-pink { --tile-wash: rgba(251, 61, 128, 0.2); }
-.tile-cyan { --tile-wash: rgba(56, 189, 248, 0.2); }
 
-/* The gameweek hero: violet gradient panel with a light sweep. */
+/* The gameweek panel: an elevated surface with an editorial countdown, not
+   a saturated slab. */
 .hero-gw {
   position: relative;
   overflow: hidden;
-  border-radius: 1.35rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  background:
-    radial-gradient(120% 90% at 12% 0%, rgba(255, 255, 255, 0.14), transparent 55%),
-    linear-gradient(135deg, #7c3aed 0%, #5b21b6 55%, #3b1180 100%);
-  color: #ffffff;
-  box-shadow: 0 10px 30px -12px rgba(124, 58, 237, 0.55);
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  box-shadow: var(--card-shadow);
+}
+[data-theme='light'] .hero-gw {
+  background: var(--surface);
 }
 .count-tile {
-  min-width: 3.25rem;
-  border-radius: 0.9rem;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 0.5rem 0.25rem 0.4rem;
+  min-width: 3.5rem;
+  padding: 0 0.25rem;
+}
+.count-tile + .count-tile {
+  border-left: 1px solid var(--line);
 }
 
 /* Surfaces: flat, clean, softly shadowed in the light theme. */

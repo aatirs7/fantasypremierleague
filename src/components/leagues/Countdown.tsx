@@ -53,13 +53,13 @@ export function CountdownBlocks({ toIso, doneText }: { toIso: string; doneText: 
         ];
 
   return (
-    <div className="flex justify-center gap-2.5">
+    <div className="flex justify-center">
       {blocks.map(([n, label]) => (
         <div key={label as string} className="count-tile text-center">
-          <p className="text-2xl font-bold leading-none tabular-nums">
+          <p className="text-3xl font-semibold leading-none tracking-tight tabular-nums">
             {String(n).padStart(2, '0')}
           </p>
-          <p className="mt-1 text-[0.55rem] font-bold uppercase tracking-[0.15em] opacity-70">
+          <p className="mt-1.5 text-[0.55rem] font-medium uppercase tracking-[0.2em] text-muted-2">
             {label}
           </p>
         </div>
