@@ -31,7 +31,6 @@ import LeagueActions from '@/components/leagues/LeagueActions';
 import LeagueSwitcher from '@/components/leagues/LeagueSwitcher';
 import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
-import PullToRefresh from '@/components/PullToRefresh';
 
 export const dynamic = 'force-dynamic';
 
@@ -261,7 +260,6 @@ export default async function HomePage({
 
   return (
     <div className="space-y-4 py-2 lg:mx-auto lg:max-w-2xl">
-      <PullToRefresh />
       <RememberLeague leagueId={activeId} />
 
       <header className="reveal pb-1 pt-1 text-center">

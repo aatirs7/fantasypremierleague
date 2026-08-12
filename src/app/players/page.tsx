@@ -6,7 +6,6 @@ import { db } from '@/lib/db';
 import { fplPlayers } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import PlayerCard from '@/components/players/PlayerCard';
-import PullToRefresh from '@/components/PullToRefresh';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,7 +65,6 @@ export default async function PlayersPage({
 
   return (
     <div className="reveal space-y-3 py-4 lg:mx-auto lg:max-w-2xl">
-      <PullToRefresh />
       <h1 className="text-center font-display text-4xl">Players</h1>
 
       <div className="card space-y-3 p-3.5">

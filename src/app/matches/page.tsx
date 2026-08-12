@@ -4,7 +4,6 @@ import { asc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { fixtures, fplPlayers, gameweeks } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
-import PullToRefresh from '@/components/PullToRefresh';
 import LivePoller from '@/components/matches/LivePoller';
 import ClubBadge from '@/components/matches/ClubBadge';
 import LocalTime from '@/components/LocalTime';
@@ -128,7 +127,6 @@ export default async function MatchesPage({
 
   return (
     <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
-      <PullToRefresh />
       {anyLive ? <LivePoller /> : null}
 
       <header className="flex flex-col items-center gap-3 pt-2">

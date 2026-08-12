@@ -11,8 +11,10 @@ import { useRouter } from 'next/navigation';
 //  2. Code: router.refresh does NOT pull new client bundles, so after a fresh
 //     deploy we poll the running deployment id and do a real reload when it
 //     changes (skipped while the user is typing).
-const THROTTLE_MS = 8000;
-const POLL_MS = 90000;
+// There is no pull-to-refresh gesture anywhere in the app: this is the only
+// refresh mechanism, so it polls fairly briskly while the app is visible.
+const THROTTLE_MS = 4000;
+const POLL_MS = 30000;
 
 export default function AutoRefresh() {
   const router = useRouter();

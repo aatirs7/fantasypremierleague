@@ -14,7 +14,6 @@ import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
 import Avatar from '@/components/Avatar';
 import LocalTime from '@/components/LocalTime';
-import PullToRefresh from '@/components/PullToRefresh';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +40,6 @@ export default async function LeaguePage({
 
   return (
     <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
-      <PullToRefresh />
       <RememberLeague leagueId={league.id} />
 
       <div className="flex flex-col items-center gap-2 pt-2 text-center">
