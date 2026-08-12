@@ -111,17 +111,17 @@ body {
   letter-spacing: 0.01em;
 }
 
-/* Ground: a deep vertical wash with a low violet bloom, plus fine grain so
-   large dark areas have texture instead of reading as an empty void. */
+/* Ground: the top pixel is exactly --bg so the strip the status bar sits on
+   is the same colour as the page. Any bloom is kept away from that edge. */
 .bg-atmosphere {
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(100% 42% at 50% 100%, var(--glow-2), transparent 70%),
-    radial-gradient(90% 38% at 50% 0%, var(--glow-1), transparent 72%),
-    linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 55%);
+    radial-gradient(100% 40% at 50% 100%, var(--glow-2), transparent 70%),
+    radial-gradient(85% 32% at 50% 38%, var(--glow-1), transparent 72%),
+    var(--bg);
 }
 .bg-grain {
   position: fixed;
@@ -132,12 +132,20 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Mobile app bar. */
-.app-bar {
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border-bottom: 1px solid var(--line);
+/* Where floating chrome (theme, help) sits, clear of the status bar. In the
+   dark theme the page runs under a translucent status bar, so chrome starts
+   lower; in light the strip is opaque and chrome can sit near the top. */
+:root {
+  --chrome-top: 3.4rem;
+}
+[data-theme='light'] {
+  --chrome-top: 0.6rem;
+}
+@media (min-width: 1024px) {
+  :root,
+  [data-theme='light'] {
+    --chrome-top: 0.75rem;
+  }
 }
 
 /* Display type: same face as body, heavier and tighter. */

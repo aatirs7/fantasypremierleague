@@ -31,7 +31,12 @@ export async function generateMetadata(): Promise<Metadata> {
     appleWebApp: {
       capable: true,
       title: 'EPL Draft',
-      statusBarStyle: theme === 'light' ? 'default' : 'black',
+      // black-translucent makes the installed app draw UNDER the status bar,
+      // so the page background paints that strip and there is no seam. The
+      // page reserves 3.5rem of top padding to clear it (see --chrome-top).
+      // Light theme keeps an opaque strip, because the translucent one forces
+      // white clock/battery text that a light page cannot carry.
+      statusBarStyle: theme === 'light' ? 'default' : 'black-translucent',
     },
   };
 }
@@ -79,7 +84,7 @@ export default async function RootLayout({
         <AutoRefresh />
         <ThemeButton initial={theme} />
         <DesktopNav />
-        <main className="mx-auto w-full max-w-md flex-1 px-4 pt-6 lg:max-w-6xl lg:px-8 lg:pt-24">
+        <main className="mx-auto w-full max-w-md flex-1 px-4 pt-14 lg:max-w-6xl lg:px-8 lg:pt-24">
           {children}
         </main>
         <BottomTabBar />
