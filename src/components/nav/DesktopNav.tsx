@@ -28,12 +28,15 @@ export default function DesktopNav() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`relative flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors ${
-                  active ? 'text-[var(--accent-ink)]' : 'text-muted hover:text-foreground'
+                className={`relative flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
+                  active ? 'text-foreground' : 'text-muted-2 hover:text-muted'
                 }`}
               >
                 {active ? (
-                  <span className="absolute inset-0 -z-10 rounded-xl bg-accent" aria-hidden />
+                  <span
+                    className="absolute inset-0 -z-10 rounded-lg border border-edge bg-[var(--surface-raised)]"
+                    aria-hidden
+                  />
                 ) : null}
                 <Icon className="h-4 w-4" strokeWidth={2.4} />
                 {tab.label}

@@ -401,7 +401,7 @@ export default async function HomePage({
       <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
         <Link
           href="/squad"
-          className="tile flex aspect-square flex-col justify-between p-4 active:scale-[0.98]"
+          className="tile flex aspect-square max-h-[12.5rem] flex-col justify-between p-4 active:scale-[0.98]"
         >
           <Shirt className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
           <span className="min-w-0">
@@ -426,7 +426,7 @@ export default async function HomePage({
 
         <Link
           href={`/league/${activeId}`}
-          className="tile flex aspect-square flex-col justify-between p-4 active:scale-[0.98]"
+          className="tile flex aspect-square max-h-[12.5rem] flex-col justify-between p-4 active:scale-[0.98]"
         >
           <Trophy className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
           <span className="min-w-0">
@@ -451,7 +451,7 @@ export default async function HomePage({
         {active?.draftStatus === 'complete' && firstPick ? (
           <Link
             href={`/draft?league=${activeId}`}
-            className="tile flex aspect-square flex-col justify-between p-4 active:scale-[0.98]"
+            className="tile flex aspect-square max-h-[12.5rem] flex-col justify-between p-4 active:scale-[0.98]"
           >
             <Swords className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
             <span className="min-w-0">
@@ -468,7 +468,7 @@ export default async function HomePage({
 
         <Link
           href="/players"
-          className="tile flex aspect-square flex-col justify-between p-4 active:scale-[0.98]"
+          className="tile flex aspect-square max-h-[12.5rem] flex-col justify-between p-4 active:scale-[0.98]"
         >
           <Search className="h-5 w-5 text-muted-2" strokeWidth={1.8} />
           <span className="min-w-0">
