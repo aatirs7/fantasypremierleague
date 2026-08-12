@@ -459,7 +459,7 @@ export default async function HomePage({
 
       {/* Board strip: fills the last of the screen with real faces. */}
       <section className="reveal" style={{ animationDelay: '150ms' }}>
-        <p className="mb-2 text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+        <p className="mb-1.5 text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
           {seasonRunning ? 'Leading scorers' : 'Top of the board'}
         </p>
         <div className="-mx-4 overflow-x-auto px-4">
@@ -468,12 +468,12 @@ export default async function HomePage({
               <Link
                 key={p.fplId}
                 href={`/players/${p.fplId}`}
-                className="tile flex w-[4.6rem] flex-col items-center gap-1 px-2 py-2.5 text-center active:scale-[0.98]"
+                className="tile flex w-[4.6rem] flex-col items-center gap-0.5 px-2 pb-1.5 pt-1.5 text-center active:scale-[0.98]"
               >
                 <span className="text-[0.55rem] font-medium tabular-nums text-muted-2">
                   {seasonRunning ? `${p.totalPoints} pts` : `#${p.draftRank ?? i + 1}`}
                 </span>
-                <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={34} />
+                <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={28} />
                 <span className="w-full truncate text-[0.62rem] font-semibold leading-tight">
                   {p.webName}
                 </span>
