@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Plus, Search, Star, Tras
 import PlayerPhoto from '@/components/players/PlayerPhoto';
 import Avatar from '@/components/Avatar';
 import RingTimer from '@/components/RingTimer';
+import LocalTime from '@/components/LocalTime';
 
 // The draft room. Renders purely from the polled state payload so every
 // device shows identical truth; the countdown renders from the server
@@ -552,14 +553,7 @@ export default function DraftRoom({
           </div>
           {state.draftTime ? (
             <p className="text-center text-sm text-muted">
-              Scheduled for{' '}
-              {new Date(state.draftTime).toLocaleString('en-US', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-                hour: 'numeric',
-                minute: '2-digit',
-              })}
+              Scheduled for <LocalTime iso={state.draftTime} mode="date-time" />
             </p>
           ) : null}
         </div>

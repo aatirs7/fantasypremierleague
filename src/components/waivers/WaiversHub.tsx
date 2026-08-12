@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Search, X } from 'lucide-react';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
+import LocalTime from '@/components/LocalTime';
 
 // Waivers hub: pool with search/filters, claim queue with reorder, the
 // visible priority order, and the results feed. During free agency the same
@@ -152,7 +153,7 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
             <p className="text-sm">
               <span className="font-bold text-accent">Claims open.</span>{' '}
               <span className="text-muted">
-                Processed {new Date(win.closesAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}
+                Processed <LocalTime iso={win.closesAt} mode="weekday-time" />
                 , 24h before the deadline.
               </span>
             </p>

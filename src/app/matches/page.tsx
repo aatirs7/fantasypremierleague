@@ -7,6 +7,7 @@ import { readSession } from '@/lib/auth';
 import PullToRefresh from '@/components/PullToRefresh';
 import LivePoller from '@/components/matches/LivePoller';
 import ClubBadge from '@/components/matches/ClubBadge';
+import LocalTime from '@/components/LocalTime';
 import { computePLTable } from '@/lib/pl-table';
 
 export const dynamic = 'force-dynamic';
@@ -58,9 +59,7 @@ function MatchCard({ f, clubById }: { f: FixtureRow; clubById: Map<number, Club>
             </span>
           ) : (
             <span className="font-display text-base leading-none text-foreground">
-              {f.kickoff
-                ? f.kickoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-                : 'TBC'}
+              {f.kickoff ? <LocalTime iso={f.kickoff.toISOString()} mode="time" /> : 'TBC'}
             </span>
           )}
         </div>
@@ -118,11 +117,11 @@ export default async function MatchesPage({
     ? plTable.some((r) => r.live)
     : rows.some((f) => f.started && !f.finished);
 
+  // Group by calendar day. The heading itself renders in the viewer's
+  // timezone from the day's first kickoff.
   const byDay = new Map<string, FixtureRow[]>();
   for (const f of rows) {
-    const key = f.kickoff
-      ? f.kickoff.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' })
-      : 'Date TBC';
+    const key = f.kickoff ? f.kickoff.toISOString().slice(0, 10) : 'tbc';
     if (!byDay.has(key)) byDay.set(key, []);
     byDay.get(key)!.push(f);
   }
@@ -228,15 +227,24 @@ export default async function MatchesPage({
           </div>
           <p className="text-center text-xs text-muted-2">
             {gw.name}
-            {gw.finished
-              ? ' · finished'
-              : ` · deadline ${gw.deadline.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}`}
+            {gw.finished ? (
+              ' · finished'
+            ) : (
+              <>
+                {' · deadline '}
+                <LocalTime iso={gw.deadline.toISOString()} mode="weekday-time" />
+              </>
+            )}
           </p>
 
           {[...byDay.entries()].map(([day, dayRows]) => (
             <section key={day}>
               <h2 className="sticky top-0 z-10 mb-2 -mx-1 bg-[var(--bg)]/80 px-1 py-1 text-center font-display text-lg tracking-wide text-muted backdrop-blur lg:top-16">
-                {day}
+                {dayRows[0]?.kickoff ? (
+                  <LocalTime iso={dayRows[0].kickoff.toISOString()} mode="day" />
+                ) : (
+                  'Date TBC'
+                )}
               </h2>
               <div className="space-y-2">
                 {dayRows.map((f) => (

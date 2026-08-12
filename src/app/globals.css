@@ -229,6 +229,51 @@ body {
   }
 }
 
+/* Home dashboard: tinted tiles with a soft corner wash and a matching
+   glow, so the grid reads as a designed board instead of grey boxes. */
+.tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+.tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(105% 75% at 50% 118%, var(--tile-wash), transparent 68%);
+}
+.tile > * {
+  position: relative;
+}
+.tile-violet { --tile-wash: rgba(139, 92, 246, 0.28); }
+.tile-gold { --tile-wash: rgba(245, 183, 61, 0.22); }
+.tile-pink { --tile-wash: rgba(251, 61, 128, 0.2); }
+.tile-cyan { --tile-wash: rgba(56, 189, 248, 0.2); }
+
+/* The gameweek hero: violet gradient panel with a light sweep. */
+.hero-gw {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgba(255, 255, 255, 0.14), transparent 55%),
+    linear-gradient(135deg, #7c3aed 0%, #5b21b6 55%, #3b1180 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 30px -12px rgba(124, 58, 237, 0.55);
+}
+.count-tile {
+  min-width: 3.25rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 0.5rem 0.25rem 0.4rem;
+}
+
 /* Surfaces: flat, clean, softly shadowed in the light theme. */
 .card {
   background: var(--surface);

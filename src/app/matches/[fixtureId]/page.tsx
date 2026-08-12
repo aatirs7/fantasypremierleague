@@ -7,6 +7,7 @@ import { fixtures, fplPlayers, type FixtureStat } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import ClubBadge from '@/components/matches/ClubBadge';
 import LivePoller from '@/components/matches/LivePoller';
+import LocalTime from '@/components/LocalTime';
 
 export const dynamic = 'force-dynamic';
 
@@ -131,15 +132,12 @@ export default async function MatchDetailPage({
           }`}
         >
           {status}
-          {!f.started && f.kickoff
-            ? ` ${f.kickoff.toLocaleString('en-US', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-                hour: 'numeric',
-                minute: '2-digit',
-              })}`
-            : ''}
+          {!f.started && f.kickoff ? (
+            <>
+              {' '}
+              <LocalTime iso={f.kickoff.toISOString()} mode="date-time" />
+            </>
+          ) : null}
         </p>
         {scorersHome.length || scorersAway.length ? (
           <div className="mx-auto grid max-w-sm grid-cols-2 gap-3 text-[0.7rem] text-muted">

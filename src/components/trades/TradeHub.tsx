@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeftRight, X } from 'lucide-react';
+import LocalTime from '@/components/LocalTime';
 
 // Trade hub: build an offer by tapping players on both sides, plus inbox
 // (accept/reject), outgoing (cancel), and owner veto on accepted trades.
@@ -142,7 +143,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
       </p>
       {t.executesAt && t.status === 'accepted' ? (
         <p className="text-[0.65rem] text-muted-2">
-          Executes {new Date(t.executesAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })} unless vetoed
+          Executes <LocalTime iso={t.executesAt} mode="weekday-time" /> unless vetoed
         </p>
       ) : null}
       {actions}

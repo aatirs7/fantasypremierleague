@@ -13,6 +13,7 @@ import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
 import Avatar from '@/components/Avatar';
+import LocalTime from '@/components/LocalTime';
 import PullToRefresh from '@/components/PullToRefresh';
 
 export const dynamic = 'force-dynamic';
@@ -91,13 +92,7 @@ export default async function LeaguePage({
                   <Countdown toIso={league.draftTime.toISOString()} doneText="It is draft time" />
                 </p>
                 <p className="text-xs text-muted">
-                  {new Date(league.draftTime).toLocaleString('en-US', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })}
+                  <LocalTime iso={league.draftTime.toISOString()} mode="date-time" />
                 </p>
               </>
             ) : (
