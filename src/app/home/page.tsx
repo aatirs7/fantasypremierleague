@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc as sqlDesc, desc, eq, inArray, sql as sqlRaw } from 'drizzle-orm';
 import {
   ChevronRight,
   Search,
@@ -32,6 +32,7 @@ import LeagueSwitcher from '@/components/leagues/LeagueSwitcher';
 import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
 import NoScroll from '@/components/NoScroll';
+import PlayerPhoto from '@/components/players/PlayerPhoto';
 
 export const dynamic = 'force-dynamic';
 
@@ -119,6 +120,28 @@ export default async function HomePage({
   const liveClubShort = new Map(liveClubs.map((c) => [c.clubId, c.clubShort]));
 
   const teamName = mySquad?.name ?? `${session.username} FC`;
+
+  // A strip of names for the bottom of the dashboard: before the draft it is
+  // the top of the board, once the season is running it is who is in form.
+  const seasonRunning = (currentGw?.gw ?? 0) > 0 && active?.draftStatus === 'complete';
+  const boardPlayers = await db
+    .select({
+      fplId: sqlFplId.fplId,
+      photoCode: sqlFplId.photoCode,
+      webName: sqlFplId.webName,
+      clubShort: sqlFplId.clubShort,
+      position: sqlFplId.position,
+      draftRank: sqlFplId.draftRank,
+      form: sqlFplId.form,
+      totalPoints: sqlFplId.totalPoints,
+    })
+    .from(sqlFplId)
+    .orderBy(
+      seasonRunning
+        ? sqlDesc(sqlFplId.totalPoints)
+        : sqlRaw`${sqlFplId.draftRank} asc nulls last`,
+    )
+    .limit(8);
 
   // Formation string from the current editable lineup, e.g. 4-3-3.
   let formation: string | null = null;
@@ -434,7 +457,34 @@ export default async function HomePage({
 
       </section>
 
-      {/* Recap lives on the league page; home stays to one screen. */}
+      {/* Board strip: fills the last of the screen with real faces. */}
+      <section className="reveal" style={{ animationDelay: '150ms' }}>
+        <p className="mb-2 text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+          {seasonRunning ? 'Leading scorers' : 'Top of the board'}
+        </p>
+        <div className="-mx-4 overflow-x-auto px-4">
+          <div className="flex w-max gap-2.5">
+            {boardPlayers.map((p, i) => (
+              <Link
+                key={p.fplId}
+                href={`/players/${p.fplId}`}
+                className="tile flex w-[4.6rem] flex-col items-center gap-1 px-2 py-2.5 text-center active:scale-[0.98]"
+              >
+                <span className="text-[0.55rem] font-medium tabular-nums text-muted-2">
+                  {seasonRunning ? `${p.totalPoints} pts` : `#${p.draftRank ?? i + 1}`}
+                </span>
+                <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={34} />
+                <span className="w-full truncate text-[0.62rem] font-semibold leading-tight">
+                  {p.webName}
+                </span>
+                <span className="text-[0.55rem] text-muted-2">
+                  {p.clubShort} · {p.position}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
