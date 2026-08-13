@@ -314,6 +314,86 @@ export const standingSnapshots = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Head to head: a weekly opponent, then playoffs. Regular season runs to
+// REGULAR_SEASON_END, semis and the final land on the last two gameweeks.
+
+export const matchups = pgTable(
+  'matchups',
+  {
+    leagueId: uuid('league_id').notNull(),
+    gw: integer('gw').notNull(),
+    // Slot distinguishes concurrent playoff ties in the same gameweek.
+    slot: integer('slot').notNull().default(0),
+    homeUserId: uuid('home_user_id').notNull(),
+    // Null away side means a bye (odd number of managers).
+    awayUserId: uuid('away_user_id'),
+    homePoints: integer('home_points'),
+    awayPoints: integer('away_points'),
+    // regular | semi | final | third
+    round: text('round').notNull().default('regular'),
+    settled: boolean('settled').notNull().default(false),
+  },
+  (t) => [primaryKey({ columns: [t.leagueId, t.gw, t.slot] })],
+);
+
+// One row per manager per league, rolled up from settled matchups.
+export const h2hRecords = pgTable(
+  'h2h_records',
+  {
+    leagueId: uuid('league_id').notNull(),
+    userId: uuid('user_id').notNull(),
+    wins: integer('wins').notNull().default(0),
+    losses: integer('losses').notNull().default(0),
+    draws: integer('draws').notNull().default(0),
+    pointsFor: integer('points_for').notNull().default(0),
+    pointsAgainst: integer('points_against').notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.leagueId, t.userId] })],
+);
+
+// ---------------------------------------------------------------------------
+// Chips: one use each per season, played before a gameweek deadline.
+
+export const chips = pgTable(
+  'chips',
+  {
+    leagueId: uuid('league_id').notNull(),
+    userId: uuid('user_id').notNull(),
+    // triple_captain | bench_boost | wildcard
+    chip: text('chip').notNull(),
+    gw: integer('gw').notNull(),
+    playedAt: timestamp('played_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.leagueId, t.userId, t.chip] })],
+);
+
+// ---------------------------------------------------------------------------
+// Weekly awards and league chat: the banter layer.
+
+export const gwAwards = pgTable(
+  'gw_awards',
+  {
+    leagueId: uuid('league_id').notNull(),
+    gw: integer('gw').notNull(),
+    // manager_of_week | bench_disaster | captain_curse | wooden_spoon
+    kind: text('kind').notNull(),
+    userId: uuid('user_id').notNull(),
+    value: integer('value').notNull().default(0),
+    detail: text('detail'),
+  },
+  (t) => [primaryKey({ columns: [t.leagueId, t.gw, t.kind] })],
+);
+
+export const messages = pgTable('messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  leagueId: uuid('league_id').notNull(),
+  // Null author means a system post (awards, trades, draft results).
+  userId: uuid('user_id'),
+  body: text('body').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ---------------------------------------------------------------------------
 // Waivers and trades
 
 export const waiverClaims = pgTable('waiver_claims', {

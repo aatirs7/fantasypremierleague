@@ -49,11 +49,13 @@ export async function rescoreGwProvisional(gw: number, notes: string[]): Promise
   const { statOf, posOf } = await statMaps(gw);
   void posOf;
   const { squadRows, lineupBySquad } = await allSquadsWithLineups(gw);
+  const { activeChipsBySquad } = await import('./chips');
+  const chipOf = await activeChipsBySquad(gw);
   let scored = 0;
   for (const s of squadRows) {
     const picks = lineupBySquad.get(s.squadId);
     if (!picks) continue;
-    const r = computeProvisionalScore(picks, statOf);
+    const r = computeProvisionalScore(picks, statOf, chipOf.get(s.squadId) ?? null);
     await db
       .insert(gwScores)
       .values({
@@ -85,13 +87,15 @@ export async function rescoreGwProvisional(gw: number, notes: string[]): Promise
 export async function finalizeGw(gw: number, notes: string[]): Promise<void> {
   const { statOf, posOf } = await statMaps(gw);
   const { squadRows, lineupBySquad } = await allSquadsWithLineups(gw);
+  const { activeChipsBySquad } = await import('./chips');
+  const chipOf = await activeChipsBySquad(gw);
   let scored = 0;
   for (const s of squadRows) {
     // A squad with no lineup for this GW (drafted mid-season, or the
     // ensure step raced) gets one now so it is never silently zeroed.
     const picks = lineupBySquad.get(s.squadId) ?? (await ensureLineup(s.squadId, gw));
     if (!picks) continue;
-    const r = computeFinalScore(picks, statOf, posOf);
+    const r = computeFinalScore(picks, statOf, posOf, chipOf.get(s.squadId) ?? null);
     await db
       .insert(gwScores)
       .values({
@@ -127,11 +131,27 @@ export async function finalizeGw(gw: number, notes: string[]): Promise<void> {
     .from(leagues)
     .where(and(eq(leagues.draftStatus, 'complete'), eq(leagues.isTest, false)));
   const { recomputePriorityFromStandings } = await import('./waivers');
+  const { settleGw } = await import('./h2h');
+  const { computeAwards } = await import('./awards');
+  const { postSystemMessage } = await import('./chat');
   for (const l of leagueRows) {
     try {
       await recomputePriorityFromStandings(l.id);
     } catch (e) {
       notes.push(`waiver priority league ${l.id} FAILED: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    // Head to head result, weekly awards, and the feed post that carries
+    // them into the league chat.
+    try {
+      await settleGw(l.id, gw, notes);
+    } catch (e) {
+      notes.push(`h2h league ${l.id} FAILED: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    try {
+      await computeAwards(l.id, gw, notes);
+      await postSystemMessage(l.id, gw);
+    } catch (e) {
+      notes.push(`awards league ${l.id} FAILED: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 }

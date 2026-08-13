@@ -73,27 +73,38 @@ export function applyAutosubs(
   return { finalXi: xi, autosubs };
 }
 
+// Chips that change how a gameweek scores.
+export type ScoringChip = 'triple_captain' | 'bench_boost' | 'wildcard' | null;
+
 // Final score for a finished, data-checked GW.
 export function computeFinalScore(
   picks: LineupPick[],
   statOf: Map<number, PlayerGwStat>,
   posOf: Map<number, string>,
+  chip: ScoringChip = null,
 ): ScoreResult {
-  const { finalXi, autosubs } = applyAutosubs(picks, statOf, posOf);
   const stat = (id: number) => statOf.get(id) ?? ZERO;
+
+  // Bench boost: every one of the 15 counts, so there is nothing to sub in.
+  const boosted = chip === 'bench_boost';
+  const { finalXi, autosubs } = boosted
+    ? { finalXi: picks.map((p) => p.fplId), autosubs: [] as AutoSub[] }
+    : applyAutosubs(picks, statOf, posOf);
+
   const rawPoints = finalXi.reduce((sum, id) => sum + stat(id).totalPoints, 0);
   const goals = finalXi.reduce((sum, id) => sum + stat(id).goals, 0);
 
   const captain = picks.find((p) => p.isCaptain)?.fplId;
   const vice = picks.find((p) => p.isVice)?.fplId;
-  // Captain doubles. If the captain played 0 minutes, the vice doubles
-  // instead. If both played 0, nobody doubles. An autosubbed-out captain by
-  // definition played 0 minutes.
+  // Captain doubles (triples with the chip). If the captain played 0 minutes,
+  // the vice takes over. If both played 0, nobody is multiplied. An
+  // autosubbed-out captain by definition played 0 minutes.
+  const extra = chip === 'triple_captain' ? 2 : 1;
   let captainBonus = 0;
   if (captain != null && stat(captain).minutes > 0) {
-    captainBonus = stat(captain).totalPoints;
+    captainBonus = stat(captain).totalPoints * extra;
   } else if (vice != null && stat(vice).minutes > 0) {
-    captainBonus = stat(vice).totalPoints;
+    captainBonus = stat(vice).totalPoints * extra;
   }
   return {
     rawPoints,
@@ -111,13 +122,18 @@ export function computeFinalScore(
 export function computeProvisionalScore(
   picks: LineupPick[],
   statOf: Map<number, PlayerGwStat>,
+  chip: ScoringChip = null,
 ): ScoreResult {
   const stat = (id: number) => statOf.get(id) ?? ZERO;
-  const xi = picks.filter((p) => p.starting).map((p) => p.fplId);
+  const xi =
+    chip === 'bench_boost'
+      ? picks.map((p) => p.fplId)
+      : picks.filter((p) => p.starting).map((p) => p.fplId);
   const rawPoints = xi.reduce((sum, id) => sum + stat(id).totalPoints, 0);
   const goals = xi.reduce((sum, id) => sum + stat(id).goals, 0);
   const captain = picks.find((p) => p.isCaptain)?.fplId;
-  const captainBonus = captain != null ? stat(captain).totalPoints : 0;
+  const extra = chip === 'triple_captain' ? 2 : 1;
+  const captainBonus = captain != null ? stat(captain).totalPoints * extra : 0;
   return {
     rawPoints,
     captainBonus,

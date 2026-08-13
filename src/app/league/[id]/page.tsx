@@ -9,6 +9,9 @@ import { MIN_MANAGERS, isLeagueMember, leagueMemberList } from '@/lib/leagues';
 import InviteShare from '@/components/leagues/InviteShare';
 import LeagueStandings from '@/components/leagues/LeagueStandings';
 import PLStandings from '@/components/matches/PLStandings';
+import H2HStandings from '@/components/leagues/H2HStandings';
+import AwardsFeed from '@/components/leagues/AwardsFeed';
+import ChipsPanel from '@/components/leagues/ChipsPanel';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
@@ -61,22 +64,37 @@ export default async function LeaguePage({
       </div>
 
       {!pending && league.draftStatus === 'complete' ? (
-        <div className="flex justify-center gap-6 border-b border-edge">
-          <Link href={`/league/${league.id}`} data-active={!showPl} className="tab-underline">
-            Standings
-          </Link>
-          <Link href={`/league/${league.id}?view=pl`} data-active={showPl} className="tab-underline">
-            PL Table
-          </Link>
-          <Link href={`/league/${league.id}/stats`} className="tab-underline">
-            Stats
-          </Link>
-          <Link href={`/league/${league.id}/waivers`} className="tab-underline">
-            Waivers
-          </Link>
-          <Link href={`/league/${league.id}/trades`} className="tab-underline">
-            Trades
-          </Link>
+        <div className="-mx-4 overflow-x-auto px-4">
+          <div className="flex w-max min-w-full justify-center gap-5 border-b border-edge">
+            {(
+              [
+                ['', 'Head to head', view == null],
+                ['?view=points', 'Points', view === 'points'],
+                ['?view=pl', 'PL Table', showPl],
+              ] as [string, string, boolean][]
+            ).map(([suffix, label, active]) => (
+              <Link
+                key={label}
+                href={`/league/${league.id}${suffix}`}
+                data-active={active}
+                className="tab-underline whitespace-nowrap"
+              >
+                {label}
+              </Link>
+            ))}
+            <Link href={`/league/${league.id}/chat`} className="tab-underline whitespace-nowrap">
+              Chat
+            </Link>
+            <Link href={`/league/${league.id}/stats`} className="tab-underline whitespace-nowrap">
+              Stats
+            </Link>
+            <Link href={`/league/${league.id}/waivers`} className="tab-underline whitespace-nowrap">
+              Waivers
+            </Link>
+            <Link href={`/league/${league.id}/trades`} className="tab-underline whitespace-nowrap">
+              Trades
+            </Link>
+          </div>
         </div>
       ) : null}
 
@@ -126,9 +144,13 @@ export default async function LeaguePage({
         </Link>
       ) : showPl ? (
         <PLStandings />
+      ) : view === 'points' ? (
+        <LeagueStandings league={league} viewerId={session.userId} members={members} />
       ) : (
         <>
-          <LeagueStandings league={league} viewerId={session.userId} members={members} />
+          <H2HStandings leagueId={league.id} viewerId={session.userId} />
+          <ChipsPanel leagueId={league.id} />
+          <AwardsFeed leagueId={league.id} />
           <Link
             href={`/draft?league=${league.id}`}
             className="btn-outline mx-auto w-full max-w-xs"

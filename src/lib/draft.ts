@@ -126,6 +126,15 @@ async function advance(
       })
       .where(eq(leagues.id, league.id))
       .returning();
+    // The head-to-head calendar is built from the draft order, so generate
+    // it as soon as the board is full. Best effort: a failure here must not
+    // roll back the completed draft.
+    try {
+      const { ensureSchedule } = await import('./h2h');
+      await ensureSchedule(league.id);
+    } catch {
+      // the cron regenerates it on the next finalize
+    }
     return updated;
   }
   const nextPicker = members[pickerIndex(nextPick, members.length)];
