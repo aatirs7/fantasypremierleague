@@ -471,8 +471,8 @@ export default async function HomePage({
       </section>
 
       {/* Board strip: fills the last of the screen with real faces. */}
-      <section className="reveal shrink-0" style={{ animationDelay: '150ms' }}>
-        <p className="mb-1.5 text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+      <section className="reveal mt-1.5 shrink-0" style={{ animationDelay: '150ms' }}>
+        <p className="mb-2 text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
           {seasonRunning ? 'Leading scorers' : 'Top of the board'}
         </p>
         <div className="-mx-4 overflow-x-auto px-4">
