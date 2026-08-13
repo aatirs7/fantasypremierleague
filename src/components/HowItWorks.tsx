@@ -175,7 +175,7 @@ export default function HowItWorks({ trigger }: { trigger: 'card' | 'button' | '
           onClick={close}
         >
           <div
-            className="glass reveal w-full max-w-md space-y-5 rounded-t-3xl p-6 pb-10 text-center lg:rounded-3xl lg:pb-6"
+            className="reveal w-full max-w-md space-y-5 rounded-t-3xl border border-edge bg-surface-raised p-6 pb-10 text-center shadow-2xl lg:rounded-3xl lg:pb-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative">
@@ -195,11 +195,10 @@ export default function HowItWorks({ trigger }: { trigger: 'card' | 'button' | '
               </button>
             </div>
 
-            <ul className="mx-auto min-h-32 max-w-xs space-y-2.5 text-left">
+            <ul className="mx-auto flex min-h-32 max-w-xs flex-col justify-center gap-3 text-center">
               {card.lines.map((line, i) => (
-                <li key={i} className="flex gap-2.5 text-sm leading-relaxed">
-                  <span className="mt-[0.55rem] h-1 w-1 shrink-0 rounded-full bg-accent" />
-                  <span>{line}</span>
+                <li key={i} className="text-sm leading-relaxed text-muted">
+                  {line}
                 </li>
               ))}
             </ul>

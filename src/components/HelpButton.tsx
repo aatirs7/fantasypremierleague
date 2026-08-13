@@ -145,7 +145,7 @@ export default function HelpButton() {
           onClick={close}
         >
           <div
-            className="glass reveal w-full max-w-md space-y-5 rounded-t-3xl p-6 pb-10 text-center lg:rounded-3xl lg:pb-6"
+            className="reveal w-full max-w-md space-y-5 rounded-t-3xl border border-edge bg-surface-raised p-6 pb-10 text-center shadow-2xl lg:rounded-3xl lg:pb-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative">
