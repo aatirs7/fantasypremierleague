@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   BarChart3,
+  BookOpen,
   CalendarDays,
   ChevronRight,
   ListOrdered,
@@ -24,6 +25,7 @@ export default async function MorePage() {
   const theme = (await cookies()).get('epld_theme')?.value === 'light' ? 'light' : 'dark';
 
   const items = [
+    { href: '/how-it-works', label: 'How it works', sub: 'Rules, chips, playoffs', icon: BookOpen },
     { href: '/players', label: 'Players', sub: 'Scout all 577', icon: Search },
     { href: '/matches', label: 'Matches', sub: 'Fixtures and live scores', icon: CalendarDays },
     { href: '/matches?view=table', label: 'PL Table', sub: 'The real standings', icon: ListOrdered },

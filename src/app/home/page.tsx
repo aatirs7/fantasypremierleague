@@ -77,6 +77,12 @@ export default async function HomePage({
           Join a friend&apos;s league with their code, or start your own and share it.
         </p>
         <LeagueActions />
+        <Link
+          href="/how-it-works"
+          className="btn-outline mx-auto w-full max-w-xs"
+        >
+          How it works
+        </Link>
       </div>
     );
   }
@@ -292,6 +298,12 @@ export default async function HomePage({
           {greeting().replace(',', '')}
         </p>
         <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">{session.username}</h1>
+        <Link
+          href="/how-it-works"
+          className="mt-1 inline-block text-[0.68rem] font-medium text-accent"
+        >
+          How it works
+        </Link>
       </header>
 
       {mine.length > 1 ? (
