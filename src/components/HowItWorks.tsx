@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowLeftRight,
   BookOpen,
@@ -120,6 +121,8 @@ const CARDS: Card[] = [
 export default function HowItWorks({ trigger }: { trigger: 'card' | 'button' | 'row' }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const close = () => {
     setOpen(false);
@@ -165,14 +168,14 @@ export default function HowItWorks({ trigger }: { trigger: 'card' | 'button' | '
       </button>
     );
 
-  return (
-    <>
-      {opener}
-      {open ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 lg:items-center"
-          onClick={close}
-        >
+  // The sheet is portalled to the body. Rendered in place it would be
+  // trapped inside the home column's overflow:hidden and behind any later
+  // sibling that animates, since .reveal makes its own stacking context.
+  const sheet = open ? (
+    <div
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/85 lg:items-center"
+      onClick={close}
+    >
           <div
             className="reveal w-full max-w-md space-y-5 rounded-t-3xl border border-edge p-6 pb-10 text-center shadow-2xl lg:rounded-3xl lg:pb-6"
             style={{ background: 'var(--surface-raised)', backdropFilter: 'none' }}
@@ -229,8 +232,13 @@ export default function HowItWorks({ trigger }: { trigger: 'card' | 'button' | '
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+    </div>
+  ) : null;
+
+  return (
+    <>
+      {opener}
+      {mounted && sheet ? createPortal(sheet, document.body) : null}
     </>
   );
 }
