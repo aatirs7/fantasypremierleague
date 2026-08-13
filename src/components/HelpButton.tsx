@@ -96,7 +96,6 @@ function topicFor(pathname: string): HelpTopic | null {
       ],
     };
   }
-  if (pathname.startsWith('/how-it-works')) return null;
   if (pathname.startsWith('/more')) {
     return {
       title: 'More',

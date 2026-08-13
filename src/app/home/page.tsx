@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { and, desc as sqlDesc, desc, eq, inArray, sql as sqlRaw } from 'drizzle-orm';
 import {
-  BookOpen,
   ChevronRight,
   Search,
   Shirt,
@@ -33,6 +32,7 @@ import LeagueSwitcher from '@/components/leagues/LeagueSwitcher';
 import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
 import NoScroll from '@/components/NoScroll';
+import HowItWorks from '@/components/HowItWorks';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
 
 export const dynamic = 'force-dynamic';
@@ -78,12 +78,7 @@ export default async function HomePage({
           Join a friend&apos;s league with their code, or start your own and share it.
         </p>
         <LeagueActions />
-        <Link
-          href="/how-it-works"
-          className="btn-outline mx-auto w-full max-w-xs"
-        >
-          How it works
-        </Link>
+        <HowItWorks trigger="button" />
       </div>
     );
   }
@@ -412,13 +407,18 @@ export default async function HomePage({
         </Link>
       ) : null}
 
-      {/* Square tiles, two across, so the dashboard fits without scrolling. */}
+      {/* The rules, one obvious tap away. Slim bar so it costs little height. */}
+      <div className="reveal" style={{ animationDelay: '85ms' }}>
+        <HowItWorks trigger="card" />
+      </div>
+
+      {/* Two across, kept short so the board strip below is never cramped. */}
       <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
         <Link
           href="/squad"
-          className="tile flex aspect-square max-h-[10.5rem] flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
+          className="tile flex min-h-[7.5rem] flex-col items-center justify-center gap-1.5 p-3 text-center active:scale-[0.98]"
         >
-          <Shirt className="h-8 w-8 text-muted" strokeWidth={1.4} />
+          <Shirt className="h-6 w-6 text-muted" strokeWidth={1.5} />
           <span className="min-w-0 w-full">
             <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
               My Team
@@ -441,9 +441,9 @@ export default async function HomePage({
 
         <Link
           href={`/league/${activeId}`}
-          className="tile flex aspect-square max-h-[10.5rem] flex-col items-center justify-center gap-2 p-3 text-center active:scale-[0.98]"
+          className="tile flex min-h-[7.5rem] flex-col items-center justify-center gap-1.5 p-3 text-center active:scale-[0.98]"
         >
-          <Trophy className="h-8 w-8 text-muted" strokeWidth={1.4} />
+          <Trophy className="h-6 w-6 text-muted" strokeWidth={1.5} />
           <span className="min-w-0 w-full">
             <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
               League
@@ -463,22 +463,6 @@ export default async function HomePage({
         </Link>
 
       </section>
-
-      {/* The rules, one obvious tap away. */}
-      <Link
-        href="/how-it-works"
-        className="tile reveal flex items-center gap-3 px-4 py-3 active:scale-[0.99]"
-        style={{ animationDelay: '140ms' }}
-      >
-        <BookOpen className="h-5 w-5 shrink-0 text-accent" strokeWidth={1.8} />
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold tracking-tight">How it works</span>
-          <span className="block text-xs text-muted">
-            Draft, scoring, playoffs, chips and waivers explained
-          </span>
-        </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" />
-      </Link>
 
       {/* Board strip: fills the last of the screen with real faces. */}
       <section className="reveal" style={{ animationDelay: '150ms' }}>

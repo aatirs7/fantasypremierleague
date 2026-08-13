@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   BarChart3,
-  BookOpen,
   CalendarDays,
   ChevronRight,
   ListOrdered,
@@ -13,6 +12,7 @@ import { cookies } from 'next/headers';
 import { readSession } from '@/lib/auth';
 import { resolveActiveLeagueId } from '@/lib/leagues';
 import Avatar from '@/components/Avatar';
+import HowItWorks from '@/components/HowItWorks';
 import { ThemeRow } from '@/components/ThemeButton';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +25,6 @@ export default async function MorePage() {
   const theme = (await cookies()).get('epld_theme')?.value === 'light' ? 'light' : 'dark';
 
   const items = [
-    { href: '/how-it-works', label: 'How it works', sub: 'Rules, chips, playoffs', icon: BookOpen },
     { href: '/players', label: 'Players', sub: 'Scout all 577', icon: Search },
     { href: '/matches', label: 'Matches', sub: 'Fixtures and live scores', icon: CalendarDays },
     { href: '/matches?view=table', label: 'PL Table', sub: 'The real standings', icon: ListOrdered },
@@ -46,6 +45,7 @@ export default async function MorePage() {
       </Link>
 
       <div className="card divide-y divide-[var(--line)] px-1.5">
+        <HowItWorks trigger="row" />
         {items.map((item) => (
           <Link key={item.href} href={item.href} className="flex min-h-14 items-center gap-3 px-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/12 text-accent">
