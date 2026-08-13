@@ -285,11 +285,13 @@ export default async function HomePage({
   }
 
   return (
-    <div className="space-y-3 pb-2 lg:mx-auto lg:max-w-2xl">
+    // One screen, no scroll: a column that fills main exactly, with the two
+    // tiles as the only flexible row so everything else keeps its height.
+    <div className="flex h-full flex-col gap-3 overflow-hidden pb-2 lg:mx-auto lg:h-auto lg:max-w-2xl lg:overflow-visible">
       <NoScroll />
       <RememberLeague leagueId={activeId} />
 
-      <header className="reveal text-center">
+      <header className="reveal shrink-0 text-center">
         <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
           {greeting().replace(',', '')}
         </p>
@@ -304,7 +306,7 @@ export default async function HomePage({
       {liveFixtures.length ? (
         <Link
           href={liveFixtures.length === 1 ? `/matches/${liveFixtures[0].fplFixtureId}` : '/matches'}
-          className="tile reveal flex flex-col items-center gap-1.5 p-4 text-center active:scale-[0.99]"
+          className="tile reveal flex shrink-0 flex-col items-center gap-1.5 p-4 text-center active:scale-[0.99]"
         >
           <span className="flex items-center gap-1.5 text-[0.58rem] font-medium uppercase tracking-[0.22em] text-live">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-live" />
@@ -324,7 +326,7 @@ export default async function HomePage({
 
       {/* Gameweek panel. */}
       {nextGw ? (
-        <section className="hero-gw reveal px-5 pb-3 pt-4 text-center" style={{ animationDelay: '40ms' }}>
+        <section className="hero-gw reveal shrink-0 px-5 pb-3 pt-4 text-center" style={{ animationDelay: '40ms' }}>
           <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
             {active?.draftStatus === 'complete' ? 'Next deadline' : 'Season opener'}
           </p>
@@ -344,7 +346,7 @@ export default async function HomePage({
 
       {/* Season stat strip, once the league has drafted. */}
       {active?.draftStatus === 'complete' ? (
-        <section className="reveal grid grid-cols-3 gap-2.5" style={{ animationDelay: '60ms' }}>
+        <section className="reveal grid shrink-0 grid-cols-3 gap-2.5" style={{ animationDelay: '60ms' }}>
           {(
             [
               ['Rank', myRank ? ordinal(myRank) : '-', myRank ? `of ${fieldSize}` : 'no scores yet'],
@@ -375,7 +377,7 @@ export default async function HomePage({
 
       {/* Draft state card (pre-draft / live). */}
       {active?.draftStatus === 'pending' ? (
-        <section className="tile reveal space-y-2.5 p-3.5 text-center" style={{ animationDelay: '70ms' }}>
+        <section className="tile reveal shrink-0 space-y-2.5 p-3.5 text-center" style={{ animationDelay: '70ms' }}>
           <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
             Draft night
           </p>
@@ -399,7 +401,7 @@ export default async function HomePage({
       ) : active?.draftStatus === 'active' ? (
         <Link
           href={`/draft?league=${activeId}`}
-          className="btn-primary reveal w-full"
+          className="btn-primary reveal w-full shrink-0"
           style={{ animationDelay: '70ms' }}
         >
           <Swords className="h-5 w-5" />
@@ -408,15 +410,19 @@ export default async function HomePage({
       ) : null}
 
       {/* The rules, one obvious tap away. Slim bar so it costs little height. */}
-      <div className="reveal" style={{ animationDelay: '85ms' }}>
+      <div className="reveal shrink-0" style={{ animationDelay: '85ms' }}>
         <HowItWorks trigger="card" />
       </div>
 
-      {/* Two across, kept short so the board strip below is never cramped. */}
-      <section className="reveal grid grid-cols-2 gap-3" style={{ animationDelay: '100ms' }}>
+      {/* Two across. The only flexible row, so it absorbs whatever height is
+          left over and the board strip below is never pushed off screen. */}
+      <section
+        className="reveal grid min-h-0 flex-1 grid-cols-2 gap-3 lg:min-h-[9rem] lg:flex-none"
+        style={{ animationDelay: '100ms' }}
+      >
         <Link
           href="/squad"
-          className="tile flex min-h-[7.5rem] flex-col items-center justify-center gap-1.5 p-3 text-center active:scale-[0.98]"
+          className="tile flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1.5 overflow-hidden p-3 text-center active:scale-[0.98]"
         >
           <Shirt className="h-6 w-6 text-muted" strokeWidth={1.5} />
           <span className="min-w-0 w-full">
@@ -441,7 +447,7 @@ export default async function HomePage({
 
         <Link
           href={`/league/${activeId}`}
-          className="tile flex min-h-[7.5rem] flex-col items-center justify-center gap-1.5 p-3 text-center active:scale-[0.98]"
+          className="tile flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1.5 overflow-hidden p-3 text-center active:scale-[0.98]"
         >
           <Trophy className="h-6 w-6 text-muted" strokeWidth={1.5} />
           <span className="min-w-0 w-full">
@@ -465,7 +471,7 @@ export default async function HomePage({
       </section>
 
       {/* Board strip: fills the last of the screen with real faces. */}
-      <section className="reveal" style={{ animationDelay: '150ms' }}>
+      <section className="reveal shrink-0" style={{ animationDelay: '150ms' }}>
         <p className="mb-1.5 text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
           {seasonRunning ? 'Leading scorers' : 'Top of the board'}
         </p>

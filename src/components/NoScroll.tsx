@@ -2,24 +2,14 @@
 
 import { useEffect } from 'react';
 
-// Locks scrolling for the page that renders it. Home is designed to fit one
-// screen, so it should not move at all, even by a few pixels of rubber band.
+// Locks the page that renders it to exactly one screen. The attribute drives
+// the rules in globals.css: body gets a definite height, so the page column
+// can size itself against the viewport instead of growing past it.
 export default function NoScroll() {
   useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const prev = {
-      htmlOverflow: html.style.overflow,
-      bodyOverflow: body.style.overflow,
-      overscroll: body.style.overscrollBehavior,
-    };
-    html.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
-    body.style.overscrollBehavior = 'none';
+    document.body.setAttribute('data-fixed', 'true');
     return () => {
-      html.style.overflow = prev.htmlOverflow;
-      body.style.overflow = prev.bodyOverflow;
-      body.style.overscrollBehavior = prev.overscroll;
+      document.body.removeAttribute('data-fixed');
     };
   }, []);
   return null;

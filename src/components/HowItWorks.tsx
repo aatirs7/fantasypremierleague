@@ -147,18 +147,17 @@ export default function HowItWorks({ trigger }: { trigger: 'card' | 'button' | '
     ) : trigger === 'card' ? (
       <button
         onClick={() => setOpen(true)}
-        className="tile flex w-full items-center gap-2.5 px-3.5 py-2 text-left active:scale-[0.99]"
+        className="tile w-full px-3.5 py-2 text-center active:scale-[0.99]"
       >
-        <BookOpen className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.8} />
-        <span className="min-w-0 flex-1">
-          <span className="block text-[0.8rem] font-semibold leading-tight tracking-tight">
+        <span className="flex items-center justify-center gap-1.5">
+          <BookOpen className="h-3.5 w-3.5 shrink-0 text-accent" strokeWidth={1.8} />
+          <span className="text-[0.8rem] font-semibold leading-tight tracking-tight">
             How it works
           </span>
-          <span className="block truncate text-[0.65rem] leading-tight text-muted">
-            Draft, scoring, playoffs and chips explained
-          </span>
         </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" />
+        <span className="mt-0.5 block truncate text-[0.65rem] leading-tight text-muted">
+          Draft, scoring, playoffs and chips explained
+        </span>
       </button>
     ) : (
       <button onClick={() => setOpen(true)} className="btn-outline mx-auto w-full max-w-xs">
@@ -171,11 +170,12 @@ export default function HowItWorks({ trigger }: { trigger: 'card' | 'button' | '
       {opener}
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 lg:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 lg:items-center"
           onClick={close}
         >
           <div
-            className="reveal w-full max-w-md space-y-5 rounded-t-3xl border border-edge bg-surface-raised p-6 pb-10 text-center shadow-2xl lg:rounded-3xl lg:pb-6"
+            className="reveal w-full max-w-md space-y-5 rounded-t-3xl border border-edge p-6 pb-10 text-center shadow-2xl lg:rounded-3xl lg:pb-6"
+            style={{ background: 'var(--surface-raised)', backdropFilter: 'none' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative">

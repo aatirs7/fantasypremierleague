@@ -122,6 +122,26 @@ body {
   letter-spacing: 0.01em;
 }
 
+/* A page that must fit one screen (Home) sets data-fixed on the body. That
+   pins the body to the viewport height so its flex column resolves against
+   a definite height, and kills every last pixel of rubber band. Phone only:
+   on desktop the page is free to grow. */
+@media (max-width: 1023px) {
+  body[data-fixed='true'] {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  html:has(body[data-fixed='true']) {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  body[data-fixed='true'] > main {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
 /* Ground: a charcoal gradient, lighter up top and settling darker at the
    foot. The first layer keeps the top ~130px at exactly --bg-top so the
    strip the iOS status bar sits on matches it pixel for pixel, then fades
