@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { and, desc as sqlDesc, desc, eq, inArray, sql as sqlRaw } from 'drizzle-orm';
 import {
+  BookOpen,
   ChevronRight,
   Search,
   Shirt,
@@ -298,12 +299,6 @@ export default async function HomePage({
           {greeting().replace(',', '')}
         </p>
         <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">{session.username}</h1>
-        <Link
-          href="/how-it-works"
-          className="mt-1 inline-block text-[0.68rem] font-medium text-accent"
-        >
-          How it works
-        </Link>
       </header>
 
       {mine.length > 1 ? (
@@ -468,6 +463,22 @@ export default async function HomePage({
         </Link>
 
       </section>
+
+      {/* The rules, one obvious tap away. */}
+      <Link
+        href="/how-it-works"
+        className="tile reveal flex items-center gap-3 px-4 py-3 active:scale-[0.99]"
+        style={{ animationDelay: '140ms' }}
+      >
+        <BookOpen className="h-5 w-5 shrink-0 text-accent" strokeWidth={1.8} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold tracking-tight">How it works</span>
+          <span className="block text-xs text-muted">
+            Draft, scoring, playoffs, chips and waivers explained
+          </span>
+        </span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" />
+      </Link>
 
       {/* Board strip: fills the last of the screen with real faces. */}
       <section className="reveal" style={{ animationDelay: '150ms' }}>
