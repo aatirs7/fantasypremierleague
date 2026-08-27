@@ -107,7 +107,7 @@ function cards(leagueId: string, gw: number | null): Card[] {
         'Top four make the playoffs, semis in GW37 and the final on the last day.',
         'Weekly awards land on the league page. Manager of the Week, and the Wooden Spoon.',
       ],
-      cta: { label: 'Open the league', href: `/league/${leagueId}` },
+      cta: { label: 'See your draft grade', href: `/league/${leagueId}?view=grades` },
     },
   ];
 }

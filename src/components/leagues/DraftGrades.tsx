@@ -1,4 +1,5 @@
-import { leagueDraftGrades } from '@/lib/draft-grades';
+import { leagueDraftAwards, leagueDraftGrades, leaguePickCount } from '@/lib/draft-grades';
+import DraftReport from '@/components/leagues/DraftReport';
 import { teamNames } from '@/lib/names';
 import Avatar from '@/components/Avatar';
 import Link from 'next/link';
@@ -21,7 +22,12 @@ export default async function DraftGrades({
   leagueId: string;
   viewerId: string;
 }) {
-  const [grades, names] = await Promise.all([leagueDraftGrades(leagueId), teamNames(leagueId)]);
+  const [grades, awards, names, picks] = await Promise.all([
+    leagueDraftGrades(leagueId),
+    leagueDraftAwards(leagueId),
+    teamNames(leagueId),
+    leaguePickCount(leagueId),
+  ]);
   if (!grades.length) {
     return (
       <p className="tile p-5 text-center text-sm text-muted">
@@ -31,7 +37,15 @@ export default async function DraftGrades({
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
+      <DraftReport
+        grades={grades.map((g) => ({ ...g, username: names.get(g.userId) ?? g.username }))}
+        awards={awards.map((a) => ({ ...a, username: names.get(a.userId) ?? a.username }))}
+        viewerId={viewerId}
+        picks={picks}
+        autoOpen
+        storageKey={`epld_draftreport_${leagueId}`}
+      />
       <p className="text-center text-xs text-muted">
         Graded on the board, not the table. Value taken, positions covered, and how many of your
         picks can actually play.

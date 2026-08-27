@@ -237,3 +237,158 @@ export function gradeDraft(entries: GradeEntry[]): Grade[] {
     })
     .sort((a, b) => b.score - a.score);
 }
+
+// ---------------------------------------------------------------------------
+// Awards
+//
+// The grade says how well you drafted. The awards say what everyone will
+// actually argue about. One winner each, always awarded to somebody, and
+// only included when the data genuinely supports it.
+
+export type Award = {
+  key: string;
+  title: string;
+  userId: string;
+  username: string;
+  subject: string;
+  line: string;
+};
+
+export function draftAwards(entries: GradeEntry[]): Award[] {
+  if (entries.length < 2) return [];
+  const managers = entries.length;
+  const awards: Award[] = [];
+
+  const all = entries.flatMap((e) => e.players.map((p) => ({ e, p })));
+
+  // The player who fell furthest past his own draft rank.
+  const steal = all
+    .filter((x) => x.p.draftRank != null)
+    .sort((a, b) => b.p.pickNumber - b.p.draftRank! - (a.p.pickNumber - a.p.draftRank!))[0];
+  if (steal && steal.p.pickNumber - steal.p.draftRank! >= managers) {
+    awards.push({
+      key: 'steal',
+      title: 'Daylight Robbery',
+      userId: steal.e.userId,
+      username: steal.e.username,
+      subject: steal.p.webName,
+      line: `Sat there ${steal.p.pickNumber - steal.p.draftRank!} picks longer than he should have. Everyone else was asleep.`,
+    });
+  }
+
+  // The player taken furthest ahead of his rank.
+  const reach = all
+    .filter((x) => x.p.draftRank != null)
+    .sort((a, b) => a.p.draftRank! - a.p.pickNumber - (b.p.draftRank! - b.p.pickNumber))[0];
+  if (reach && reach.p.draftRank! - reach.p.pickNumber >= managers * 2) {
+    awards.push({
+      key: 'reach',
+      title: 'Nobody Was Bidding',
+      userId: reach.e.userId,
+      username: reach.e.username,
+      subject: reach.p.webName,
+      line: `Taken ${reach.p.draftRank! - reach.p.pickNumber} spots early. He was not going anywhere.`,
+    });
+  }
+
+  // Most players who cannot currently play.
+  const sick = entries
+    .map((e) => ({
+      e,
+      hurt: e.players.filter((p) => ['i', 's', 'u'].includes(p.status) && p.pickNumber <= 60),
+    }))
+    .sort((a, b) => b.hurt.length - a.hurt.length)[0];
+  if (sick && sick.hurt.length >= 2) {
+    awards.push({
+      key: 'sickbay',
+      title: 'The Treatment Room',
+      userId: sick.e.userId,
+      username: sick.e.username,
+      subject: sick.hurt.map((p) => p.webName).join(', '),
+      line: `${sick.hurt.length} early picks who cannot kick a ball. Not a squad, a waiting room.`,
+    });
+  }
+
+  // Deepest single-club stack.
+  const homer = entries
+    .map((e) => ({ e, stack: biggestClubStack(e.players) }))
+    .sort((a, b) => b.stack.count - a.stack.count)[0];
+  if (homer && homer.stack.count >= 4) {
+    awards.push({
+      key: 'homer',
+      title: 'Season Ticket Holder',
+      userId: homer.e.userId,
+      username: homer.e.username,
+      subject: `${homer.stack.count} ${homer.stack.club} players`,
+      line: `When ${homer.stack.club} lose 4-0, so do you. Diversification is free.`,
+    });
+  }
+
+  // Most picks handed to the clock.
+  const asleep = entries
+    .map((e) => ({ e, autos: e.players.filter((p) => p.autoPicked).length }))
+    .sort((a, b) => b.autos - a.autos)[0];
+  if (asleep && asleep.autos >= 1) {
+    awards.push({
+      key: 'asleep',
+      title: 'Drafted By The Clock',
+      userId: asleep.e.userId,
+      username: asleep.e.username,
+      subject: `${asleep.autos} auto pick${asleep.autos === 1 ? '' : 's'}`,
+      line: 'Turned up to a draft and let the timer do the hard part.',
+    });
+  }
+
+  // Earliest goalkeeper.
+  const keeper = entries
+    .map((e) => ({ e, round: firstKeeperRound(e.players, managers) }))
+    .filter((x) => x.round != null)
+    .sort((a, b) => a.round! - b.round!)[0];
+  if (keeper && keeper.round! <= 4) {
+    const gk = keeper.e.players
+      .filter((p) => p.position === 'GK')
+      .sort((a, b) => a.pickNumber - b.pickNumber)[0];
+    awards.push({
+      key: 'keeper',
+      title: 'Panic Between The Sticks',
+      userId: keeper.e.userId,
+      username: keeper.e.username,
+      subject: `${gk?.webName ?? 'A keeper'}, round ${keeper.round}`,
+      line: 'Nobody has ever won a league because they got the fourth best goalkeeper first.',
+    });
+  }
+
+  // Best starting eleven on paper.
+  const best = entries
+    .map((e) => ({ e, strength: startingValue(e.players) }))
+    .sort((a, b) => b.strength - a.strength)[0];
+  if (best) {
+    const star = best.e.players.slice().sort((a, b) => playerValue(b) - playerValue(a))[0];
+    awards.push({
+      key: 'best',
+      title: 'Best On Paper',
+      userId: best.e.userId,
+      username: best.e.username,
+      subject: star ? `Led by ${star.webName}` : 'The strongest eleven',
+      line: 'Paper does not play the fixtures, but it is a nice place to start.',
+    });
+  }
+
+  // Best player taken in the last three rounds.
+  const lateRoundStart = managers * 12;
+  const late = all
+    .filter((x) => x.p.pickNumber > lateRoundStart)
+    .sort((a, b) => playerValue(b.p) - playerValue(a.p))[0];
+  if (late && playerValue(late.p) > 60) {
+    awards.push({
+      key: 'bargain',
+      title: 'Bargain Bin',
+      userId: late.e.userId,
+      username: late.e.username,
+      subject: late.p.webName,
+      line: `Still on the board in round ${Math.ceil(late.p.pickNumber / managers)}. Someone was paying attention.`,
+    });
+  }
+
+  return awards;
+}

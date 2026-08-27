@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { gradeDraft, playerValue, type GradeEntry, type GradePlayer } from '../src/lib/draft-grade';
+import {
+  draftAwards,
+  gradeDraft,
+  playerValue,
+  type GradeEntry,
+  type GradePlayer,
+} from '../src/lib/draft-grade';
 
 let seq = 0;
 function player(
@@ -103,5 +109,43 @@ describe('gradeDraft', () => {
 
   it('returns nothing for an empty league', () => {
     expect(gradeDraft([])).toEqual([]);
+  });
+});
+
+describe('draftAwards', () => {
+  it('hands out an award for the biggest steal', () => {
+    const lucky = squad(120).map((p, i) =>
+      i === 0 ? { ...p, webName: 'Bargain', draftRank: 5, pickNumber: 90 } : p,
+    );
+    const out = draftAwards([entry('Lucky', lucky), entry('Other', squad(120))]);
+    const steal = out.find((a) => a.key === 'steal');
+    expect(steal?.username).toBe('Lucky');
+    expect(steal?.subject).toBe('Bargain');
+  });
+
+  it('hands out an award for the deepest club stack', () => {
+    const stacked = squad(120).map((p, i) => (i < 6 ? { ...p, clubShort: 'NFO' } : p));
+    const out = draftAwards([entry('Homer', stacked), entry('Other', squad(120))]);
+    const homer = out.find((a) => a.key === 'homer');
+    expect(homer?.username).toBe('Homer');
+    expect(homer?.subject).toMatch(/NFO/);
+  });
+
+  it('never awards the same key twice', () => {
+    const out = draftAwards([entry('A', squad(150)), entry('B', squad(80))]);
+    expect(new Set(out.map((a) => a.key)).size).toBe(out.length);
+  });
+
+  it('gives every award a winner and a line', () => {
+    const out = draftAwards([entry('A', squad(150)), entry('B', squad(80))]);
+    for (const a of out) {
+      expect(a.username.length).toBeGreaterThan(0);
+      expect(a.line.length).toBeGreaterThan(0);
+      expect(a.title.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('awards nothing to a one-manager league', () => {
+    expect(draftAwards([entry('Solo', squad(120))])).toEqual([]);
   });
 });

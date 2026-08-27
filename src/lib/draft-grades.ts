@@ -2,13 +2,13 @@ import 'server-only';
 import { and, eq, isNull } from 'drizzle-orm';
 import { db } from './db';
 import { draftPicks, fplPlayers, leagueMembers, squadPlayers, squads, users } from './schema';
-import { gradeDraft, type Grade, type GradeEntry } from './draft-grade';
+import { draftAwards, gradeDraft, type Award, type Grade, type GradeEntry } from './draft-grade';
 
 // Server side of the grader: assemble every manager's board and hand it to
 // the pure function. Recomputed on read rather than stored, because it is
 // cheap and because a player's status changes under it (an injury after the
 // draft should show up in the reasons).
-export async function leagueDraftGrades(leagueId: string): Promise<Grade[]> {
+async function buildEntries(leagueId: string): Promise<GradeEntry[]> {
   const members = await db
     .select({ userId: leagueMembers.userId, username: users.username, isBot: users.isBot })
     .from(leagueMembers)
@@ -61,7 +61,21 @@ export async function leagueDraftGrades(leagueId: string): Promise<Grade[]> {
       }),
   }));
 
-  return gradeDraft(entries.filter((e) => e.players.length > 0));
+  return entries.filter((e) => e.players.length > 0);
+}
+
+export async function leagueDraftGrades(leagueId: string): Promise<Grade[]> {
+  return gradeDraft(await buildEntries(leagueId));
+}
+
+export async function leagueDraftAwards(leagueId: string): Promise<Award[]> {
+  return draftAwards(await buildEntries(leagueId));
+}
+
+// How many picks the board actually took, for the report's opening line.
+export async function leaguePickCount(leagueId: string): Promise<number> {
+  const entries = await buildEntries(leagueId);
+  return entries.reduce((n, e) => n + e.players.length, 0);
 }
 
 // Kept for the squad view: who owns whom, without a second round trip.
