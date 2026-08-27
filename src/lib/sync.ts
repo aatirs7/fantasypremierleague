@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, eq, getTableColumns, isNull, lt, sql, SQL } from 'drizzle-orm';
+import { and, eq, getTableColumns, inArray, isNull, lt, sql, SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { db } from './db';
 import {
@@ -141,6 +141,20 @@ async function syncBootstrap(report: SyncReport): Promise<void> {
       .values(chunk)
       .onConflictDoUpdate({ target: fplPlayers.fplId, set: excludedSet(fplPlayers, ['fplId', 'draftRank']) });
     report.playersUpserted += chunk.length;
+  }
+
+  // Anyone we hold who is no longer in the bootstrap at all has left the
+  // game entirely; flag them so they cannot be drafted. Everyone present is
+  // reactivated by the upsert above.
+  const liveIds = new Set(data.elements.map((el) => el.id));
+  const held = await db.select({ fplId: fplPlayers.fplId }).from(fplPlayers);
+  const goneIds = held.map((h) => h.fplId).filter((id) => !liveIds.has(id));
+  if (goneIds.length) {
+    await db
+      .update(fplPlayers)
+      .set({ active: false })
+      .where(inArray(fplPlayers.fplId, goneIds));
+    report.notes.push(`bootstrap: ${goneIds.length} players no longer listed, deactivated`);
   }
 
   const gwRows = data.events

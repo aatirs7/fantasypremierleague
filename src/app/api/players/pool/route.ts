@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { fplPlayers } from '@/lib/schema';
+import { draftable } from '@/lib/pool';
 import { currentUserId } from '@/lib/auth';
 
 // The full player pool with draft-room-card fields, fetched once when the
@@ -25,6 +26,7 @@ export async function GET() {
       setPieceNotes: fplPlayers.setPieceNotes,
     })
     .from(fplPlayers)
+    .where(draftable())
     .orderBy(sql`${fplPlayers.draftRank} asc nulls last`, sql`${fplPlayers.totalPoints} desc`);
   return NextResponse.json({ players });
 }

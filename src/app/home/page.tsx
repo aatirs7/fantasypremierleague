@@ -26,6 +26,7 @@ import {
 import { readSession } from '@/lib/auth';
 import { editableGw } from '@/lib/lineup';
 import { leagueTable } from '@/lib/scoring';
+import { draftable } from '@/lib/pool';
 import { myLeagues, resolveActiveLeagueId } from '@/lib/leagues';
 import LeagueActions from '@/components/leagues/LeagueActions';
 import LeagueSwitcher from '@/components/leagues/LeagueSwitcher';
@@ -138,6 +139,7 @@ export default async function HomePage({
       totalPoints: sqlFplId.totalPoints,
     })
     .from(sqlFplId)
+    .where(draftable())
     .orderBy(
       seasonRunning
         ? sqlDesc(sqlFplId.totalPoints)

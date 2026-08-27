@@ -4,6 +4,7 @@ import PlayerSearch from '@/components/players/PlayerSearch';
 import { and, asc, desc, ilike, or, eq, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { fplPlayers } from '@/lib/schema';
+import { draftable } from '@/lib/pool';
 import { readSession } from '@/lib/auth';
 import PlayerCard from '@/components/players/PlayerCard';
 
@@ -42,10 +43,12 @@ export default async function PlayersPage({
     where.push(or(ilike(fplPlayers.webName, needle), ilike(fplPlayers.fullName, needle))!);
   }
 
+  // Departed players never show in the scouting list either.
+  where.push(draftable());
   const players = await db
     .select()
     .from(fplPlayers)
-    .where(where.length ? and(...where) : undefined)
+    .where(and(...where))
     .orderBy(...SORTS[sortKey].order, asc(fplPlayers.fplId))
     .limit(100);
 

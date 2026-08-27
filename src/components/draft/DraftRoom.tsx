@@ -66,6 +66,7 @@ type DraftState = {
 };
 
 const QUOTAS: Record<string, number> = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+const SQUAD_SIZE = 15;
 const POSITIONS = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
 
 const POS_CLS: Record<string, string> = {
@@ -75,11 +76,23 @@ const POS_CLS: Record<string, string> = {
   FWD: 'bg-[#38bdf8]/15 text-[#38bdf8]',
 };
 
+const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
+
+function countsOf(squad: SquadEntry[]): Record<string, number> {
+  const c: Record<string, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+  for (const s of squad) c[s.position]++;
+  return c;
+}
+
+// Filled dots per position, plus how many picks that manager still owes.
 function QuotaDots({ squad }: { squad: SquadEntry[] }) {
+  const counts = countsOf(squad);
+  const left = SQUAD_SIZE - squad.length;
   return (
     <span className="flex items-center gap-1.5">
-      {Object.entries(QUOTAS).map(([pos, max]) => {
-        const have = squad.filter((s) => s.position === pos).length;
+      {POS_ORDER.map((pos) => {
+        const max = QUOTAS[pos];
+        const have = counts[pos];
         return (
           <span key={pos} className="flex items-center gap-0.5 text-[0.55rem] font-bold text-muted">
             {pos}
@@ -94,7 +107,80 @@ function QuotaDots({ squad }: { squad: SquadEntry[] }) {
           </span>
         );
       })}
+      <span className="ml-1 shrink-0 text-[0.55rem] font-bold tabular-nums text-muted-2">
+        {left} left
+      </span>
     </span>
+  );
+}
+
+// Your team as it fills up, live. The counters are the thing you actually
+// need mid-draft: what you still owe at each position, and how many picks
+// are left to cover it.
+function MySquad({ squad }: { squad: SquadEntry[] }) {
+  const counts = countsOf(squad);
+  const left = SQUAD_SIZE - squad.length;
+  return (
+    <div className="card space-y-3 p-4">
+      <div className="flex items-baseline justify-between">
+        <p className="text-sm font-bold">Your squad</p>
+        <p className="text-xs tabular-nums text-muted">
+          {squad.length} of {SQUAD_SIZE}
+          {left > 0 ? <span className="text-muted-2"> · {left} to go</span> : null}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {POS_ORDER.map((pos) => {
+          const max = QUOTAS[pos];
+          const need = max - counts[pos];
+          return (
+            <div
+              key={pos}
+              className={`rounded-xl border px-1.5 py-2 text-center ${
+                need === 0 ? 'border-edge opacity-50' : 'border-accent/40 bg-accent/[0.06]'
+              }`}
+            >
+              <p className="text-[0.55rem] font-bold uppercase tracking-wider text-muted-2">{pos}</p>
+              <p className="mt-0.5 text-lg font-semibold leading-none tabular-nums">
+                {counts[pos]}
+                <span className="text-xs text-muted-2">/{max}</span>
+              </p>
+              <p className="mt-0.5 text-[0.55rem] font-semibold text-muted">
+                {need === 0 ? 'full' : `need ${need}`}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="space-y-1.5">
+        {POS_ORDER.map((pos) => {
+          const mine = squad.filter((s) => s.position === pos);
+          if (!mine.length) return null;
+          return (
+            <div key={pos} className="flex items-start gap-2">
+              <span className="w-8 shrink-0 pt-1 text-[0.55rem] font-bold uppercase tracking-wider text-muted-2">
+                {pos}
+              </span>
+              <span className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                {mine.map((p) => (
+                  <span
+                    key={p.fplId}
+                    className={`rounded-full px-2 py-1 text-[0.65rem] font-semibold ${POS_CLS[p.position] ?? ''}`}
+                  >
+                    {p.webName} · {p.clubShort}
+                  </span>
+                ))}
+              </span>
+            </div>
+          );
+        })}
+        {squad.length === 0 ? (
+          <p className="text-center text-xs text-muted-2">No picks yet. Your first one lands here.</p>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -390,7 +476,16 @@ export default function DraftRoom({
                     : 'border-edge bg-white/[0.02] text-muted'
               }`}
             >
-              {p === 'ALL' ? 'All' : p}
+              {p === 'ALL' ? (
+                `All ${SQUAD_SIZE - (mySquad?.length ?? 0)}`
+              ) : (
+                <>
+                  {p}
+                  <span className={`ml-1 tabular-nums ${full ? '' : 'text-muted-2'}`}>
+                    {Math.max(0, QUOTAS[p] - myCounts[p])}
+                  </span>
+                </>
+              )}
             </button>
           );
         })}
@@ -780,7 +875,8 @@ export default function DraftRoom({
         ) : null}
       </div>
 
-      {/* My plan + player pool. */}
+      {/* Your team so far, then the plan and the pool. */}
+      <MySquad squad={mySquad} />
       {queuePanel}
       {poolSection(true)}
 

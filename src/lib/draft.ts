@@ -13,6 +13,7 @@ import {
   users,
 } from './schema';
 import { MIN_MANAGERS } from './leagues';
+import { DEPARTED_STATUS } from './pool';
 
 // Snake draft engine. Every mutation runs inside one WebSocket transaction
 // holding pg_advisory_xact_lock on the league, so two managers tapping the
@@ -210,6 +211,8 @@ async function chooseAutoPick(
     .where(
       sql`${draftQueues.leagueId} = ${league.id}
         and ${draftQueues.userId} = ${userId}
+        and ${fplPlayers.active} = true
+        and ${fplPlayers.status} <> ${DEPARTED_STATUS}
         and not exists (
           select 1 from squad_players sp
           where sp.league_id = ${league.id}
@@ -238,6 +241,8 @@ async function chooseAutoPick(
     .from(fplPlayers)
     .where(
       sql`${fplPlayers.position} in ${bestPositions}
+        and ${fplPlayers.active} = true
+        and ${fplPlayers.status} <> ${DEPARTED_STATUS}
         and not exists (
           select 1 from squad_players sp
           where sp.league_id = ${league.id}
@@ -358,11 +363,19 @@ export async function makePick(
       throw new DraftError('The board moved on, check the latest state');
     }
     const [player] = await tx
-      .select({ fplId: fplPlayers.fplId, position: fplPlayers.position })
+      .select({
+        fplId: fplPlayers.fplId,
+        position: fplPlayers.position,
+        status: fplPlayers.status,
+        active: fplPlayers.active,
+      })
       .from(fplPlayers)
       .where(eq(fplPlayers.fplId, fplId))
       .limit(1);
     if (!player) throw new DraftError('Unknown player', 404);
+    if (!player.active || player.status === DEPARTED_STATUS) {
+      throw new DraftError('That player has left the Premier League', 409);
+    }
     // Still unowned in this league? The partial unique index backstops this.
     const [owned] = await tx
       .select({ id: squadPlayers.id })

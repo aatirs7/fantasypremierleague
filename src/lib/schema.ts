@@ -110,8 +110,13 @@ export const fplPlayers = pgTable('fpl_players', {
   price: numeric('price', { precision: 4, scale: 1 }),
   // From the Draft API; the auto-pick order. Lower is better.
   draftRank: integer('draft_rank'),
-  // a available, d doubtful, i injured, s suspended, u unavailable
+  // a available, d doubtful, i injured, s suspended, u unavailable.
+  // 'u' is how FPL flags a departure ("Has joined Napoli on loan").
   status: text('status').notNull().default('a'),
+  // False once a player stops appearing in the FPL bootstrap at all, so a
+  // stale row can never be drafted. Departures usually show up as status
+  // 'u' first; this catches outright removal.
+  active: boolean('active').notNull().default(true),
   news: text('news'),
   chanceNext: integer('chance_next'),
   totalPoints: integer('total_points').notNull().default(0),

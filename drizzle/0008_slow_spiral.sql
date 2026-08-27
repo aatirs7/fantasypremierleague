@@ -1,0 +1,1 @@
+ALTER TABLE "fpl_players" ADD COLUMN "active" boolean DEFAULT true NOT NULL;

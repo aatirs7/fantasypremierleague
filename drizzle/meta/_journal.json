@@ -57,6 +57,13 @@
       "when": 1787800747240,
       "tag": "0007_kind_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787802124890,
+      "tag": "0008_slow_spiral",
+      "breakpoints": true
     }
   ]
 }
