@@ -31,7 +31,7 @@ export default async function MorePage() {
     { href: '/matches', label: 'Matches', sub: 'Fixtures and live scores', icon: CalendarDays },
     { href: '/matches?view=table', label: 'PL Table', sub: 'The real standings', icon: ListOrdered },
     ...(leagueId
-      ? [{ href: `/league/${leagueId}/stats`, label: 'League Stats', sub: 'Records and MVP', icon: BarChart3 }]
+      ? [{ href: `/league/${leagueId}?view=stats`, label: 'League Stats', sub: 'Records and MVP', icon: BarChart3 }]
       : []),
     { href: '/me', label: 'Profile', sub: 'Account and leagues', icon: User },
   ];

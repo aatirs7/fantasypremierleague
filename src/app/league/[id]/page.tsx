@@ -11,6 +11,7 @@ import LeagueStandings from '@/components/leagues/LeagueStandings';
 import PLStandings from '@/components/matches/PLStandings';
 import H2HStandings from '@/components/leagues/H2HStandings';
 import AwardsFeed from '@/components/leagues/AwardsFeed';
+import LeagueStats from '@/components/leagues/LeagueStats';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
@@ -85,7 +86,11 @@ export default async function LeaguePage({
                 {label}
               </Link>
             ))}
-            <Link href={`/league/${league.id}/stats`} className="tab-underline whitespace-nowrap">
+            <Link
+              href={`/league/${league.id}?view=stats`}
+              data-active={view === 'stats'}
+              className="tab-underline whitespace-nowrap"
+            >
               Stats
             </Link>
             <Link href={`/league/${league.id}/waivers`} className="tab-underline whitespace-nowrap">
@@ -146,6 +151,8 @@ export default async function LeaguePage({
         <PLStandings />
       ) : view === 'points' ? (
         <LeagueStandings league={league} viewerId={session.userId} members={members} />
+      ) : view === 'stats' ? (
+        <LeagueStats leagueId={league.id} />
       ) : view === 'standings' ? (
         <H2HStandings leagueId={league.id} viewerId={session.userId} show="table" />
       ) : (
