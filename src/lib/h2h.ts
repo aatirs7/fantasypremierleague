@@ -1,7 +1,7 @@
 import 'server-only';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from './db';
-import { h2hRecords, matchups, gwScores, leagueMembers, squads, users } from './schema';
+import { h2hRecords, leagues, matchups, gwScores, leagueMembers, squads, users } from './schema';
 import {
   FINAL_GW,
   REGULAR_SEASON_END,
@@ -35,7 +35,16 @@ export async function ensureSchedule(leagueId: string): Promise<void> {
     .slice()
     .sort((a, b) => (a.draftOrder ?? 99) - (b.draftOrder ?? 99))
     .map((m) => m.userId);
-  const season = buildRegularSeason(ordered);
+  // A league drafted mid-season starts its fixture list at its own first
+  // gameweek, not at GW1.
+  const [league] = await db
+    .select({ startGw: leagues.startGw })
+    .from(leagues)
+    .where(eq(leagues.id, leagueId))
+    .limit(1);
+  const startGw = league?.startGw ?? 1;
+  if (startGw > REGULAR_SEASON_END) return;
+  const season = buildRegularSeason(ordered, startGw);
   if (!season.length) return;
 
   await db.insert(matchups).values(

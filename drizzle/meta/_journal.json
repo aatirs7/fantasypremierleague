@@ -50,6 +50,13 @@
       "when": 1786588041253,
       "tag": "0006_amused_invaders",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787800747240,
+      "tag": "0007_kind_sphinx",
+      "breakpoints": true
     }
   ]
 }

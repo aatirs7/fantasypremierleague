@@ -54,7 +54,10 @@ export default async function LeaguePage({
         </span>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{league.name}</h1>
-          <p className="text-sm text-muted">2026-27 Season</p>
+          <p className="text-sm text-muted">
+            {league.season} Season
+            {(league.startGw ?? 1) > 1 ? ` · from GW${league.startGw}` : ''}
+          </p>
         </div>
         {league.isTest ? (
           <p className="inline-block rounded-full bg-gold/20 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-gold">

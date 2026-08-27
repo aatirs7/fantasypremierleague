@@ -54,6 +54,10 @@ export const leagues = pgTable('leagues', {
   draftTime: timestamp('draft_time', { withTimezone: true }),
   // pending | active | complete
   draftStatus: text('draft_status').notNull().default('pending'),
+  // First gameweek whose points count for this league. Set when the draft
+  // completes, so a league drafted mid-season starts from the next
+  // gameweek instead of inheriting the whole season. Null means GW1.
+  startGw: integer('start_gw'),
   vetoEnabled: boolean('veto_enabled').notNull().default(false),
   season: text('season').notNull().default('2026-27'),
   isTest: boolean('is_test').notNull().default(false),

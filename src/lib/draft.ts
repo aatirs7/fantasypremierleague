@@ -1,10 +1,11 @@
 import 'server-only';
-import { and, asc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, isNull, sql } from 'drizzle-orm';
 import { withTransaction, type Tx } from './db';
 import {
   draftPicks,
   draftQueues,
   fplPlayers,
+  gameweeks,
   leagueMembers,
   leagues,
   squadPlayers,
@@ -116,10 +117,20 @@ async function advance(
   const totalPicks = members.length * SQUAD_SIZE;
   const nextPick = (league.currentPick ?? 0) + 1;
   if (nextPick > totalPicks) {
+    // The league's season begins at the next gameweek whose deadline has
+    // not passed. Draft in August and that is GW1; draft after GW1 has been
+    // played and nothing already banked counts towards this league.
+    const [upcoming] = await tx
+      .select({ gw: gameweeks.gw })
+      .from(gameweeks)
+      .where(gt(gameweeks.deadline, from))
+      .orderBy(asc(gameweeks.gw))
+      .limit(1);
     const [updated] = await tx
       .update(leagues)
       .set({
         draftStatus: 'complete',
+        startGw: upcoming?.gw ?? league.startGw ?? null,
         currentPick: null,
         currentPickDeadline: null,
         stateVersion: league.stateVersion + 1,
@@ -132,6 +143,8 @@ async function advance(
     try {
       const { ensureSchedule } = await import('./h2h');
       await ensureSchedule(league.id);
+      const { clearPreStartScores } = await import('./scoring');
+      await clearPreStartScores(league.id);
     } catch {
       // the cron regenerates it on the next finalize
     }

@@ -328,7 +328,11 @@ export default async function HomePage({
       {nextGw ? (
         <section className="hero-gw reveal shrink-0 px-5 pb-3 pt-4 text-center" style={{ animationDelay: '40ms' }}>
           <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
-            {active?.draftStatus === 'complete' ? 'Next deadline' : 'Season opener'}
+            {active?.draftStatus === 'complete'
+              ? 'Next deadline'
+              : nextGw.gw > 1
+                ? 'Your first gameweek'
+                : 'Season opener'}
           </p>
           <p className="mt-0.5 text-lg font-semibold tracking-tight">Gameweek {nextGw.gw}</p>
           <div className="mb-3 mt-3">

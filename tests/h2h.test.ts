@@ -66,6 +66,19 @@ describe('buildRegularSeason', () => {
   it('returns nothing for a one-manager league', () => {
     expect(buildRegularSeason(ids(1))).toEqual([]);
   });
+
+  it('starts at the league start gameweek when drafted mid-season', () => {
+    const matches = buildRegularSeason(ids(8), 12);
+    const gws = new Set(matches.map((m) => m.gw));
+    expect(Math.min(...gws)).toBe(12);
+    expect(Math.max(...gws)).toBe(REGULAR_SEASON_END);
+    // Still one fixture each, every week, from the start gameweek on.
+    for (let gw = 12; gw <= REGULAR_SEASON_END; gw++) {
+      const week = matches.filter((m) => m.gw === gw);
+      const players = week.flatMap((m) => [m.homeUserId, m.awayUserId]).filter(Boolean);
+      expect(new Set(players).size).toBe(8);
+    }
+  });
 });
 
 describe('playoffs', () => {

@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, lt } from 'drizzle-orm';
 import { db } from './db';
 import {
   fplPlayers,
@@ -36,13 +36,24 @@ async function statMaps(gw: number): Promise<{
   return { statOf, posOf: new Map(positions.map((p) => [p.fplId, p.position])) };
 }
 
+// Squads whose league counts this gameweek. A league drafted mid-season
+// carries a start_gw, and anything before it is not its season: no scores,
+// no lineups conjured, nothing rolled up.
 async function allSquadsWithLineups(gw: number) {
-  const squadRows = await db
+  const startGwOf = await leagueStartGws();
+  const all = await db
     .select({ squadId: squads.id, leagueId: squads.leagueId, userId: squads.userId })
     .from(squads);
+  const squadRows = all.filter((s) => gw >= (startGwOf.get(s.leagueId) ?? 1));
   const lineupRows = await db.select().from(lineups).where(eq(lineups.gw, gw));
   const lineupBySquad = new Map(lineupRows.map((l) => [l.squadId, l.picks]));
   return { squadRows, lineupBySquad };
+}
+
+// leagueId -> first gameweek that counts (1 when unset).
+export async function leagueStartGws(): Promise<Map<string, number>> {
+  const rows = await db.select({ id: leagues.id, startGw: leagues.startGw }).from(leagues);
+  return new Map(rows.map((r) => [r.id, r.startGw ?? 1]));
 }
 
 export async function rescoreGwProvisional(gw: number, notes: string[]): Promise<void> {
@@ -156,6 +167,29 @@ export async function finalizeGw(gw: number, notes: string[]): Promise<void> {
   }
 }
 
+// Wipe anything a league banked before its own season began, then roll the
+// totals back up. Called once when a draft completes; safe to re-run.
+export async function clearPreStartScores(leagueId: string): Promise<void> {
+  const [league] = await db
+    .select({ startGw: leagues.startGw })
+    .from(leagues)
+    .where(eq(leagues.id, leagueId))
+    .limit(1);
+  const startGw = league?.startGw ?? 1;
+  if (startGw <= 1) return;
+  const squadRows = await db
+    .select({ id: squads.id })
+    .from(squads)
+    .where(eq(squads.leagueId, leagueId));
+  if (!squadRows.length) return;
+  const ids = squadRows.map((s) => s.id);
+  await db
+    .delete(gwScores)
+    .where(and(inArray(gwScores.squadId, ids), lt(gwScores.gw, startGw)));
+  await db.delete(lineups).where(and(inArray(lineups.squadId, ids), lt(lineups.gw, startGw)));
+  await rollupSeasonScores();
+}
+
 // Season totals from final gw_scores only. GW wins are counted per league:
 // every squad sharing the league's top score that week gets a win.
 export async function rollupSeasonScores(): Promise<void> {
@@ -163,7 +197,14 @@ export async function rollupSeasonScores(): Promise<void> {
     .select({ squadId: squads.id, leagueId: squads.leagueId })
     .from(squads);
   const leagueOf = new Map(squadRows.map((s) => [s.squadId, s.leagueId]));
-  const finals = await db.select().from(gwScores).where(eq(gwScores.final, true));
+  const startGwOf = await leagueStartGws();
+  const allFinals = await db.select().from(gwScores).where(eq(gwScores.final, true));
+  // Belt and braces: rows written before a league had a start_gw must not
+  // count either, so filter on read as well as on write.
+  const finals = allFinals.filter((row) => {
+    const leagueId = leagueOf.get(row.squadId);
+    return !!leagueId && row.gw >= (startGwOf.get(leagueId) ?? 1);
+  });
 
   type Totals = { total: number; played: number; wins: number; goals: number };
   const totals = new Map<string, Totals>();
