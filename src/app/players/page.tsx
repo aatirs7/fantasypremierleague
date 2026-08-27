@@ -13,6 +13,10 @@ export const dynamic = 'force-dynamic';
 const SORTS: Record<string, { label: string; order: SQL[] }> = {
   draft: { label: 'Draft rank', order: [sql`${fplPlayers.draftRank} asc nulls last`] },
   points: { label: 'Points', order: [desc(fplPlayers.totalPoints)] },
+  last: {
+    label: 'Last szn',
+    order: [sql`${fplPlayers.lastSeasonPoints} desc nulls last`],
+  },
   form: { label: 'Form', order: [sql`${fplPlayers.form} desc nulls last`] },
   ppg: { label: 'PPG', order: [sql`${fplPlayers.ppg} desc nulls last`] },
   owned: { label: 'Owned', order: [sql`${fplPlayers.ownership} desc nulls last`] },

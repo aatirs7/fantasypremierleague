@@ -10,6 +10,8 @@ export type PlayerCardData = {
   price: string | null;
   draftRank: number | null;
   totalPoints: number;
+  lastSeason: string | null;
+  lastSeasonPoints: number | null;
   form: string | null;
   status: string;
   news: string | null;
@@ -55,9 +57,17 @@ export default function PlayerCard({ p }: { p: PlayerCardData }) {
           {p.setPieceNotes ? <span className="truncate text-muted-2">{p.setPieceNotes}</span> : null}
         </span>
       </span>
+      {/* Two numbers, both labelled. This season's total is near useless in
+          August, so last season's sits under it as the real signal. */}
       <span className="shrink-0 text-right">
-        <span className="block text-sm font-bold tabular-nums">{p.totalPoints} pts</span>
-        <span className="block text-xs text-muted tabular-nums">{p.form ?? '0.0'} form</span>
+        <span className="block text-sm font-bold tabular-nums">
+          {p.totalPoints}
+          <span className="ml-1 text-[0.6rem] font-medium text-muted-2">now</span>
+        </span>
+        <span className="block text-xs tabular-nums text-muted">
+          {p.lastSeasonPoints ?? '-'}
+          <span className="ml-1 text-[0.6rem] text-muted-2">last szn</span>
+        </span>
       </span>
     </Link>
   );

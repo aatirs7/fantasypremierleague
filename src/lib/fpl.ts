@@ -162,6 +162,13 @@ export type ElementSummary = {
     difficulty?: number;
     kickoff_time?: string;
   }[];
+  // Completed seasons, oldest first. The last entry is the season just gone.
+  history_past?: {
+    season_name?: string;
+    total_points?: number;
+    minutes?: number;
+    starts?: number;
+  }[];
 };
 
 export function fetchBootstrap(): Promise<Bootstrap> {

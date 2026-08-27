@@ -64,6 +64,13 @@
       "when": 1787802124890,
       "tag": "0008_slow_spiral",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1787804224553,
+      "tag": "0009_flaky_red_hulk",
+      "breakpoints": true
     }
   ]
 }

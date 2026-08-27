@@ -223,8 +223,14 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
             </div>
             <div>
               <p className="text-2xl font-bold tabular-nums">{p.totalPoints}</p>
-              <p className="text-xs text-muted">Points</p>
+              <p className="text-xs text-muted">Points now</p>
             </div>
+            {p.lastSeasonPoints != null ? (
+              <div>
+                <p className="text-2xl font-bold tabular-nums">{p.lastSeasonPoints}</p>
+                <p className="text-xs text-muted">{p.lastSeason ?? 'Last season'}</p>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -233,9 +239,9 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
       <div className="card grid grid-cols-4 divide-x divide-[var(--line)] py-3.5 text-center">
         {(
           [
-            [p.totalPoints, 'Points'],
+            [p.lastSeasonPoints ?? '-', p.lastSeason ?? 'Last season'],
+            [p.lastSeasonStarts ?? '-', 'Starts last szn'],
             [p.goals, 'Goals'],
-            [p.assists, 'Assists'],
             [p.form ?? '0.0', 'Form'],
           ] as [string | number, string][]
         ).map(([value, label]) => (

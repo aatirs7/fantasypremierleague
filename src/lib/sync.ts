@@ -12,6 +12,7 @@ import {
 } from './schema';
 import {
   fetchBootstrap,
+  fetchElementSummary,
   fetchDraftBootstrap,
   fetchFixtures,
   fetchLive,
@@ -394,6 +395,39 @@ export async function runSync(opts: { dry?: boolean; force?: boolean } = {}): Pr
       await setMeta(key, String(now));
     } catch (e) {
       report.notes.push(`ensure lineups gw${row.gw} FAILED: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  // Last-season totals, a few players at a time. history_past only changes
+  // when a new name enters the game, so this is a slow trickle that fills
+  // gaps (January signings, promoted-club squads) without ever costing the
+  // cron more than a handful of requests. '-' marks "checked, no history"
+  // so rookies are not retried forever.
+  if (force || now - (await getMetaMs('lastSeasonBackfill')) > 6 * 60 * 60 * 1000) {
+    try {
+      const missing = await db
+        .select({ fplId: fplPlayers.fplId })
+        .from(fplPlayers)
+        .where(and(eq(fplPlayers.active, true), isNull(fplPlayers.lastSeason)))
+        .limit(20);
+      for (const row of missing) {
+        const summary = await fetchElementSummary(row.fplId);
+        const past = summary.history_past ?? [];
+        const last = past[past.length - 1];
+        await db
+          .update(fplPlayers)
+          .set({
+            lastSeason: last?.season_name ?? '-',
+            lastSeasonPoints: last?.total_points ?? null,
+            lastSeasonMinutes: last?.minutes ?? null,
+            lastSeasonStarts: last?.starts ?? null,
+          })
+          .where(eq(fplPlayers.fplId, row.fplId));
+      }
+      if (missing.length) report.notes.push(`last season: filled ${missing.length} players`);
+      await setMeta('lastSeasonBackfill', String(now));
+    } catch (e) {
+      report.notes.push(`last season FAILED: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 

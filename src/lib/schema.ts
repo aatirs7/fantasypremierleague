@@ -119,7 +119,15 @@ export const fplPlayers = pgTable('fpl_players', {
   active: boolean('active').notNull().default(true),
   news: text('news'),
   chanceNext: integer('chance_next'),
+  // This season's running total, straight from the bootstrap. Early in a
+  // season it is nearly meaningless, which is why last season sits beside it.
   totalPoints: integer('total_points').notNull().default(0),
+  // Previous completed season, from element-summary history_past. Null until
+  // the backfill reaches this player; a rookie legitimately has none.
+  lastSeason: text('last_season'),
+  lastSeasonPoints: integer('last_season_points'),
+  lastSeasonMinutes: integer('last_season_minutes'),
+  lastSeasonStarts: integer('last_season_starts'),
   form: numeric('form', { precision: 4, scale: 2 }),
   ppg: numeric('ppg', { precision: 4, scale: 2 }),
   ownership: numeric('ownership', { precision: 5, scale: 2 }),
