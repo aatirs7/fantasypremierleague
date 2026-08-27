@@ -111,3 +111,66 @@ export function generateAutoLineup(squad: SquadPlayerInfo[]): LineupPick[] {
     })),
   ];
 }
+
+// Every legal shape, as (DEF, MID, FWD). One keeper is fixed, so the
+// outfield ten are what vary.
+export function legalFormations(): { def: number; mid: number; fwd: number; label: string }[] {
+  const out: { def: number; mid: number; fwd: number; label: string }[] = [];
+  for (let def = XI_MIN.DEF; def <= XI_MAX.DEF; def++) {
+    for (let mid = XI_MIN.MID; mid <= XI_MAX.MID; mid++) {
+      const fwd = 10 - def - mid;
+      if (fwd < XI_MIN.FWD || fwd > XI_MAX.FWD) continue;
+      out.push({ def, mid, fwd, label: `${def}-${mid}-${fwd}` });
+    }
+  }
+  return out;
+}
+
+// Rearrange a squad into a target shape, keeping as many of the current
+// starters as possible: the ones dropped are the weakest at their position,
+// and the ones promoted are the strongest on the bench. Anything that leaves
+// the XI loses its armband, because a captain on the bench scores nothing.
+export function applyFormation(
+  picks: { fplId: number; starting: boolean; slot: number; isCaptain: boolean; isVice: boolean }[],
+  positionOf: Map<number, string>,
+  strengthOf: (fplId: number) => number,
+  target: { def: number; mid: number; fwd: number },
+): typeof picks {
+  const want: Record<string, number> = { GK: 1, DEF: target.def, MID: target.mid, FWD: target.fwd };
+  const startingIds = new Set<number>();
+
+  for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {
+    const candidates = picks
+      .filter((p) => positionOf.get(p.fplId) === pos)
+      .sort((a, b) => {
+        // Current starters first, so a formation change is the smallest
+        // edit that satisfies the shape rather than a fresh team.
+        if (a.starting !== b.starting) return a.starting ? -1 : 1;
+        return strengthOf(b.fplId) - strengthOf(a.fplId);
+      });
+    for (const p of candidates.slice(0, want[pos])) startingIds.add(p.fplId);
+  }
+
+  const posOrder: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
+  const xi = picks
+    .filter((p) => startingIds.has(p.fplId))
+    .sort(
+      (a, b) =>
+        posOrder[positionOf.get(a.fplId) ?? 'MID'] - posOrder[positionOf.get(b.fplId) ?? 'MID'] ||
+        strengthOf(b.fplId) - strengthOf(a.fplId),
+    );
+  const bench = picks
+    .filter((p) => !startingIds.has(p.fplId))
+    .sort((a, b) => a.slot - b.slot);
+
+  return [
+    ...xi.map((p, i) => ({ ...p, starting: true, slot: i + 1 })),
+    ...bench.map((p, i) => ({
+      ...p,
+      starting: false,
+      slot: 12 + i,
+      isCaptain: false,
+      isVice: false,
+    })),
+  ];
+}

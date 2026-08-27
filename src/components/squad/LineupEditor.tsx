@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Crown, Repeat, Shield } from 'lucide-react';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
-import { XI_MAX, XI_MIN } from '@/lib/lineup-rules';
+import { applyFormation, legalFormations, XI_MAX, XI_MIN } from '@/lib/lineup-rules';
 import type { LineupPick } from '@/lib/schema';
 
 type PlayerInfo = {
@@ -51,6 +51,7 @@ export default function LineupEditor({
   // purpose, so a curious tap never becomes an accidental substitution.
   const [swapMode, setSwapMode] = useState(false);
   const [pickRole, setPickRole] = useState<'captain' | 'vice' | null>(null);
+  const [shapeOpen, setShapeOpen] = useState(false);
 
   const byId = useMemo(() => new Map(players.map((p) => [p.fplId, p])), [players]);
   const starters = picks.filter((p) => p.starting);
@@ -112,6 +113,22 @@ export default function LineupEditor({
     });
     setPicks(renumber(next));
     setSelected(null);
+    setDirty(true);
+  };
+
+  const setShape = (target: { def: number; mid: number; fwd: number }) => {
+    const positionOf = new Map(players.map((p) => [p.fplId, p.position]));
+    const strengthOf = (fplId: number) => {
+      const info = byId.get(fplId);
+      if (!info) return 0;
+      // Form decides who keeps the shirt, with an unavailable player last
+      // whatever his form says.
+      const base = Number(info.form ?? 0);
+      return info.status === 'a' ? base + 10 : base;
+    };
+    setPicks(applyFormation(picks, positionOf, strengthOf, target));
+    setSelected(null);
+    setShapeOpen(false);
     setDirty(true);
   };
 
@@ -275,9 +292,12 @@ export default function LineupEditor({
             edge and either side of the keeper, so nothing above it needs to
             exist. */}
         <div className="relative z-20 flex items-center justify-center gap-2">
-          <span className="rounded-full bg-black/35 px-2.5 py-1 text-[0.62rem] font-semibold text-white/80 backdrop-blur-sm">
+          <button
+            onClick={() => setShapeOpen(true)}
+            className="rounded-full bg-black/35 px-2.5 py-1 text-[0.62rem] font-semibold text-white/80 backdrop-blur-sm"
+          >
             {counts.DEF}-{counts.MID}-{counts.FWD}
-          </span>
+          </button>
           <button
             onClick={() => {
               setSwapMode(!swapMode);
@@ -375,9 +395,12 @@ export default function LineupEditor({
   const listView = (
     <>
       <div className="flex items-center justify-center gap-2 pb-1">
-        <span className="rounded-full border border-edge px-2.5 py-1 text-[0.62rem] font-semibold text-muted">
+        <button
+          onClick={() => setShapeOpen(true)}
+          className="rounded-full border border-edge px-2.5 py-1 text-[0.62rem] font-semibold text-muted"
+        >
           {counts.DEF}-{counts.MID}-{counts.FWD}
-        </span>
+        </button>
         <button
           onClick={() => {
             setSwapMode(!swapMode);
@@ -428,6 +451,44 @@ export default function LineupEditor({
             ? 'Tap a player, then tap who they swap with.'
             : 'Now tap the player to swap them with.'}
         </p>
+      ) : null}
+
+      {shapeOpen ? (
+        <div className="modal-scrim" onClick={() => setShapeOpen(false)}>
+          <div className="modal-card reveal space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+                Defenders · Midfielders · Forwards
+              </p>
+              <h2 className="mt-1 text-2xl font-semibold tracking-tight">Change formation</h2>
+              <p className="mt-1 text-xs text-muted">
+                We keep as many of your current starters as the shape allows.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {legalFormations().map((f) => {
+                const current =
+                  f.def === counts.DEF && f.mid === counts.MID && f.fwd === counts.FWD;
+                return (
+                  <button
+                    key={f.label}
+                    onClick={() => setShape(f)}
+                    className={`min-h-12 rounded-xl border text-sm font-semibold tabular-nums transition ${
+                      current
+                        ? 'border-accent bg-accent/12 text-accent'
+                        : 'border-edge text-muted'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setShapeOpen(false)} className="btn-outline w-full">
+              Cancel
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {pickRole ? (
