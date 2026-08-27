@@ -265,10 +265,61 @@ export default function LineupEditor({
   };
 
   const selectedPick = selected != null ? picks.find((p) => p.fplId === selected) : null;
+  const captainPick = picks.find((p) => p.isCaptain);
+  const vicePick = picks.find((p) => p.isVice);
 
   const pitchView = (
     <div className="space-y-3">
-      <div className="pitch space-y-4 px-2 pb-5 pt-4">
+      <div className="pitch relative space-y-4 px-2 pb-5 pt-3">
+        {/* Controls sit on the grass. The pitch has dead space along the top
+            edge and either side of the keeper, so nothing above it needs to
+            exist. */}
+        <div className="relative z-20 flex items-center justify-center gap-2">
+          <span className="rounded-full bg-black/35 px-2.5 py-1 text-[0.62rem] font-semibold text-white/80 backdrop-blur-sm">
+            {counts.DEF}-{counts.MID}-{counts.FWD}
+          </span>
+          <button
+            onClick={() => {
+              setSwapMode(!swapMode);
+              setSelected(null);
+            }}
+            className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.62rem] font-semibold backdrop-blur-sm transition ${
+              swapMode ? 'bg-accent text-[var(--accent-ink)]' : 'bg-black/35 text-white/80'
+            }`}
+          >
+            <Repeat className="h-3 w-3" />
+            {swapMode ? 'Done' : 'Swap'}
+          </button>
+          <button
+            onClick={() => setView('list')}
+            className="rounded-full bg-black/35 px-2.5 py-1 text-[0.62rem] font-semibold text-white/80 backdrop-blur-sm"
+          >
+            List
+          </button>
+        </div>
+
+        {/* Armbands flank the keeper, where the grass is empty anyway. */}
+        <div className="pointer-events-none relative z-20 -mb-2 flex items-start justify-between px-1">
+          <button
+            onClick={() => setPickRole('captain')}
+            className="pointer-events-auto flex max-w-[6.5rem] items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-[0.6rem] font-semibold backdrop-blur-sm"
+          >
+            <Crown className="h-3 w-3 shrink-0 text-gold" />
+            <span className={`truncate ${captainPick ? 'text-white/85' : 'text-live'}`}>
+              {captainPick ? byId.get(captainPick.fplId)?.webName : 'Captain'}
+            </span>
+          </button>
+          <button
+            onClick={() => setPickRole('vice')}
+            className="pointer-events-auto flex max-w-[6.5rem] items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-[0.6rem] font-semibold backdrop-blur-sm"
+          >
+            <Shield className="h-3 w-3 shrink-0 text-silver" />
+            <span className={`truncate ${vicePick ? 'text-white/85' : 'text-live'}`}>
+              {vicePick ? byId.get(vicePick.fplId)?.webName : 'Vice'}
+            </span>
+          </button>
+        </div>
+
         {POS_ORDER.map((pos) => {
           const rows = starters.filter((p) => byId.get(p.fplId)?.position === pos);
           if (!rows.length) return null;
@@ -323,6 +374,29 @@ export default function LineupEditor({
 
   const listView = (
     <>
+      <div className="flex items-center justify-center gap-2 pb-1">
+        <span className="rounded-full border border-edge px-2.5 py-1 text-[0.62rem] font-semibold text-muted">
+          {counts.DEF}-{counts.MID}-{counts.FWD}
+        </span>
+        <button
+          onClick={() => {
+            setSwapMode(!swapMode);
+            setSelected(null);
+          }}
+          className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.62rem] font-semibold transition ${
+            swapMode ? 'bg-accent text-[var(--accent-ink)]' : 'border border-edge text-muted'
+          }`}
+        >
+          <Repeat className="h-3 w-3" />
+          {swapMode ? 'Done' : 'Swap'}
+        </button>
+        <button
+          onClick={() => setView('pitch')}
+          className="rounded-full border border-edge px-2.5 py-1 text-[0.62rem] font-semibold text-muted"
+        >
+          Pitch
+        </button>
+      </div>
       {POS_ORDER.map((pos) => {
         const rows = starters.filter((p) => byId.get(p.fplId)?.position === pos);
         if (!rows.length) return null;
@@ -346,41 +420,8 @@ export default function LineupEditor({
     </>
   );
 
-  const captain = picks.find((p) => p.isCaptain);
-  const vice = picks.find((p) => p.isVice);
-
   return (
     <div className={`space-y-3 ${dirty ? 'pb-24' : 'pb-2'}`}>
-      <div className="flex items-center justify-center gap-2">
-        <p className="shrink-0 text-xs text-muted">
-          <span className={`font-semibold ${formationOk ? 'text-foreground' : 'text-live'}`}>
-            {counts.DEF}-{counts.MID}-{counts.FWD}
-          </span>
-        </p>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setSwapMode(!swapMode);
-              setSelected(null);
-            }}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-              swapMode
-                ? 'bg-accent text-[var(--accent-ink)]'
-                : 'border border-edge-strong text-muted'
-            }`}
-          >
-            <Repeat className="h-3.5 w-3.5" />
-            {swapMode ? 'Done' : 'Swap'}
-          </button>
-          <button
-            onClick={() => setView(view === 'pitch' ? 'list' : 'pitch')}
-            className="rounded-full border border-edge-strong px-3 py-1.5 text-xs font-semibold text-muted"
-          >
-            {view === 'pitch' ? 'List' : 'Pitch'}
-          </button>
-        </div>
-      </div>
-
       {swapMode ? (
         <p className="rounded-xl border border-accent/35 bg-accent/[0.07] px-3 py-2 text-center text-xs text-accent">
           {selected == null
@@ -388,29 +429,6 @@ export default function LineupEditor({
             : 'Now tap the player to swap them with.'}
         </p>
       ) : null}
-
-      {/* The armbands, spelled out. Doubling the wrong man is the single most
-          expensive mistake available, so it should never be a guess. */}
-      <div className="flex items-stretch gap-2 text-xs">
-        <button
-          onClick={() => setPickRole('captain')}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-edge px-3 py-2"
-        >
-          <Crown className="h-3.5 w-3.5 shrink-0 text-gold" />
-          <span className={captain ? 'truncate font-semibold' : 'text-live'}>
-            {captain ? byId.get(captain.fplId)?.webName : 'Set captain'}
-          </span>
-        </button>
-        <button
-          onClick={() => setPickRole('vice')}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-edge px-3 py-2"
-        >
-          <Shield className="h-3.5 w-3.5 shrink-0 text-silver" />
-          <span className={vice ? 'truncate text-muted' : 'text-live'}>
-            {vice ? byId.get(vice.fplId)?.webName : 'Set vice'}
-          </span>
-        </button>
-      </div>
 
       {pickRole ? (
         <div className="modal-scrim" onClick={() => setPickRole(null)}>
