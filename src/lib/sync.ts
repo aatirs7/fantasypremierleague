@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, eq, getTableColumns, inArray, isNull, lt, sql, SQL } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns, gt, inArray, isNull, lt, sql, SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { db } from './db';
 import {
@@ -412,6 +412,30 @@ export async function runSync(opts: { dry?: boolean; force?: boolean } = {}): Pr
     } catch (e) {
       report.notes.push(`ensure lineups gw${row.gw} FAILED: ${e instanceof Error ? e.message : String(e)}`);
     }
+  }
+
+  // Deadline nudge: once per gameweek, in the two hours before it locks, to
+  // everyone in a drafted league who still has not touched their lineup.
+  // Self-gating on a meta key so it can never fire twice.
+  try {
+    const [upcoming] = await db
+      .select({ gw: gameweeks.gw, deadline: gameweeks.deadline })
+      .from(gameweeks)
+      .where(gt(gameweeks.deadline, new Date()))
+      .orderBy(asc(gameweeks.gw))
+      .limit(1);
+    if (upcoming) {
+      const msLeft = upcoming.deadline.getTime() - now;
+      const key = `deadlineNudge:${upcoming.gw}`;
+      if (msLeft > 0 && msLeft < 2 * 60 * 60 * 1000 && (await getMetaMs(key)) === 0) {
+        const { notifyUnsetLineups } = await import('./notify');
+        const sent = await notifyUnsetLineups(upcoming.gw, upcoming.deadline);
+        await setMeta(key, String(now));
+        report.notes.push(`deadline nudge gw${upcoming.gw}: ${sent} sent`);
+      }
+    }
+  } catch (e) {
+    report.notes.push(`deadline nudge FAILED: ${e instanceof Error ? e.message : String(e)}`);
   }
 
   // Last-season totals, a few players at a time. history_past only changes

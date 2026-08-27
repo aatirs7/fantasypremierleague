@@ -1,11 +1,20 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { eq, inArray } from 'drizzle-orm';
-import { ArrowLeft } from 'lucide-react';
 import { db } from '@/lib/db';
 import { fixtures, fplPlayers, type FixtureStat } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import ClubBadge from '@/components/matches/ClubBadge';
+import BackButton from '@/components/BackButton';
+import {
+  CircleSlash,
+  Footprints,
+  Goal,
+  Hand,
+  Square,
+  Star,
+  type LucideIcon,
+} from 'lucide-react';
 import LivePoller from '@/components/matches/LivePoller';
 import LocalTime from '@/components/LocalTime';
 
@@ -63,38 +72,29 @@ export default async function MatchDetailPage({
       .filter((e) => e.value > 0)
       .map((e) => `${nameOf.get(e.element) ?? `#${e.element}`}${e.value > 1 ? ` x${e.value}` : ''}${suffix}`);
 
-  const Section = ({
-    title,
-    identifier,
-    suffix = '',
-  }: {
-    title: string;
-    identifier: string;
-    suffix?: string;
-  }) => {
-    const s = byId2.get(identifier);
-    if (!s) return null;
-    const homeLines = renderSide(s.h, suffix);
-    const awayLines = renderSide(s.a, suffix);
-    if (!homeLines.length && !awayLines.length) return null;
-    return (
-      <div className="card p-4">
-        <p className="mb-2 text-center text-sm font-bold">{title}</p>
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="space-y-1 text-left">
-            {homeLines.map((l) => (
-              <p key={l} className="font-semibold">{l}</p>
-            ))}
-          </div>
-          <div className="space-y-1 text-right">
-            {awayLines.map((l) => (
-              <p key={l} className="font-semibold">{l}</p>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Every event type in one table: icon in the middle, home names left,
+  // away names right. Nine separate cards each holding two words read as
+  // broken rather than as a match report.
+  const EVENTS: { id: string; label: string; icon: LucideIcon; suffix?: string }[] = [
+    { id: 'goals_scored', label: 'Goals', icon: Goal },
+    { id: 'assists', label: 'Assists', icon: Footprints },
+    { id: 'own_goals', label: 'Own goals', icon: Goal },
+    { id: 'penalties_saved', label: 'Pens saved', icon: Hand },
+    { id: 'penalties_missed', label: 'Pens missed', icon: CircleSlash },
+    { id: 'yellow_cards', label: 'Yellows', icon: Square },
+    { id: 'red_cards', label: 'Reds', icon: Square },
+    { id: 'saves', label: 'Saves', icon: Hand },
+    { id: 'bonus', label: 'Bonus', icon: Star },
+  ];
+
+  const rows = EVENTS.map((e) => {
+    const stat = byId2.get(e.id);
+    if (!stat) return null;
+    const h = renderSide(stat.h, e.suffix ?? '');
+    const a = renderSide(stat.a, e.suffix ?? '');
+    if (!h.length && !a.length) return null;
+    return { ...e, h, a };
+  }).filter(Boolean) as { id: string; label: string; icon: LucideIcon; h: string[]; a: string[] }[];
 
   const goals = byId2.get('goals_scored');
   const scorersHome = goals ? renderSide(goals.h) : [];
@@ -103,13 +103,10 @@ export default async function MatchDetailPage({
   return (
     <div className="reveal space-y-4 pb-3 pt-1 lg:mx-auto lg:max-w-2xl">
       {live ? <LivePoller /> : null}
-      <Link
-        href="/matches"
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.05]"
-        aria-label="back"
-      >
-        <ArrowLeft className="h-5 w-5 text-muted" />
-      </Link>
+      <BackButton
+        fallback="/matches"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-edge text-muted active:scale-95"
+      />
 
       {/* Score header */}
       <div className="space-y-2 text-center">
@@ -156,22 +153,52 @@ export default async function MatchDetailPage({
       </div>
 
       {f.started ? (
-        <div className="space-y-3">
-          <Section title="Goals" identifier="goals_scored" />
-          <Section title="Assists" identifier="assists" />
-          <Section title="Own Goals" identifier="own_goals" />
-          <Section title="Penalties Saved" identifier="penalties_saved" />
-          <Section title="Penalties Missed" identifier="penalties_missed" />
-          <Section title="Yellow Cards" identifier="yellow_cards" />
-          <Section title="Red Cards" identifier="red_cards" />
-          <Section title="Saves" identifier="saves" />
-          <Section title="Bonus Points" identifier="bonus" suffix=" bonus" />
-          {stats.length === 0 ? (
-            <p className="card p-5 text-center text-sm text-muted">
-              Event details land with the next sync.
-            </p>
-          ) : null}
-        </div>
+        rows.length ? (
+          <div className="card divide-y divide-[var(--line)] px-3">
+            {rows.map((r) => {
+              const Icon = r.icon;
+              const card = r.id === 'yellow_cards' || r.id === 'red_cards';
+              return (
+                <div key={r.id} className="flex items-start gap-2 py-2.5 text-xs">
+                  <span className="min-w-0 flex-1 space-y-0.5 text-left">
+                    {r.h.map((l) => (
+                      <span key={l} className="block truncate font-semibold">
+                        {l}
+                      </span>
+                    ))}
+                  </span>
+                  <span className="flex w-20 shrink-0 flex-col items-center gap-0.5 pt-0.5">
+                    <Icon
+                      className={`h-3.5 w-3.5 ${
+                        r.id === 'red_cards'
+                          ? 'text-live'
+                          : r.id === 'yellow_cards'
+                            ? 'text-gold'
+                            : 'text-muted-2'
+                      }`}
+                      strokeWidth={1.8}
+                      fill={card ? 'currentColor' : 'none'}
+                    />
+                    <span className="text-[0.55rem] font-medium uppercase tracking-wider text-muted-2">
+                      {r.label}
+                    </span>
+                  </span>
+                  <span className="min-w-0 flex-1 space-y-0.5 text-right">
+                    {r.a.map((l) => (
+                      <span key={l} className="block truncate font-semibold">
+                        {l}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="card p-5 text-center text-sm text-muted">
+            No events recorded yet. They land with the next sync.
+          </p>
+        )
       ) : (
         <p className="card p-5 text-center text-sm text-muted">
           Events appear here once the match kicks off.

@@ -475,3 +475,13 @@ export const syncMeta = pgTable('sync_meta', {
   value: text('value').notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+// One row per browser/device that has granted notification permission. The
+// endpoint is the identity: a device that re-subscribes replaces its row.
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  endpoint: text('endpoint').primaryKey(),
+  userId: uuid('user_id').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});

@@ -13,6 +13,8 @@ import { readSession } from '@/lib/auth';
 import { resolveActiveLeagueId } from '@/lib/leagues';
 import Avatar from '@/components/Avatar';
 import HowItWorks from '@/components/HowItWorks';
+import PushToggle from '@/components/PushToggle';
+import NoScroll from '@/components/NoScroll';
 import { ThemeRow } from '@/components/ThemeButton';
 
 export const dynamic = 'force-dynamic';
@@ -36,6 +38,7 @@ export default async function MorePage() {
 
   return (
     <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
+      <NoScroll />
       <Link href="/me" className="flex flex-col items-center gap-2 text-center">
         <Avatar name={session.username} size={48} />
         <span>
@@ -46,6 +49,7 @@ export default async function MorePage() {
 
       <div className="card divide-y divide-[var(--line)] px-1.5">
         <HowItWorks trigger="row" />
+        <PushToggle />
         {items.map((item) => (
           <Link key={item.href} href={item.href} className="flex min-h-14 items-center gap-3 px-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/12 text-accent">
