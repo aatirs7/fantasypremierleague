@@ -57,7 +57,11 @@ export default async function H2HStandings({
             const homeWin = f.settled && f.away && f.home.points > f.away.points;
             const awayWin = f.settled && f.away && f.away.points > f.home.points;
             return (
-              <div key={f.slot} className="tile p-3">
+              <Link
+                key={f.slot}
+                href={`/league/${leagueId}/h2h/${gw}/${f.slot}`}
+                className="tile block p-3 active:scale-[0.99]"
+              >
                 {f.round !== 'regular' ? (
                   <p className="mb-1.5 text-center text-[0.55rem] font-medium uppercase tracking-[0.18em] text-gold">
                     {ROUND_LABEL[f.round] ?? f.round}
@@ -101,7 +105,7 @@ export default async function H2HStandings({
                     this week
                   </p>
                 )}
-              </div>
+              </Link>
             );
           })}
         </section>

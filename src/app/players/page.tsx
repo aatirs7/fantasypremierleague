@@ -7,6 +7,7 @@ import { fplPlayers } from '@/lib/schema';
 import { draftable } from '@/lib/pool';
 import { readSession } from '@/lib/auth';
 import PlayerCard from '@/components/players/PlayerCard';
+import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,6 +99,21 @@ export default async function PlayersPage({
           ))}
         </div>
 
+      </div>
+
+      {/* Sort and club are a disclosure: two rows of pills was most of the
+          screen before you saw a single player. The summary carries the
+          current selection so nothing is hidden, only folded. */}
+      <details className="card group px-3.5 py-2.5">
+        <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-semibold text-muted marker:hidden">
+          <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-muted-2" />
+          <span className="flex-1">
+            {SORTS[sortKey].label}
+            {club ? ` · ${club}` : ''}
+          </span>
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-2 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="space-y-3 pt-3">
         <div>
           <p className="mb-1.5 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-muted-2">
             Sort by
@@ -153,7 +169,8 @@ export default async function PlayersPage({
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </details>
 
       <div className="space-y-2">
         {players.map((p) => (

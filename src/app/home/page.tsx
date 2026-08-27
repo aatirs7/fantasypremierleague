@@ -170,6 +170,19 @@ export default async function HomePage({
     }
   }
 
+  // Deadline nudge: has this manager actually set an XI for the upcoming
+  // gameweek, or is it still whatever we generated for them?
+  let lineupNeedsAttention = false;
+  if (mySquad && nextGw && active?.draftStatus === 'complete') {
+    const [row] = await db
+      .select({ autoSet: lineups.autoSet, picks: lineups.picks })
+      .from(lineups)
+      .where(and(eq(lineups.squadId, mySquad.id), eq(lineups.gw, nextGw.gw)))
+      .limit(1);
+    const noCaptain = !row || !row.picks.some((p) => p.isCaptain);
+    lineupNeedsAttention = !row || row.autoSet || noCaptain;
+  }
+
   let myRank: number | null = null;
   let fieldSize = 0;
   let seasonPoints = 0;
@@ -356,6 +369,27 @@ export default async function HomePage({
         </section>
       ) : null}
 
+      {/* One job, one deadline. Sits directly under the clock because it is
+          the only thing on this screen that expires. */}
+      {lineupNeedsAttention && nextGw ? (
+        <Link
+          href="/squad"
+          className="tile tile-live reveal flex shrink-0 items-center gap-3 px-3.5 py-2.5 active:scale-[0.99]"
+          style={{ animationDelay: '50ms' }}
+        >
+          <Shirt className="h-5 w-5 shrink-0 text-live" strokeWidth={1.8} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[0.8rem] font-semibold leading-tight tracking-tight">
+              Set your lineup
+            </span>
+            <span className="block truncate text-[0.65rem] leading-tight text-muted">
+              Locks in <Countdown toIso={nextGw.deadline.toISOString()} doneText="now" />
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" />
+        </Link>
+      ) : null}
+
       {/* Season stat strip, once the league has drafted. */}
       {active?.draftStatus === 'complete' ? (
         <section className="reveal grid shrink-0 grid-cols-3 gap-2.5" style={{ animationDelay: '60ms' }}>
@@ -422,9 +456,11 @@ export default async function HomePage({
       ) : null}
 
       {/* The rules, one obvious tap away. Slim bar so it costs little height. */}
-      <div className="reveal shrink-0" style={{ animationDelay: '85ms' }}>
-        <HowItWorks trigger="card" />
-      </div>
+      {!lineupNeedsAttention ? (
+        <div className="reveal shrink-0" style={{ animationDelay: '85ms' }}>
+          <HowItWorks trigger="card" />
+        </div>
+      ) : null}
 
       {/* Two across. The only flexible row, so it absorbs whatever height is
           left over and the board strip below is never pushed off screen. */}
