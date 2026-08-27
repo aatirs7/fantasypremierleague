@@ -46,6 +46,10 @@ export async function GET(_req: Request, ctx: { params: Promise<{ leagueId: stri
           clubShort: fplPlayers.clubShort,
           totalPoints: fplPlayers.totalPoints,
           form: fplPlayers.form,
+          // Fed to the suggestion engine, which values a player on what he
+          // actually did last season rather than one gameweek of noise.
+          lastSeasonPoints: fplPlayers.lastSeasonPoints,
+          draftRank: fplPlayers.draftRank,
         })
         .from(fplPlayers)
         .where(inArray(fplPlayers.fplId, ids))

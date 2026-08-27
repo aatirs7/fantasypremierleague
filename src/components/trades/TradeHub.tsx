@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeftRight, X } from 'lucide-react';
 import LocalTime from '@/components/LocalTime';
+import { suggestTrades, value } from '@/lib/trade-suggest';
 
 // Trade hub: build an offer by tapping players on both sides, plus inbox
 // (accept/reject), outgoing (cancel), and owner veto on accepted trades.
@@ -14,6 +15,8 @@ type TradePlayer = {
   clubShort: string;
   totalPoints: number;
   form: string | null;
+  lastSeasonPoints: number | null;
+  draftRank: number | null;
 };
 
 type TradeRow = {
@@ -47,6 +50,7 @@ const POS_CLS: Record<string, string> = {
 export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myUserId: string }) {
   const [data, setData] = useState<TradesData | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [tab, setTab] = useState<'ideas' | 'build' | 'activity'>('ideas');
   const [offer, setOffer] = useState<number[]>([]);
   const [request, setRequest] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
@@ -99,6 +103,17 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
   );
   const partner = partners.find((p) => p.userId === partnerId) ?? null;
 
+  const ideas = useMemo(
+    () =>
+      mySquad.length
+        ? suggestTrades(
+            mySquad,
+            partners.map((p) => ({ userId: p.userId, username: p.username, players: p.players })),
+          )
+        : [],
+    [mySquad, partners],
+  );
+
   if (!data) return <p className="py-10 text-center text-sm text-muted">Loading trades...</p>;
 
   const toggle = (list: number[], set: (v: number[]) => void, id: number) => {
@@ -150,10 +165,28 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
     </div>
   );
 
+
+  // One player, one line: position tag, name, and what he is worth. The old
+  // hub showed two walls of identical pills with no way to tell a starter
+  // from a passenger.
+  const PlayerLine = ({ p, tone }: { p: TradePlayer; tone: 'give' | 'get' }) => (
+    <span className="flex items-center gap-1.5 text-xs">
+      <span
+        className={`w-8 shrink-0 rounded px-1 py-0.5 text-center text-[0.55rem] font-bold ${POS_CLS[p.position] ?? ''}`}
+      >
+        {p.position}
+      </span>
+      <span className="min-w-0 flex-1 truncate font-semibold">{p.webName}</span>
+      <span className={`shrink-0 tabular-nums ${tone === 'get' ? 'text-accent' : 'text-muted-2'}`}>
+        {value(p)}
+      </span>
+    </span>
+  );
+
   return (
     <div className="space-y-3">
       {data.frozen ? (
-        <p className="rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-2 text-xs text-gold">
+        <p className="rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-2 text-center text-xs text-gold">
           Trades are frozen while the gameweek plays out. Back after the final whistle.
         </p>
       ) : null}
@@ -166,172 +199,285 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
         </button>
       ) : null}
 
-      {inbox.length ? (
-        <div className="space-y-2">
-          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Inbox</p>
-          {inbox.map((t) => (
-            <TradeCard
-              key={t.id}
-              t={t}
-              actions={
-                <div className="flex gap-2 pt-1">
-                  <button
-                    onClick={() => void act({ action: 'accept', tradeId: t.id })}
-                    disabled={busy || data.frozen}
-                    className="btn-primary min-h-10 flex-1 text-xs"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => void act({ action: 'reject', tradeId: t.id })}
-                    disabled={busy}
-                    className="min-h-10 flex-1 rounded-xl border border-edge text-xs font-bold text-muted"
-                  >
-                    Reject
-                  </button>
+      <div className="flex justify-center gap-6 border-b border-edge">
+        {(
+          [
+            ['ideas', 'Ideas'],
+            ['build', 'Build'],
+            ['activity', inbox.length ? `Activity (${inbox.length})` : 'Activity'],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            data-active={tab === key}
+            className="tab-underline"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'ideas' ? (
+        ideas.length ? (
+          <div className="space-y-2.5">
+            <p className="text-center text-xs text-muted">
+              Deals that would improve both squads. Every position count stays legal.
+            </p>
+            {ideas.map((s, i) => (
+              <div key={i} className="tile space-y-3 p-3.5">
+                <p className="text-center text-[0.7rem] leading-relaxed text-muted">{s.reason}</p>
+                <div className="flex gap-3">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="text-[0.55rem] font-medium uppercase tracking-wider text-muted-2">
+                      You give
+                    </p>
+                    {s.give.map((p) => (
+                      <PlayerLine key={p.fplId} p={p as TradePlayer} tone="give" />
+                    ))}
+                  </div>
+                  <ArrowLeftRight className="mt-4 h-4 w-4 shrink-0 self-start text-muted-2" />
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="text-[0.55rem] font-medium uppercase tracking-wider text-muted-2">
+                      You get
+                    </p>
+                    {s.get.map((p) => (
+                      <PlayerLine key={p.fplId} p={p as TradePlayer} tone="get" />
+                    ))}
+                  </div>
                 </div>
-              }
-            />
-          ))}
-        </div>
-      ) : null}
-
-      {outgoing.length ? (
-        <div className="space-y-2">
-          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Outgoing</p>
-          {outgoing.map((t) => (
-            <TradeCard
-              key={t.id}
-              t={t}
-              actions={
-                <button
-                  onClick={() => void act({ action: 'cancel', tradeId: t.id })}
-                  disabled={busy}
-                  className="min-h-10 w-full rounded-xl border border-edge text-xs font-bold text-muted"
-                >
-                  Cancel offer
-                </button>
-              }
-            />
-          ))}
-        </div>
-      ) : null}
-
-      {vetoable.length ? (
-        <div className="space-y-2">
-          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-            Accepted (veto window)
-          </p>
-          {vetoable.map((t) => (
-            <TradeCard
-              key={t.id}
-              t={t}
-              actions={
-                data.isOwner ? (
-                  <button
-                    onClick={() => void act({ action: 'veto', tradeId: t.id })}
-                    disabled={busy}
-                    className="min-h-10 w-full rounded-xl border border-live/40 text-xs font-bold text-live"
-                  >
-                    Veto this trade
-                  </button>
-                ) : null
-              }
-            />
-          ))}
-        </div>
-      ) : null}
-
-      <div className="card space-y-3 p-4">
-        <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-          Propose a trade
-        </p>
-        {partners.length === 0 ? (
-          <p className="text-xs text-muted">No other managers to trade with.</p>
-        ) : (
-          <>
-            <div className="flex flex-wrap gap-1.5">
-              {partners.map((p) => (
-                <button
-                  key={p.userId}
-                  onClick={() => {
-                    setPartnerId(p.userId === partnerId ? null : p.userId);
-                    setRequest([]);
-                  }}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                    partnerId === p.userId
-                      ? 'border-accent bg-accent/10 text-accent'
-                      : 'border-edge bg-white/[0.02] text-muted'
-                  }`}
-                >
-                  {p.username}
-                </button>
-              ))}
-            </div>
-            {partner ? (
-              <>
-                <p className="text-xs font-bold text-muted">You give (tap up to 3)</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {mySquad.map((p) => (
-                    <PlayerChip
-                      key={p.fplId}
-                      p={p}
-                      active={offer.includes(p.fplId)}
-                      onTap={() => toggle(offer, setOffer, p.fplId)}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs font-bold text-muted">You get from {partner.username}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {partner.players.map((p) => (
-                    <PlayerChip
-                      key={p.fplId}
-                      p={p}
-                      active={request.includes(p.fplId)}
-                      onTap={() => toggle(request, setRequest, p.fplId)}
-                    />
-                  ))}
+                <div className="flex items-center justify-center gap-4 text-[0.62rem]">
+                  <span className="font-semibold text-accent">You +{s.yourGain}</span>
+                  <span className="text-muted-2">
+                    {s.partnerName} +{s.theirGain}
+                  </span>
                 </div>
                 <button
                   onClick={() =>
                     void act({
                       action: 'propose',
-                      receiverId: partner.userId,
-                      offerFplIds: offer,
-                      requestFplIds: request,
+                      receiverId: s.partnerId,
+                      offerFplIds: s.give.map((p) => p.fplId),
+                      requestFplIds: s.get.map((p) => p.fplId),
                     })
                   }
-                  disabled={busy || data.frozen || !offer.length || !request.length}
-                  className="btn-primary w-full"
+                  disabled={busy || data.frozen}
+                  className="btn-primary min-h-10 w-full text-xs"
                 >
-                  <ArrowLeftRight className="h-4 w-4" />
-                  Propose {offer.length}-for-{request.length}
+                  Offer this to {s.partnerName}
                 </button>
-              </>
-            ) : (
-              <p className="text-xs text-muted">Pick a manager to start building an offer.</p>
-            )}
-          </>
-        )}
-      </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="tile p-5 text-center text-sm text-muted">
+            Nothing here would improve both squads right now. Build one by hand if you disagree.
+          </p>
+        )
+      ) : null}
 
-      {historic.length ? (
-        <div className="card space-y-1.5 p-4">
-          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">History</p>
-          {historic.map((t) => (
-            <p key={t.id} className="text-xs text-muted">
-              <span className="font-bold text-foreground">{t.proposerName}</span> to{' '}
-              <span className="font-bold text-foreground">{t.receiverName}</span>: {t.offer.join(', ')}{' '}
-              for {t.request.join(', ')}{' '}
-              <span
-                className={
-                  t.status === 'executed' ? 'font-bold text-accent' : 'font-bold text-muted-2'
-                }
-              >
-                {t.status}
-              </span>
+      {tab === 'build' ? (
+        <div className="space-y-3">
+          {partners.length === 0 ? (
+            <p className="tile p-5 text-center text-sm text-muted">
+              No other managers to trade with.
             </p>
-          ))}
+          ) : (
+            <>
+              <div className="-mx-4 overflow-x-auto px-4">
+                <div className="flex w-max gap-1.5">
+                  {partners.map((p) => (
+                    <button
+                      key={p.userId}
+                      onClick={() => {
+                        setPartnerId(p.userId === partnerId ? null : p.userId);
+                        setRequest([]);
+                      }}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap ${
+                        partnerId === p.userId
+                          ? 'border-accent bg-accent/10 text-accent'
+                          : 'border-edge text-muted'
+                      }`}
+                    >
+                      {p.username}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {partner ? (
+                <div className="tile space-y-3 p-3.5">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1.5">
+                      <p className="text-center text-[0.55rem] font-medium uppercase tracking-wider text-muted-2">
+                        You give
+                      </p>
+                      {mySquad
+                        .slice()
+                        .sort((a, b) => value(b) - value(a))
+                        .map((p) => (
+                          <PlayerChip
+                            key={p.fplId}
+                            p={p}
+                            active={offer.includes(p.fplId)}
+                            onTap={() => toggle(offer, setOffer, p.fplId)}
+                          />
+                        ))}
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-center text-[0.55rem] font-medium uppercase tracking-wider text-muted-2">
+                        You get
+                      </p>
+                      {partner.players
+                        .slice()
+                        .sort((a, b) => value(b) - value(a))
+                        .map((p) => (
+                          <PlayerChip
+                            key={p.fplId}
+                            p={p}
+                            active={request.includes(p.fplId)}
+                            onTap={() => toggle(request, setRequest, p.fplId)}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                  <p className="text-center text-[0.62rem] text-muted-2">
+                    Up to 3 each way. Both squads must still be 2/5/5/3 afterwards, so the
+                    positions have to match.
+                  </p>
+                  <button
+                    onClick={() =>
+                      void act({
+                        action: 'propose',
+                        receiverId: partner.userId,
+                        offerFplIds: offer,
+                        requestFplIds: request,
+                      })
+                    }
+                    disabled={busy || data.frozen || !offer.length || !request.length}
+                    className="btn-primary w-full"
+                  >
+                    <ArrowLeftRight className="h-4 w-4" />
+                    Propose {offer.length} for {request.length}
+                  </button>
+                </div>
+              ) : (
+                <p className="tile p-5 text-center text-sm text-muted">
+                  Pick a manager to start building an offer.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      ) : null}
+
+      {tab === 'activity' ? (
+        <div className="space-y-3">
+          {inbox.length ? (
+            <div className="space-y-2">
+              <p className="text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+                Offers to you
+              </p>
+              {inbox.map((t) => (
+                <TradeCard
+                  key={t.id}
+                  t={t}
+                  actions={
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => void act({ action: 'accept', tradeId: t.id })}
+                        disabled={busy || data.frozen}
+                        className="btn-primary min-h-10 flex-1 text-xs"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => void act({ action: 'reject', tradeId: t.id })}
+                        disabled={busy}
+                        className="min-h-10 flex-1 rounded-xl border border-edge text-xs font-semibold text-muted"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  }
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {outgoing.length ? (
+            <div className="space-y-2">
+              <p className="text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+                Waiting on them
+              </p>
+              {outgoing.map((t) => (
+                <TradeCard
+                  key={t.id}
+                  t={t}
+                  actions={
+                    <button
+                      onClick={() => void act({ action: 'cancel', tradeId: t.id })}
+                      disabled={busy}
+                      className="min-h-10 w-full rounded-xl border border-edge text-xs font-semibold text-muted"
+                    >
+                      Cancel offer
+                    </button>
+                  }
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {vetoable.length ? (
+            <div className="space-y-2">
+              <p className="text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+                Accepted, veto window open
+              </p>
+              {vetoable.map((t) => (
+                <TradeCard
+                  key={t.id}
+                  t={t}
+                  actions={
+                    data.isOwner ? (
+                      <button
+                        onClick={() => void act({ action: 'veto', tradeId: t.id })}
+                        disabled={busy}
+                        className="min-h-10 w-full rounded-xl border border-live/40 text-xs font-semibold text-live"
+                      >
+                        Veto this trade
+                      </button>
+                    ) : null
+                  }
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {historic.length ? (
+            <div className="tile space-y-1.5 p-4">
+              <p className="text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+                Settled
+              </p>
+              {historic.map((t) => (
+                <p key={t.id} className="text-xs text-muted">
+                  <span className="font-semibold text-foreground">{t.proposerName}</span> to{' '}
+                  <span className="font-semibold text-foreground">{t.receiverName}</span>:{' '}
+                  {t.offer.join(', ')} for {t.request.join(', ')}{' '}
+                  <span
+                    className={t.status === 'executed' ? 'font-semibold text-accent' : 'text-muted-2'}
+                  >
+                    {t.status}
+                  </span>
+                </p>
+              ))}
+            </div>
+          ) : null}
+
+          {!inbox.length && !outgoing.length && !vetoable.length && !historic.length ? (
+            <p className="tile p-5 text-center text-sm text-muted">
+              Nothing has been offered yet this season.
+            </p>
+          ) : null}
         </div>
       ) : null}
     </div>

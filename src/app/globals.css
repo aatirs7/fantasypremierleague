@@ -659,3 +659,10 @@ h2 {
 h2[data-today='true'] {
   color: var(--accent);
 }
+h2[data-today='true'] span {
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+h2[data-today='true'] span:first-child,
+h2[data-today='true'] span:last-child {
+  background: none;
+}

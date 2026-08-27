@@ -283,16 +283,17 @@ export default async function MatchesPage({
             <section key={day} id={`day-${day}`} className="scroll-mt-24">
               <h2
                 data-day-kickoff={dayRows[0]?.kickoff?.toISOString()}
-                className="sticky top-[var(--chrome-top)] z-10 mb-2 -mx-1 bg-[var(--bg)]/85 px-1 py-1 text-center font-display text-lg tracking-wide text-muted backdrop-blur lg:top-16"
+                className="mb-2 flex items-center gap-2 px-1 text-[0.6rem] font-medium uppercase tracking-[0.18em] text-muted-2"
               >
-                {dayRows[0]?.kickoff ? (
-                  <LocalTime iso={dayRows[0].kickoff.toISOString()} mode="day" />
-                ) : (
-                  'Date TBC'
-                )}
-                <span className="ml-2 text-[0.6rem] font-medium uppercase tracking-wider text-muted-2">
-                  GW{dayRows[0]?.gw}
+                <span className="shrink-0">
+                  {dayRows[0]?.kickoff ? (
+                    <LocalTime iso={dayRows[0].kickoff.toISOString()} mode="day" />
+                  ) : (
+                    'Date TBC'
+                  )}
                 </span>
+                <span className="h-px flex-1 bg-[var(--line)]" />
+                <span className="shrink-0">GW{dayRows[0]?.gw}</span>
               </h2>
               <div className="space-y-2">
                 {dayRows.map((f) => (
