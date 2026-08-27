@@ -66,7 +66,9 @@ export default function PlayerCard({ p }: { p: PlayerCardData }) {
         </span>
         <span className="block text-xs tabular-nums text-muted">
           {p.lastSeasonPoints ?? '-'}
-          <span className="ml-1 text-[0.6rem] text-muted-2">last szn</span>
+          <span className="ml-1 text-[0.6rem] text-muted-2">
+            {p.lastSeasonPoints == null ? 'new to PL' : 'last szn'}
+          </span>
         </span>
       </span>
     </Link>

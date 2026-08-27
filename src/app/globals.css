@@ -310,10 +310,14 @@ h2 {
   background: rgba(255, 255, 255, 0.12);
   pointer-events: none;
 }
+/* Player plates float on the grass rather than sitting in black boxes:
+   just enough tint to keep the name legible, and a blur so the pitch
+   texture still reads through. */
 .plate {
-  background: rgba(8, 7, 14, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.7rem;
+  background: rgba(6, 14, 11, 0.34);
+  backdrop-filter: blur(3px);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 0.75rem;
 }
 
 /* Room for the fixed bottom bar (icon + label + padding), plus the iOS

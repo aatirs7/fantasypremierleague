@@ -8,6 +8,7 @@ import { myLeagues, resolveActiveLeagueId } from '@/lib/leagues';
 import { editableGw, ensureLineup, playersByIds } from '@/lib/lineup';
 import LineupEditor from '@/components/squad/LineupEditor';
 import DraftBoardPitch from '@/components/squad/DraftBoardPitch';
+import ChipsPanel from '@/components/leagues/ChipsPanel';
 import { QUOTAS, SQUAD_SIZE } from '@/lib/draft';
 import Countdown from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
@@ -186,6 +187,10 @@ export default async function SquadPage({
         initial={picks}
         players={players}
       />
+      {/* Chips act on your own team, so they live with it rather than on the
+          league noticeboard. */}
+      <ChipsPanel leagueId={leagueId} />
+
       {/* Squad surgery lives below the pitch: you decide the XI first, then
           go looking for a new player. */}
       <div className="flex justify-center gap-2 pt-1">

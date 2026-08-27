@@ -121,9 +121,24 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
           <p className="mb-2 text-xs text-muted">This season</p>
           <PointsChart points={chartPoints} />
         </div>
+      ) : chartPoints.length === 1 ? (
+        // One week played: a line needs two points, so show the week itself
+        // rather than pretending the season has not started.
+        <div className="card flex items-center justify-between p-4">
+          <span>
+            <p className="text-sm font-bold">Gameweek {chartPoints[0].gw}</p>
+            <p className="text-xs text-muted">The chart starts from GW{chartPoints[0].gw + 1}</p>
+          </span>
+          <span className="text-2xl font-bold tabular-nums text-accent">
+            {chartPoints[0].value}
+            <span className="ml-1 text-[0.6rem] font-medium uppercase tracking-wider text-muted-2">
+              pts
+            </span>
+          </span>
+        </div>
       ) : (
         <p className="card p-4 text-center text-xs text-muted">
-          The points chart appears once the season kicks off.
+          No appearances yet this season.
         </p>
       )}
       <div className="card grid grid-cols-3 gap-x-2 gap-y-3 p-4 text-center">
@@ -281,9 +296,14 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
             {p.lastSeasonPoints != null ? (
               <div>
                 <p className="text-2xl font-bold tabular-nums">{p.lastSeasonPoints}</p>
-                <p className="text-xs text-muted">{p.lastSeason ?? 'Last season'}</p>
+                <p className="text-xs text-muted">{p.lastSeason}</p>
               </div>
-            ) : null}
+            ) : (
+              <div>
+                <p className="text-2xl font-bold text-muted-2">-</p>
+                <p className="text-xs text-muted">No PL season</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -292,8 +312,8 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
       <div className="card grid grid-cols-4 divide-x divide-[var(--line)] py-3.5 text-center">
         {(
           [
-            [p.lastSeasonPoints ?? '-', p.lastSeason ?? 'Last season'],
-            [p.lastSeasonStarts ?? '-', 'Starts last szn'],
+            [p.lastSeasonPoints ?? '-', p.lastSeason && p.lastSeason !== '-' ? p.lastSeason : 'Last season'],
+            [p.lastSeasonStarts ?? '-', 'Starts'],
             [p.goals, 'Goals'],
             [p.form ?? '0.0', 'Form'],
           ] as [string | number, string][]
@@ -304,6 +324,12 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
           </div>
         ))}
       </div>
+
+      {p.lastSeasonPoints == null ? (
+        <p className="rounded-xl border border-info/30 bg-info/[0.07] px-3 py-2 text-center text-xs text-info">
+          New to the Premier League. No previous season to judge him on.
+        </p>
+      ) : null}
 
       <PlayerTabs
         tabs={[

@@ -11,7 +11,6 @@ import LeagueStandings from '@/components/leagues/LeagueStandings';
 import PLStandings from '@/components/matches/PLStandings';
 import H2HStandings from '@/components/leagues/H2HStandings';
 import AwardsFeed from '@/components/leagues/AwardsFeed';
-import ChipsPanel from '@/components/leagues/ChipsPanel';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
@@ -149,7 +148,6 @@ export default async function LeaguePage({
       ) : (
         <>
           <H2HStandings leagueId={league.id} viewerId={session.userId} />
-          <ChipsPanel leagueId={league.id} />
           <AwardsFeed leagueId={league.id} />
           <Link
             href={`/draft?league=${league.id}`}

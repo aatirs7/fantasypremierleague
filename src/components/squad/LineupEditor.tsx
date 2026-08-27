@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Crown, Shield } from 'lucide-react';
+import Link from 'next/link';
+import { Crown, Repeat, Shield } from 'lucide-react';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
 import { XI_MAX, XI_MIN } from '@/lib/lineup-rules';
 import type { LineupPick } from '@/lib/schema';
@@ -46,6 +47,10 @@ export default function LineupEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'pitch' | 'list'>('pitch');
+  // Tapping a player opens their stats. Rearranging is a mode you enter on
+  // purpose, so a curious tap never becomes an accidental substitution.
+  const [swapMode, setSwapMode] = useState(false);
+  const [pickRole, setPickRole] = useState<'captain' | 'vice' | null>(null);
 
   const byId = useMemo(() => new Map(players.map((p) => [p.fplId, p])), [players]);
   const starters = picks.filter((p) => p.starting);
@@ -84,6 +89,7 @@ export default function LineupEditor({
 
   const tap = (fplId: number) => {
     setError(null);
+    if (!swapMode) return;
     if (selected == null) {
       setSelected(fplId);
       return;
@@ -200,41 +206,39 @@ export default function LineupEditor({
     );
   };
 
-  // A player plate on the pitch or bench.
+  // A player plate on the pitch or bench. Outside swap mode it is a link to
+  // the player's stats; inside it, a swap target.
   const Plate = ({ pick, benchIndex }: { pick: LineupPick; benchIndex?: number }) => {
     const p = byId.get(pick.fplId);
     if (!p) return null;
     const sel = selected === pick.fplId;
-    // While a starter is picked up, the legal drop targets glow so the swap
-    // gesture is obvious rather than something you have to be told about.
     const isTarget =
-      selected != null && selected !== pick.fplId && picks.find((x) => x.fplId === selected)?.starting !== pick.starting;
-    return (
-      <button
-        onClick={() => tap(pick.fplId)}
-        className={`plate relative flex w-[4.7rem] flex-col items-center gap-0.5 px-1 pb-1.5 pt-2 transition-transform ${
-          sel ? 'z-10 scale-105 ring-2 ring-[var(--accent)]' : ''
-        } ${isTarget ? 'ring-1 ring-accent/45' : ''}`}
-      >
+      swapMode &&
+      selected != null &&
+      selected !== pick.fplId &&
+      picks.find((x) => x.fplId === selected)?.starting !== pick.starting;
+
+    const inner = (
+      <>
         {pick.isCaptain ? (
-          <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gold text-[0.6rem] font-bold text-black">
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gold text-[0.6rem] font-bold text-[var(--accent-ink)]">
             C
           </span>
         ) : pick.isVice ? (
-          <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-silver text-[0.6rem] font-bold text-black">
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-silver text-[0.6rem] font-bold text-[#131a24]">
             V
           </span>
         ) : null}
         {benchIndex != null ? (
-          <span className="absolute -left-1 -top-1.5 rounded-full bg-white/[0.1] px-1.5 text-[0.55rem] font-bold text-muted">
+          <span className="absolute -left-1 -top-1 rounded-full bg-black/50 px-1.5 text-[0.55rem] font-bold text-white/70">
             {benchIndex + 1}
           </span>
         ) : null}
-        <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={38} />
-        <span className="w-full truncate text-center text-[0.62rem] font-bold leading-tight text-white">
+        <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={42} />
+        <span className="w-full truncate text-center text-[0.66rem] font-semibold leading-tight text-white">
           {p.webName}
         </span>
-        <span className="text-[0.55rem] font-semibold text-white/60">
+        <span className="text-[0.55rem] font-medium text-white/55">
           {p.clubShort}
           {p.status !== 'a' ? (
             <span
@@ -242,7 +246,21 @@ export default function LineupEditor({
             />
           ) : null}
         </span>
+      </>
+    );
+
+    const cls = `plate relative flex w-[4.7rem] flex-col items-center gap-0.5 px-1 pb-1.5 pt-1.5 transition ${
+      sel ? 'z-10 scale-105 ring-2 ring-[var(--accent)]' : ''
+    } ${isTarget ? 'ring-1 ring-accent/50' : ''} ${swapMode && !sel && !isTarget ? 'opacity-70' : ''}`;
+
+    return swapMode ? (
+      <button onClick={() => tap(pick.fplId)} className={cls}>
+        {inner}
       </button>
+    ) : (
+      <Link href={`/players/${pick.fplId}`} className={`${cls} active:scale-[0.97]`}>
+        {inner}
+      </Link>
     );
   };
 
@@ -264,7 +282,7 @@ export default function LineupEditor({
         })}
       </div>
 
-      {selectedPick?.starting ? (
+      {swapMode && selectedPick?.starting ? (
         <div className="card flex items-center gap-2 p-2.5">
           <p className="min-w-0 flex-1 pl-1 text-xs leading-tight text-muted">
             <span className="font-semibold text-foreground">
@@ -333,37 +351,114 @@ export default function LineupEditor({
 
   return (
     <div className={`space-y-3 ${dirty ? 'pb-24' : 'pb-2'}`}>
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted">
-          Formation{' '}
-          <span className={`font-bold ${formationOk ? 'text-accent' : 'text-live'}`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="shrink-0 text-xs text-muted">
+          <span className={`font-semibold ${formationOk ? 'text-foreground' : 'text-live'}`}>
             {counts.DEF}-{counts.MID}-{counts.FWD}
           </span>
         </p>
-        <button
-          onClick={() => setView(view === 'pitch' ? 'list' : 'pitch')}
-          className="rounded-full border border-accent/40 px-3 py-1.5 text-xs font-bold text-accent"
-        >
-          {view === 'pitch' ? 'View Roster' : 'View Pitch'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setSwapMode(!swapMode);
+              setSelected(null);
+            }}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+              swapMode
+                ? 'bg-accent text-[var(--accent-ink)]'
+                : 'border border-edge-strong text-muted'
+            }`}
+          >
+            <Repeat className="h-3.5 w-3.5" />
+            {swapMode ? 'Done' : 'Swap'}
+          </button>
+          <button
+            onClick={() => setView(view === 'pitch' ? 'list' : 'pitch')}
+            className="rounded-full border border-edge-strong px-3 py-1.5 text-xs font-semibold text-muted"
+          >
+            {view === 'pitch' ? 'List' : 'Pitch'}
+          </button>
+        </div>
       </div>
+
+      {swapMode ? (
+        <p className="rounded-xl border border-accent/35 bg-accent/[0.07] px-3 py-2 text-center text-xs text-accent">
+          {selected == null
+            ? 'Tap a player, then tap who they swap with.'
+            : 'Now tap the player to swap them with.'}
+        </p>
+      ) : null}
 
       {/* The armbands, spelled out. Doubling the wrong man is the single most
           expensive mistake available, so it should never be a guess. */}
-      <div className="flex items-center justify-center gap-4 rounded-xl border border-edge bg-white/[0.02] px-3 py-2 text-xs">
-        <span className="flex items-center gap-1.5">
+      <div className="flex items-stretch gap-2 text-xs">
+        <button
+          onClick={() => setPickRole('captain')}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-edge px-3 py-2"
+        >
           <Crown className="h-3.5 w-3.5 shrink-0 text-gold" />
-          <span className={captain ? 'font-semibold' : 'text-live'}>
-            {captain ? byId.get(captain.fplId)?.webName : 'No captain set'}
+          <span className={captain ? 'truncate font-semibold' : 'text-live'}>
+            {captain ? byId.get(captain.fplId)?.webName : 'Set captain'}
           </span>
-        </span>
-        <span className="flex items-center gap-1.5">
+        </button>
+        <button
+          onClick={() => setPickRole('vice')}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-edge px-3 py-2"
+        >
           <Shield className="h-3.5 w-3.5 shrink-0 text-silver" />
-          <span className={vice ? 'text-muted' : 'text-live'}>
-            {vice ? byId.get(vice.fplId)?.webName : 'No vice set'}
+          <span className={vice ? 'truncate text-muted' : 'text-live'}>
+            {vice ? byId.get(vice.fplId)?.webName : 'Set vice'}
           </span>
-        </span>
+        </button>
       </div>
+
+      {pickRole ? (
+        <div className="modal-scrim" onClick={() => setPickRole(null)}>
+          <div className="modal-card reveal space-y-3" onClick={(e) => e.stopPropagation()}>
+            <p className="text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+              {pickRole === 'captain' ? 'Scores double' : 'Doubles if your captain does not play'}
+            </p>
+            <h2 className="text-center text-2xl font-semibold tracking-tight">
+              {pickRole === 'captain' ? 'Pick your captain' : 'Pick your vice'}
+            </h2>
+            <div className="divide-y divide-[var(--line)]">
+              {starters.map((pick) => {
+                const p = byId.get(pick.fplId);
+                if (!p) return null;
+                const current = pickRole === 'captain' ? pick.isCaptain : pick.isVice;
+                return (
+                  <button
+                    key={pick.fplId}
+                    onClick={() => {
+                      setRole(pick.fplId, pickRole);
+                      setPickRole(null);
+                    }}
+                    className="flex min-h-12 w-full items-center gap-2.5 py-1.5 text-left"
+                  >
+                    <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={30} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">{p.webName}</span>
+                      <span className="block text-[0.65rem] text-muted">
+                        {p.clubShort} · {p.position}
+                      </span>
+                    </span>
+                    {current ? (
+                      pickRole === 'captain' ? (
+                        <Crown className="h-4 w-4 shrink-0 text-gold" />
+                      ) : (
+                        <Shield className="h-4 w-4 shrink-0 text-silver" />
+                      )
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setPickRole(null)} className="btn-outline w-full">
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {view === 'pitch' ? pitchView : listView}
 
