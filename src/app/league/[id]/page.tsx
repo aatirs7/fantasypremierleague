@@ -13,6 +13,7 @@ import H2HStandings from '@/components/leagues/H2HStandings';
 import AwardsFeed from '@/components/leagues/AwardsFeed';
 import LeagueStats from '@/components/leagues/LeagueStats';
 import DraftGrades from '@/components/leagues/DraftGrades';
+import DraftReportCard from '@/components/leagues/DraftReportCard';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
@@ -67,8 +68,8 @@ export default async function LeaguePage({
       </div>
 
       {!pending && league.draftStatus === 'complete' ? (
-        <div className="-mx-4 overflow-x-auto px-4">
-          <div className="flex w-max min-w-full justify-center gap-5 border-b border-edge">
+        <div className="border-b border-edge">
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-1">
             {(
               [
                 ['', 'Head to head', view == null],
@@ -160,6 +161,7 @@ export default async function LeaguePage({
         <H2HStandings leagueId={league.id} viewerId={session.userId} show="table" />
       ) : (
         <>
+          <DraftReportCard leagueId={league.id} viewerId={session.userId} />
           <H2HStandings leagueId={league.id} viewerId={session.userId} show="fixtures" />
           <AwardsFeed leagueId={league.id} />
         </>

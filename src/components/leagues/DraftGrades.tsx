@@ -43,8 +43,6 @@ export default async function DraftGrades({
         awards={awards.map((a) => ({ ...a, username: names.get(a.userId) ?? a.username }))}
         viewerId={viewerId}
         picks={picks}
-        autoOpen
-        storageKey={`epld_draftreport_${leagueId}`}
       />
       <p className="text-center text-xs text-muted">
         Graded on the board, not the table. Value taken, positions covered, and how many of your

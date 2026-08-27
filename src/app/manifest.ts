@@ -7,6 +7,9 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Draft your squad, set your lineup, and see who knows ball.',
     start_url: '/home',
     display: 'standalone',
+    // Every screen is a single portrait column; landscape only ever
+    // stretched it into something nobody designed.
+    orientation: 'portrait',
     background_color: '#0a0912',
     theme_color: '#0a0912',
     icons: [
