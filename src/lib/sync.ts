@@ -140,7 +140,23 @@ async function syncBootstrap(report: SyncReport): Promise<void> {
     await db
       .insert(fplPlayers)
       .values(chunk)
-      .onConflictDoUpdate({ target: fplPlayers.fplId, set: excludedSet(fplPlayers, ['fplId', 'draftRank']) });
+      // Skip every column the bootstrap does not carry. excludedSet writes
+      // excluded.<col> for each listed column, and for a column absent from
+      // the insert that resolves to the default (null), so leaving these in
+      // silently wipes the draft rank and the last-season backfill on every
+      // single sync.
+      .onConflictDoUpdate({
+        target: fplPlayers.fplId,
+        set: excludedSet(fplPlayers, [
+          'fplId',
+          'draftRank',
+          'active',
+          'lastSeason',
+          'lastSeasonPoints',
+          'lastSeasonMinutes',
+          'lastSeasonStarts',
+        ]),
+      });
     report.playersUpserted += chunk.length;
   }
 

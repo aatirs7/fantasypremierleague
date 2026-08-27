@@ -54,7 +54,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // No viewport-fit: cover on purpose. Letting iOS inset the web view itself
 // keeps env(safe-area-inset-*) at 0, which is what makes a plain
 // `fixed bottom-0` tab bar land exactly on the bottom edge.
-export const THEME_COLORS = { dark: '#000000', light: '#f6f6f7' } as const;
+export const THEME_COLORS = { dark: '#000000', light: '#e9e5db' } as const;
 
 export async function generateViewport(): Promise<Viewport> {
   const jar = await cookies();

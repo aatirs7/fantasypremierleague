@@ -227,25 +227,23 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
   return (
     <div className="reveal space-y-5 pb-3 pt-1 lg:mx-auto lg:max-w-2xl">
       {/* Hero */}
-      <div className="relative min-h-52 overflow-hidden">
-        <div className="absolute right-0 top-0 h-52 w-52 opacity-95">
-          <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={208} className="!rounded-none !bg-transparent !ring-0 object-contain" />
-        </div>
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: 'linear-gradient(90deg, transparent 55%, transparent)' }}
-          aria-hidden
-        />
-        <div className="relative flex items-start justify-between pr-14">
+      <div className="relative overflow-hidden">
+        <div className="relative flex items-start justify-between">
           <BackButton
             fallback="/players"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.05] text-muted active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-edge text-muted active:scale-95"
           />
         </div>
-        <div className="relative mt-6 max-w-[55%]">
-          <p className="text-xl text-muted">{firstName}</p>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-4xl font-bold tracking-tight">{lastName}</h1>
+        <div className="relative mt-1 flex flex-col items-center text-center">
+          <PlayerPhoto
+            photoCode={p.photoCode}
+            name={p.webName}
+            size={128}
+            className="!bg-transparent object-contain"
+          />
+          <p className="mt-3 text-base text-muted">{firstName}</p>
+          <div className="flex items-center justify-center gap-2.5">
+            <h1 className="font-display text-4xl tracking-tight">{lastName}</h1>
             {watchlist ? (
               <WatchlistButton
                 leagueId={watchlist.leagueId}
@@ -256,7 +254,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
               />
             ) : null}
           </div>
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
+          <p className="mt-2 flex items-center justify-center gap-1.5 text-sm text-muted">
             <ClubBadge clubCode={p.clubCode} name={p.clubShort} size={18} />
             {p.clubName} <span className="text-muted-2">•</span> {p.position}
           </p>
@@ -284,10 +282,10 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
               </span>
             </p>
           ) : null}
-          <div className="mt-4 flex gap-8">
+          <div className="mt-5 flex w-full justify-center gap-8 text-center">
             <div>
               <p className="text-2xl font-bold tabular-nums">{p.draftRank ?? '-'}</p>
-              <p className="text-xs text-muted">Draft Rank</p>
+              <p className="text-xs text-muted">Draft rank</p>
             </div>
             <div>
               <p className="text-2xl font-bold tabular-nums">{p.totalPoints}</p>
@@ -296,7 +294,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
             {p.lastSeasonPoints != null ? (
               <div>
                 <p className="text-2xl font-bold tabular-nums">{p.lastSeasonPoints}</p>
-                <p className="text-xs text-muted">{p.lastSeason}</p>
+                <p className="text-xs text-muted">Last season</p>
               </div>
             ) : (
               <div>
@@ -312,7 +310,7 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
       <div className="card grid grid-cols-4 divide-x divide-[var(--line)] py-3.5 text-center">
         {(
           [
-            [p.lastSeasonPoints ?? '-', p.lastSeason && p.lastSeason !== '-' ? p.lastSeason : 'Last season'],
+            [p.lastSeasonPoints ?? '-', 'Last season'],
             [p.lastSeasonStarts ?? '-', 'Starts'],
             [p.goals, 'Goals'],
             [p.form ?? '0.0', 'Form'],

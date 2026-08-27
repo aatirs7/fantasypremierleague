@@ -1,20 +1,32 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Layers, Sparkles, Zap, X, type LucideIcon } from 'lucide-react';
 
-const META: Record<string, { label: string; blurb: string }> = {
+const META: Record<
+  string,
+  { label: string; short: string; blurb: string; how: string; icon: LucideIcon }
+> = {
   triple_captain: {
     label: 'Triple Captain',
+    short: 'TC',
     blurb: 'Captain scores 3x instead of 2x.',
+    how: 'Save it for a captain with a double gameweek or a home tie against the worst defence in the league. On a 20-point haul this is 20 extra points in a single afternoon.',
+    icon: Zap,
   },
   bench_boost: {
     label: 'Bench Boost',
+    short: 'BB',
     blurb: 'All 15 players score, nobody benched.',
+    how: 'Worth most in a week where all four of your bench players have fixtures and are fit. Check the deadline team news before you burn it.',
+    icon: Layers,
   },
   wildcard: {
     label: 'Wildcard',
+    short: 'WC',
     blurb: 'Every waiver claim can land in one window.',
+    how: 'Normally only your top claim goes through. Play this when three or four players you want are all sitting unowned at once.',
+    icon: Sparkles,
   },
 };
 
@@ -26,6 +38,7 @@ export default function ChipsPanel({ leagueId }: { leagueId: string }) {
   const [gw, setGw] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -64,60 +77,103 @@ export default function ChipsPanel({ leagueId }: { leagueId: string }) {
 
   return (
     <section className="space-y-2">
-      <p className="flex items-center justify-center gap-1.5 text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
-        <Sparkles className="h-3 w-3" />
-        Chips
-      </p>
       {error ? (
         <p className="rounded-xl border border-live/40 bg-live/[0.08] px-3 py-2 text-center text-xs text-live">
           {error}
         </p>
       ) : null}
-      <div className="space-y-2">
+
+      {/* Three small chips that sit with the team rather than in a drawer at
+          the bottom of a different page. Tap one to read what it does. */}
+      <div className="flex justify-center gap-2">
         {Object.entries(META).map(([chip, meta]) => {
           const used = played.find((p) => p.chip === chip);
           const activeNow = used && gw != null && used.gw === gw;
+          const Icon = meta.icon;
           return (
-            <div key={chip} className="tile flex items-center gap-3 p-3.5">
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold">{meta.label}</span>
-                <span className="block text-xs text-muted">
-                  {activeNow
-                    ? `Active for gameweek ${used!.gw}`
-                    : used
-                      ? `Used in gameweek ${used.gw}`
-                      : meta.blurb}
-                </span>
-              </span>
-              {activeNow ? (
-                <button
-                  onClick={() => void act(chip, 'cancel')}
-                  disabled={busy}
-                  className="shrink-0 rounded-full border border-edge px-3 py-1.5 text-xs font-semibold text-muted"
-                >
-                  Take back
-                </button>
-              ) : used ? (
-                <span className="shrink-0 text-[0.6rem] font-medium uppercase tracking-wider text-muted-2">
-                  Spent
-                </span>
-              ) : (
-                <button
-                  onClick={() => void act(chip, 'play')}
-                  disabled={busy || gw == null}
-                  className="shrink-0 rounded-full bg-[var(--btn-bg)] px-3.5 py-1.5 text-xs font-semibold text-[var(--btn-fg)] disabled:opacity-40"
-                >
-                  Play
-                </button>
-              )}
-            </div>
+            <button
+              key={chip}
+              onClick={() => setOpen(chip)}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.7rem] font-semibold transition ${
+                activeNow
+                  ? 'border-accent bg-accent text-[var(--accent-ink)]'
+                  : used
+                    ? 'border-edge text-muted-2 line-through opacity-60'
+                    : 'border-accent/40 bg-accent/[0.08] text-accent'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {meta.short}
+            </button>
           );
         })}
       </div>
-      {gw != null ? (
-        <p className="text-center text-[0.6rem] text-muted-2">
-          Chips apply to gameweek {gw} and lock at the deadline.
-        </p>
+
+      {open ? (
+        (() => {
+          const meta = META[open];
+          const used = played.find((p) => p.chip === open);
+          const activeNow = used && gw != null && used.gw === gw;
+          const Icon = meta.icon;
+          return (
+            <div className="modal-scrim" onClick={() => setOpen(null)}>
+              <div
+                className="modal-card reveal space-y-4 text-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="relative">
+                  <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+                    Chip · once a season
+                  </p>
+                  <div className="mt-2 flex flex-col items-center gap-2">
+                    <Icon className="h-7 w-7 text-accent" strokeWidth={1.6} />
+                    <h2 className="text-2xl font-semibold tracking-tight">{meta.label}</h2>
+                  </div>
+                  <button
+                    onClick={() => setOpen(null)}
+                    aria-label="Close"
+                    className="absolute -right-2 -top-2 flex h-9 w-9 items-center justify-center rounded-full border border-edge text-muted"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <p className="text-sm font-semibold">{meta.blurb}</p>
+                <p className="text-sm leading-relaxed text-muted">{meta.how}</p>
+
+                {activeNow ? (
+                  <>
+                    <p className="text-xs text-accent">Active for gameweek {used!.gw}.</p>
+                    <button
+                      onClick={() => void act(open, 'cancel')}
+                      disabled={busy}
+                      className="btn-outline w-full"
+                    >
+                      Take it back
+                    </button>
+                  </>
+                ) : used ? (
+                  <p className="text-xs text-muted-2">Spent in gameweek {used.gw}.</p>
+                ) : (
+                  <>
+                    {gw != null ? (
+                      <p className="text-xs text-muted-2">
+                        Applies to gameweek {gw} and locks at the deadline.
+                      </p>
+                    ) : null}
+                    <button
+                      onClick={() => void act(open, 'play')}
+                      disabled={busy || gw == null}
+                      className="btn-primary w-full"
+                    >
+                      Play {meta.label}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })()
       ) : null}
     </section>
   );

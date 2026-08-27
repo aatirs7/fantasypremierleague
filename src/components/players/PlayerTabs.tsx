@@ -12,7 +12,7 @@ export default function PlayerTabs({
   const [active, setActive] = useState(0);
   return (
     <div>
-      <div className="flex gap-6 border-b border-edge px-1">
+      <div className="flex justify-center gap-6 border-b border-edge px-1">
         {tabs.map((t, i) => (
           <button
             key={t.label}

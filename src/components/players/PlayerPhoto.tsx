@@ -16,25 +16,46 @@ export default function PlayerPhoto({
   size?: number;
   className?: string;
 }) {
-  // Fallback chain: the big headshot, then the smaller legacy size the CDN
-  // sometimes has when 250x250 is missing, then an initial disc.
+  // Fallback chain, in coverage order. The PL moved its headshots to the
+  // premierleague25 path with no "p" prefix; that alone covers 564 of the
+  // 614 active players, where the legacy 250x250 path now 403s for every
+  // recent signing. The old path still holds a handful of veterans, so it
+  // stays as the second try, and 37 fringe names have no image anywhere and
+  // fall through to the initial disc.
   const [attempt, setAttempt] = useState(0);
   const sources =
     photoCode == null
       ? []
       : [
+          `https://resources.premierleague.com/premierleague25/photos/players/110x140/${photoCode}.png`,
           `https://resources.premierleague.com/premierleague/photos/players/250x250/p${photoCode}.png`,
-          `https://resources.premierleague.com/premierleague/photos/players/110x140/p${photoCode}.png`,
         ];
   const failed = attempt >= sources.length;
   if (photoCode == null || failed) {
+    // A blank kit silhouette, the way every football site does it. An
+    // initial in a circle reads like an avatar, not a missing photo.
     return (
       <span
-        className={`flex shrink-0 items-center justify-center rounded-full bg-accent/10 font-display text-accent ring-1 ring-accent/20 ${className}`}
-        style={{ width: size, height: size, fontSize: size * 0.45 }}
-        aria-hidden
+        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/[0.05] ring-1 ring-[var(--line)] ${className}`}
+        style={{ width: size, height: size }}
+        aria-label={name}
+        role="img"
       >
-        {name.slice(0, 1).toUpperCase()}
+        <svg
+          viewBox="0 0 24 24"
+          width={size}
+          height={size}
+          fill="none"
+          aria-hidden
+          style={{ transform: 'translateY(8%) scale(1.06)' }}
+        >
+          <circle cx="12" cy="8.4" r="4.1" fill="currentColor" className="text-muted-2" />
+          <path
+            d="M3.6 22c0-4.3 3.8-7.2 8.4-7.2s8.4 2.9 8.4 7.2z"
+            fill="currentColor"
+            className="text-muted-2"
+          />
+        </svg>
       </span>
     );
   }

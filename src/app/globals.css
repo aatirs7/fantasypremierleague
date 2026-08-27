@@ -42,10 +42,10 @@
   --info: #6fc3e8;
 
   /* Per-section card washes, so no two neighbouring boxes read the same. */
-  --tint-team: rgba(224, 168, 60, 0.055);
-  --tint-league: rgba(111, 195, 232, 0.055);
-  --tint-live: rgba(255, 107, 107, 0.07);
-  --tint-board: rgba(243, 241, 234, 0.03);
+  --tint-team: rgba(224, 168, 60, 0.13);
+  --tint-league: rgba(111, 195, 232, 0.13);
+  --tint-live: rgba(255, 107, 107, 0.15);
+  --tint-board: rgba(243, 241, 234, 0.04);
 
   --lift: rgba(243, 241, 234, 0.05);
   --glow-1: rgba(224, 168, 60, 0.07);
@@ -58,14 +58,17 @@
 /* Day theme: crisp white cards on a soft cool ground. Toggled by the theme
    button (cookie epld_theme); dark stays the default. */
 [data-theme='light'] {
-  --bg-top: #f7f5f0;
-  --bg-top-fade: rgba(247, 245, 240, 0);
-  --bg: #f7f5f0;
-  --bg-2: #ece8df;
+  /* The ground is a warm paper tone and cards are pure white, so a card
+     reads as a card. Hairlines are strong enough to see on a phone in
+     daylight, which the old 10% black was not. */
+  --bg-top: #e9e5db;
+  --bg-top-fade: rgba(233, 229, 219, 0);
+  --bg: #e9e5db;
+  --bg-2: #dcd7c9;
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --line: rgba(13, 19, 28, 0.1);
-  --line-strong: rgba(13, 19, 28, 0.2);
+  --line: rgba(13, 19, 28, 0.16);
+  --line-strong: rgba(13, 19, 28, 0.3);
   --fg: #131a24;
   --muted: #55606e;
   --muted-2: #8a94a1;
@@ -85,9 +88,9 @@
   --live: #d13c3c;
   --info: #17607f;
 
-  --tint-team: rgba(154, 108, 12, 0.05);
-  --tint-league: rgba(23, 96, 127, 0.05);
-  --tint-live: rgba(209, 60, 60, 0.06);
+  --tint-team: rgba(154, 108, 12, 0.1);
+  --tint-league: rgba(23, 96, 127, 0.1);
+  --tint-live: rgba(209, 60, 60, 0.11);
   --tint-board: rgba(13, 19, 28, 0.02);
 
   --lift: rgba(255, 255, 255, 0.55);
@@ -95,7 +98,7 @@
   --glow-2: rgba(23, 96, 127, 0.04);
   --grain-opacity: 0.014;
   --glass-bg: rgba(255, 255, 255, 0.97);
-  --card-shadow: 0 1px 2px rgba(13, 19, 28, 0.06), 0 10px 28px -18px rgba(13, 19, 28, 0.2);
+  --card-shadow: 0 1px 2px rgba(13, 19, 28, 0.09), 0 12px 26px -16px rgba(13, 19, 28, 0.28);
 }
 
 @theme inline {
@@ -352,13 +355,13 @@ h2 {
   background:
     linear-gradient(180deg, var(--tint-team), transparent 70%),
     linear-gradient(180deg, rgba(243, 241, 234, 0.035), rgba(243, 241, 234, 0.012));
-  border-color: color-mix(in srgb, var(--accent) 20%, var(--line));
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--line));
 }
 .tile-league {
   background:
     linear-gradient(180deg, var(--tint-league), transparent 70%),
     linear-gradient(180deg, rgba(243, 241, 234, 0.035), rgba(243, 241, 234, 0.012));
-  border-color: color-mix(in srgb, var(--info) 20%, var(--line));
+  border-color: color-mix(in srgb, var(--info) 32%, var(--line));
 }
 .tile-live {
   background:

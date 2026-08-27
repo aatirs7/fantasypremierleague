@@ -181,16 +181,14 @@ export default async function SquadPage({
         </p>
       </div>
       {switcher}
+      {/* Chips act on your own team, so they sit with it. */}
+      <ChipsPanel leagueId={leagueId} />
       <LineupEditor
         squadId={squad.id}
         gw={editable.gw}
         initial={picks}
         players={players}
       />
-      {/* Chips act on your own team, so they live with it rather than on the
-          league noticeboard. */}
-      <ChipsPanel leagueId={leagueId} />
-
       {/* Squad surgery lives below the pitch: you decide the XI first, then
           go looking for a new player. */}
       <div className="flex justify-center gap-2 pt-1">

@@ -249,7 +249,7 @@ export default function LineupEditor({
       </>
     );
 
-    const cls = `plate relative flex w-[4.7rem] flex-col items-center gap-0.5 px-1 pb-1.5 pt-1.5 transition ${
+    const cls = `plate relative flex ${benchIndex != null ? 'w-full' : 'w-[4.7rem]'} flex-col items-center gap-0.5 px-1 pb-1.5 pt-1.5 transition ${
       sel ? 'z-10 scale-105 ring-2 ring-[var(--accent)]' : ''
     } ${isTarget ? 'ring-1 ring-accent/50' : ''} ${swapMode && !sel && !isTarget ? 'opacity-70' : ''}`;
 
@@ -312,7 +312,7 @@ export default function LineupEditor({
             autosub order
           </span>
         </p>
-        <div className="flex justify-evenly">
+        <div className="grid grid-cols-4 gap-1.5">
           {bench.map((p, i) => (
             <Plate key={p.fplId} pick={p} benchIndex={i} />
           ))}
