@@ -6,7 +6,6 @@ import Link from 'next/link';
 import {
   ArrowLeftRight,
   Crown,
-  MessageCircle,
   Repeat,
   Shirt,
   Sparkles,
@@ -101,12 +100,12 @@ function cards(leagueId: string, gw: number | null): Card[] {
       cta: { label: 'See your chips', href: `/league/${leagueId}` },
     },
     {
-      icon: MessageCircle,
+      icon: Trophy,
       title: 'Every week you face someone',
       lines: [
         'Head to head: outscore your opponent and take the win. The table ranks by record.',
         'Top four make the playoffs, semis in GW37 and the final on the last day.',
-        'Awards and results post themselves to the league chat. Go and gloat.',
+        'Weekly awards land on the league page. Manager of the Week, and the Wooden Spoon.',
       ],
       cta: { label: 'Open the league', href: `/league/${leagueId}` },
     },

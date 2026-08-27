@@ -7,7 +7,6 @@ import {
   BookOpen,
   ChevronRight,
   Crown,
-  MessageCircle,
   Shirt,
   Sparkles,
   Swords,
@@ -102,18 +101,10 @@ const CARDS: Card[] = [
     icon: Crown,
     title: 'Weekly awards',
     lines: [
-      'Handed out automatically every gameweek.',
+      'Handed out automatically every gameweek, and shown on the league page.',
       'Manager of the Week and Wooden Spoon: best and worst score.',
       'Bench Disaster: most points left on your bench.',
       'Captain Curse: your captain returned two or fewer.',
-    ],
-  },
-  {
-    icon: MessageCircle,
-    title: 'Chat',
-    lines: [
-      'Every league has a thread for arguing about all of it.',
-      'Results and awards post themselves there each week.',
     ],
   },
 ];

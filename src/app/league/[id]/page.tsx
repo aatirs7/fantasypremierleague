@@ -85,9 +85,6 @@ export default async function LeaguePage({
                 {label}
               </Link>
             ))}
-            <Link href={`/league/${league.id}/chat`} className="tab-underline whitespace-nowrap">
-              Chat
-            </Link>
             <Link href={`/league/${league.id}/stats`} className="tab-underline whitespace-nowrap">
               Stats
             </Link>

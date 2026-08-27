@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { draftQueues, fplPlayers, leagues } from '@/lib/schema';
+import { draftQueues, fplPlayers, leagues, squadPlayers, squads, users } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { resolveActiveLeagueId } from '@/lib/leagues';
 import { fetchElementSummary } from '@/lib/fpl';
@@ -51,6 +51,38 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
         .orderBy(asc(draftQueues.rank));
       const queue = rows.map((r) => r.fplId);
       watchlist = { leagueId: activeLeagueId, queued: queue.includes(fplId), queue };
+    }
+  }
+
+  // Who owns him in your league, if anyone. Without this a player page is
+  // just numbers: you cannot tell a free agent from someone's first-round
+  // pick, which is the first thing you want to know.
+  let ownership: { owner: string | null; isMe: boolean; leagueName: string } | null = null;
+  if (activeLeagueId) {
+    const [lg] = await db
+      .select({ name: leagues.name, draftStatus: leagues.draftStatus })
+      .from(leagues)
+      .where(eq(leagues.id, activeLeagueId))
+      .limit(1);
+    if (lg && lg.draftStatus !== 'pending') {
+      const [row] = await db
+        .select({ userId: squads.userId, username: users.username })
+        .from(squadPlayers)
+        .innerJoin(squads, eq(squads.id, squadPlayers.squadId))
+        .innerJoin(users, eq(users.id, squads.userId))
+        .where(
+          and(
+            eq(squadPlayers.leagueId, activeLeagueId),
+            eq(squadPlayers.fplId, fplId),
+            isNull(squadPlayers.droppedGw),
+          ),
+        )
+        .limit(1);
+      ownership = {
+        owner: row?.username ?? null,
+        isMe: row?.userId === session.userId,
+        leagueName: lg.name,
+      };
     }
   }
 
@@ -213,6 +245,30 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
             <ClubBadge clubCode={p.clubCode} name={p.clubShort} size={18} />
             {p.clubName} <span className="text-muted-2">•</span> {p.position}
           </p>
+          {ownership ? (
+            <p className="mt-2">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.65rem] font-semibold ${
+                  ownership.isMe
+                    ? 'border-accent/45 bg-accent/12 text-accent'
+                    : ownership.owner
+                      ? 'border-edge text-muted'
+                      : 'border-info/40 bg-info/10 text-info'
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    ownership.owner ? 'bg-current' : 'bg-info'
+                  }`}
+                />
+                {ownership.isMe
+                  ? 'On your squad'
+                  : ownership.owner
+                    ? `Owned by ${ownership.owner}`
+                    : 'Free agent'}
+              </span>
+            </p>
+          ) : null}
           <div className="mt-4 flex gap-8">
             <div>
               <p className="text-2xl font-bold tabular-nums">{p.draftRank ?? '-'}</p>

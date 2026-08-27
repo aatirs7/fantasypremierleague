@@ -144,15 +144,13 @@ export async function finalizeGw(gw: number, notes: string[]): Promise<void> {
   const { recomputePriorityFromStandings } = await import('./waivers');
   const { settleGw } = await import('./h2h');
   const { computeAwards } = await import('./awards');
-  const { postSystemMessage } = await import('./chat');
   for (const l of leagueRows) {
     try {
       await recomputePriorityFromStandings(l.id);
     } catch (e) {
       notes.push(`waiver priority league ${l.id} FAILED: ${e instanceof Error ? e.message : String(e)}`);
     }
-    // Head to head result, weekly awards, and the feed post that carries
-    // them into the league chat.
+    // Head to head result and the weekly awards.
     try {
       await settleGw(l.id, gw, notes);
     } catch (e) {
@@ -160,7 +158,6 @@ export async function finalizeGw(gw: number, notes: string[]): Promise<void> {
     }
     try {
       await computeAwards(l.id, gw, notes);
-      await postSystemMessage(l.id, gw);
     } catch (e) {
       notes.push(`awards league ${l.id} FAILED: ${e instanceof Error ? e.message : String(e)}`);
     }
