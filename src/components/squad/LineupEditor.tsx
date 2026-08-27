@@ -207,12 +207,16 @@ export default function LineupEditor({
     const p = byId.get(pick.fplId);
     if (!p) return null;
     const sel = selected === pick.fplId;
+    // While a starter is picked up, the legal drop targets glow so the swap
+    // gesture is obvious rather than something you have to be told about.
+    const isTarget =
+      selected != null && selected !== pick.fplId && picks.find((x) => x.fplId === selected)?.starting !== pick.starting;
     return (
       <button
         onClick={() => tap(pick.fplId)}
-        className={`plate relative flex w-[4.7rem] flex-col items-center gap-0.5 px-1 pb-1.5 pt-2 ${
-          sel ? 'ring-2 ring-[var(--accent)]' : ''
-        }`}
+        className={`plate relative flex w-[4.7rem] flex-col items-center gap-0.5 px-1 pb-1.5 pt-2 transition-transform ${
+          sel ? 'z-10 scale-105 ring-2 ring-[var(--accent)]' : ''
+        } ${isTarget ? 'ring-1 ring-accent/45' : ''}`}
       >
         {pick.isCaptain ? (
           <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gold text-[0.6rem] font-bold text-black">
@@ -264,8 +268,11 @@ export default function LineupEditor({
 
       {selectedPick?.starting ? (
         <div className="card flex items-center gap-2 p-2.5">
-          <p className="min-w-0 flex-1 truncate pl-1 text-xs text-muted">
-            {byId.get(selectedPick.fplId)?.webName}: swap with a bench player, or
+          <p className="min-w-0 flex-1 pl-1 text-xs leading-tight text-muted">
+            <span className="font-semibold text-foreground">
+              {byId.get(selectedPick.fplId)?.webName}
+            </span>
+            <span className="block text-muted-2">Tap a bench player to swap, or</span>
           </p>
           <button
             onClick={() => setRole(selectedPick.fplId, 'captain')}
@@ -285,6 +292,9 @@ export default function LineupEditor({
       <div>
         <p className="mb-1.5 text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
           Bench
+          <span className="ml-1.5 font-medium normal-case tracking-normal text-muted-2">
+            autosub order
+          </span>
         </p>
         <div className="flex justify-evenly">
           {bench.map((p, i) => (
@@ -320,8 +330,11 @@ export default function LineupEditor({
     </>
   );
 
+  const captain = picks.find((p) => p.isCaptain);
+  const vice = picks.find((p) => p.isVice);
+
   return (
-    <div className="space-y-3 pb-24">
+    <div className={`space-y-3 ${dirty ? 'pb-24' : 'pb-2'}`}>
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted">
           Formation{' '}
@@ -335,6 +348,23 @@ export default function LineupEditor({
         >
           {view === 'pitch' ? 'View Roster' : 'View Pitch'}
         </button>
+      </div>
+
+      {/* The armbands, spelled out. Doubling the wrong man is the single most
+          expensive mistake available, so it should never be a guess. */}
+      <div className="flex items-center justify-center gap-4 rounded-xl border border-edge bg-white/[0.02] px-3 py-2 text-xs">
+        <span className="flex items-center gap-1.5">
+          <Crown className="h-3.5 w-3.5 shrink-0 text-gold" />
+          <span className={captain ? 'font-semibold' : 'text-live'}>
+            {captain ? byId.get(captain.fplId)?.webName : 'No captain set'}
+          </span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Shield className="h-3.5 w-3.5 shrink-0 text-silver" />
+          <span className={vice ? 'text-muted' : 'text-live'}>
+            {vice ? byId.get(vice.fplId)?.webName : 'No vice set'}
+          </span>
+        </span>
       </div>
 
       {autoSet && !dirty ? (

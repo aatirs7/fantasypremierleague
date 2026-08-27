@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { and, asc, eq, inArray } from 'drizzle-orm';
-import { ArrowLeft } from 'lucide-react';
 import { db } from '@/lib/db';
 import { draftQueues, fplPlayers, leagues } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { resolveActiveLeagueId } from '@/lib/leagues';
 import { fetchElementSummary } from '@/lib/fpl';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
+import BackButton from '@/components/BackButton';
 import ClubBadge from '@/components/matches/ClubBadge';
 import PointsChart from '@/components/players/PointsChart';
 import PlayerTabs from '@/components/players/PlayerTabs';
@@ -190,13 +190,10 @@ export default async function PlayerDetail({ params }: { params: Promise<{ id: s
           aria-hidden
         />
         <div className="relative flex items-start justify-between pr-14">
-          <Link
-            href="/players"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.05]"
-            aria-label="back"
-          >
-            <ArrowLeft className="h-5 w-5 text-muted" />
-          </Link>
+          <BackButton
+            fallback="/players"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.05] text-muted active:scale-95"
+          />
         </div>
         <div className="relative mt-6 max-w-[55%]">
           <p className="text-xl text-muted">{firstName}</p>

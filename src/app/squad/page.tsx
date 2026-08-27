@@ -180,20 +180,6 @@ export default async function SquadPage({
         </p>
       </div>
       {switcher}
-      <div className="flex justify-center gap-2">
-        <Link
-          href={`/league/${leagueId}/trades`}
-          className="btn-outline min-h-10 flex-1 text-xs"
-        >
-          Trades
-        </Link>
-        <Link
-          href={`/league/${leagueId}/waivers`}
-          className="btn-outline min-h-10 flex-1 text-xs"
-        >
-          Waivers
-        </Link>
-      </div>
       <LineupEditor
         squadId={squad.id}
         gw={editable.gw}
@@ -201,6 +187,16 @@ export default async function SquadPage({
         players={players}
         autoSet={row?.autoSet ?? true}
       />
+      {/* Squad surgery lives below the pitch: you decide the XI first, then
+          go looking for a new player. */}
+      <div className="flex justify-center gap-2 pt-1">
+        <Link href={`/league/${leagueId}/trades`} className="btn-outline min-h-10 flex-1 text-xs">
+          Trades
+        </Link>
+        <Link href={`/league/${leagueId}/waivers`} className="btn-outline min-h-10 flex-1 text-xs">
+          Waivers
+        </Link>
+      </div>
     </div>
   );
 }

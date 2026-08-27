@@ -116,9 +116,13 @@ function cards(leagueId: string, gw: number | null): Card[] {
 export default function PostDraftGuide({
   leagueId,
   gw,
+  openSignal = 0,
 }: {
   leagueId: string;
   gw: number | null;
+  // Bumping this reopens the deck even after it has been dismissed, for the
+  // "What happens now?" button.
+  openSignal?: number;
 }) {
   const key = `epld_postdraft_${leagueId}`;
   const [open, setOpen] = useState(false);
@@ -133,6 +137,13 @@ export default function PostDraftGuide({
       // private mode or blocked storage: just do not nag
     }
   }, [key]);
+
+  useEffect(() => {
+    if (openSignal > 0) {
+      setStep(0);
+      setOpen(true);
+    }
+  }, [openSignal]);
 
   const close = () => {
     setOpen(false);

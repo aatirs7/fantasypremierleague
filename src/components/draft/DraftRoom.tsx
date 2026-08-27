@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Plus, Search, Star, Trash2, X } from 'lucide-react';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
+import PostDraftGuide from '@/components/PostDraftGuide';
 import Avatar from '@/components/Avatar';
 import RingTimer from '@/components/RingTimer';
 import LocalTime from '@/components/LocalTime';
@@ -199,6 +200,7 @@ export default function DraftRoom({
   const [q, setQ] = useState('');
   const [pos, setPos] = useState('ALL');
   const [confirm, setConfirm] = useState<PoolPlayer | null>(null);
+  const [guideNonce, setGuideNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [introDone, setIntroDone] = useState(false);
@@ -691,10 +693,19 @@ export default function DraftRoom({
     return (
       <div className="reveal space-y-4 py-4 lg:mx-auto lg:max-w-2xl">
         {testBanner}
+        {/* The moment the board fills, walk everyone through what happens
+            next. Shows once per league, then never again. */}
+        <PostDraftGuide leagueId={leagueId} gw={null} openSignal={guideNonce} />
         <div className="card space-y-1 p-5 text-center">
           <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-gold">Draft complete</p>
           <h1 className="shine font-display text-5xl">All squads locked in</h1>
         </div>
+        <button
+          onClick={() => setGuideNonce((n) => n + 1)}
+          className="btn-outline w-full"
+        >
+          What happens now?
+        </button>
         {state.members.map((m) => (
           <div key={m.userId} className="card space-y-2 p-4">
             <p className="flex items-center justify-between">
