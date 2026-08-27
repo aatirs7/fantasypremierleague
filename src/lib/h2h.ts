@@ -1,7 +1,8 @@
 import 'server-only';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { db } from './db';
-import { h2hRecords, leagues, matchups, gwScores, leagueMembers, squads, users } from './schema';
+import { h2hRecords, leagues, matchups, gwScores, leagueMembers, squads } from './schema';
+import { teamNames } from './names';
 import {
   FINAL_GW,
   REGULAR_SEASON_END,
@@ -238,11 +239,7 @@ export type StandingRow = H2HRecord & { rank: number; username: string };
 export async function h2hStandings(leagueId: string): Promise<StandingRow[]> {
   const records = await db.select().from(h2hRecords).where(eq(h2hRecords.leagueId, leagueId));
   if (!records.length) return [];
-  const names = await db
-    .select({ id: users.id, username: users.username })
-    .from(users)
-    .where(inArray(users.id, records.map((r) => r.userId)));
-  const nameOf = new Map(names.map((n) => [n.id, n.username]));
+  const nameOf = await teamNames(leagueId);
   return sortRecords(records).map((r, i) => ({
     ...r,
     rank: i + 1,
@@ -258,14 +255,7 @@ export async function weekFixtures(leagueId: string, gw: number) {
     .where(and(eq(matchups.leagueId, leagueId), eq(matchups.gw, gw)))
     .orderBy(asc(matchups.slot));
   if (!rows.length) return [];
-  const ids = [
-    ...new Set(rows.flatMap((r) => [r.homeUserId, r.awayUserId]).filter(Boolean) as string[]),
-  ];
-  const names = await db
-    .select({ id: users.id, username: users.username })
-    .from(users)
-    .where(inArray(users.id, ids));
-  const nameOf = new Map(names.map((n) => [n.id, n.username]));
+  const nameOf = await teamNames(leagueId);
   const live = await pointsByUser(leagueId, gw);
   return rows.map((r) => ({
     slot: r.slot,

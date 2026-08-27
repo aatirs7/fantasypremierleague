@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
-import { ChevronRight, Swords, Trophy, Users } from 'lucide-react';
+import { Swords, Trophy } from 'lucide-react';
 import { db } from '@/lib/db';
 import { leagues } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
@@ -12,10 +12,10 @@ import PLStandings from '@/components/matches/PLStandings';
 import H2HStandings from '@/components/leagues/H2HStandings';
 import AwardsFeed from '@/components/leagues/AwardsFeed';
 import LeagueStats from '@/components/leagues/LeagueStats';
+import DraftGrades from '@/components/leagues/DraftGrades';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
-import Avatar from '@/components/Avatar';
 import LocalTime from '@/components/LocalTime';
 
 export const dynamic = 'force-dynamic';
@@ -73,6 +73,7 @@ export default async function LeaguePage({
               [
                 ['', 'Head to head', view == null],
                 ['?view=standings', 'Standings', view === 'standings'],
+                ['?view=grades', 'Draft', view === 'grades'],
                 ['?view=points', 'Points', view === 'points'],
                 ['?view=pl', 'PL Table', showPl],
               ] as [string, string, boolean][]
@@ -151,6 +152,8 @@ export default async function LeaguePage({
         <PLStandings />
       ) : view === 'points' ? (
         <LeagueStandings league={league} viewerId={session.userId} members={members} />
+      ) : view === 'grades' ? (
+        <DraftGrades leagueId={league.id} viewerId={session.userId} />
       ) : view === 'stats' ? (
         <LeagueStats leagueId={league.id} />
       ) : view === 'standings' ? (
@@ -162,39 +165,6 @@ export default async function LeaguePage({
         </>
       )}
 
-      <div className="space-y-2">
-        <p className="flex items-center justify-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-          <Users className="h-3.5 w-3.5" />
-          Managers ({members.length})
-        </p>
-        {members.map((m) => (
-          // Tap any manager to open their full squad page.
-          <Link
-            key={m.userId}
-            href={`/league/${league.id}/squad/${m.userId}`}
-            className="card flex min-h-12 items-center gap-3 px-3 py-2 active:scale-[0.99]"
-          >
-            <Avatar name={m.username} size={32} />
-            <span className="flex-1 truncate text-sm font-semibold">
-              {m.username}
-              {m.userId === session.userId ? (
-                <span className="ml-2 rounded-full bg-accent px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wider text-[var(--accent-ink)]">
-                  You
-                </span>
-              ) : null}
-              {m.isBot ? (
-                <span className="ml-2 rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wider text-muted">
-                  Bot
-                </span>
-              ) : null}
-            </span>
-            {m.userId === league.ownerId ? (
-              <span className="text-[0.6rem] font-bold uppercase tracking-wider text-gold">Owner</span>
-            ) : null}
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" />
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

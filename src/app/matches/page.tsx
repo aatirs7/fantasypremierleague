@@ -283,7 +283,7 @@ export default async function MatchesPage({
             <section key={day} id={`day-${day}`} className="scroll-mt-24">
               <h2
                 data-day-kickoff={dayRows[0]?.kickoff?.toISOString()}
-                className="mb-2 flex items-center gap-2 px-1 text-[0.6rem] font-medium uppercase tracking-[0.18em] text-muted-2"
+                className="mb-2 flex items-center gap-2.5 px-1 text-xs font-semibold uppercase tracking-[0.14em] text-foreground"
               >
                 <span className="shrink-0">
                   {dayRows[0]?.kickoff ? (
@@ -293,7 +293,9 @@ export default async function MatchesPage({
                   )}
                 </span>
                 <span className="h-px flex-1 bg-[var(--line)]" />
-                <span className="shrink-0">GW{dayRows[0]?.gw}</span>
+                <span className="shrink-0 text-[0.6rem] font-medium tracking-wider text-muted-2">
+                  GW{dayRows[0]?.gw}
+                </span>
               </h2>
               <div className="space-y-2">
                 {dayRows.map((f) => (
