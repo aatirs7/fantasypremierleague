@@ -33,13 +33,11 @@ export default function LineupEditor({
   gw,
   initial,
   players,
-  autoSet,
 }: {
   squadId: string;
   gw: number;
   initial: LineupPick[];
   players: PlayerInfo[];
-  autoSet: boolean;
 }) {
   const router = useRouter();
   const [picks, setPicks] = useState<LineupPick[]>(initial);
@@ -366,12 +364,6 @@ export default function LineupEditor({
           </span>
         </span>
       </div>
-
-      {autoSet && !dirty ? (
-        <p className="rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-2 text-center text-xs text-gold">
-          This lineup was set automatically. Tap a starter then a bench player to swap.
-        </p>
-      ) : null}
 
       {view === 'pitch' ? pitchView : listView}
 

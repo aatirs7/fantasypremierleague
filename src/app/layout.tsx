@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Bricolage_Grotesque, Familjen_Grotesk } from 'next/font/google';
 import { cookies } from 'next/headers';
 import BottomTabBar from '@/components/nav/BottomTabBar';
 import DesktopNav from '@/components/nav/DesktopNav';
@@ -8,11 +8,18 @@ import HelpButton from '@/components/HelpButton';
 import ThemeButton from '@/components/ThemeButton';
 import './globals.css';
 
-// One face for everything, per the reference design. The CSS var keeps its
-// historical name so the token bridge in globals.css stays untouched.
-const body = Inter({
+// Matchday programme, printed at night: a characterful editorial display
+// face over a warm, readable grotesk. The body var keeps its historical
+// name so the token bridge in globals.css stays untouched.
+const body = Familjen_Grotesk({
   variable: '--font-hanken',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+});
+const display = Bricolage_Grotesque({
+  variable: '--font-display',
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
 });
 
 // iOS paints the status bar area (clock, wifi, battery) from
@@ -72,7 +79,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-theme={theme}
-      className={`${body.variable} h-full antialiased`}
+      className={`${body.variable} ${display.variable} h-full antialiased`}
     >
       {/* Plain document scroll with a fixed bottom bar, exactly like
           wc26-general. pb-tabbar reserves the bar's height at the end of

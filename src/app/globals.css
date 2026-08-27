@@ -1,84 +1,101 @@
 @import "tailwindcss";
 
 /*
-  EPL Draft visual identity: modern matchday.
-  Violet-led (Premier League purple heritage) with PL pink for LIVE, gold
-  for records, clean flat surfaces and a grotesk display face. Layout and
-  token architecture unchanged; the look is its own.
+  Matchday programme, printed at night.
+  Ink-navy ground, bone type, one confident gold carrying every primary
+  action and every honour. Coral for live, ice blue for information. Cards
+  are tinted per section so no two neighbouring boxes read as the same grey.
+  Display face is Bricolage Grotesque over Familjen Grotesk for body.
 */
 :root {
-  /* --bg-top is exactly #000 so it matches an opaque black iOS status bar
-     pixel for pixel. The page itself is a warm charcoal that fades up into
-     that black seam, so nothing reads as a flat void. */
+  /* Matchday programme, printed at night. Ink navy ground, bone type, one
+     confident gold. --bg-top stays exactly #000 so it matches an opaque
+     black iOS status bar pixel for pixel. */
   --bg-top: #000000;
   --bg-top-fade: rgba(0, 0, 0, 0);
-  --bg: #17171e;
-  --bg-2: #0e0e14;
-  --surface: #21212a;
-  --surface-raised: #2b2b35;
-  --line: rgba(255, 255, 255, 0.09);
-  --line-strong: rgba(255, 255, 255, 0.16);
-  --fg: #f4f4f6;
-  --muted: #9b9aa3;
-  --muted-2: #6a6972;
+  --bg: #0d131c;
+  --bg-2: #080c13;
+  --surface: #161f2b;
+  --surface-raised: #1e2937;
+  --line: rgba(243, 241, 234, 0.09);
+  --line-strong: rgba(243, 241, 234, 0.17);
+  --fg: #f3f1ea;
+  --muted: #9aa5b4;
+  --muted-2: #67717f;
 
-  /* Colour is an accent, never a fill. */
-  --accent: #a78bfa;
-  --accent-2: #8b5cf6;
-  --accent-ink: #000000;
+  /* Gold carries every primary action and every honour. One accent, used
+     with discipline, beats five fighting each other. */
+  --accent: #e0a83c;
+  --accent-2: #c78f27;
+  --accent-ink: #14181f;
 
-  /* Primary actions are ink-on-paper, not a candy gradient. */
-  --btn-bg: #f4f4f6;
-  --btn-fg: #000000;
+  /* Primary actions are gold on ink. */
+  --btn-bg: #e0a83c;
+  --btn-fg: #14181f;
 
-  --gold: #e3b25f;
-  --silver: #c9cbd3;
+  --gold: #e0a83c;
+  --silver: #b9c1cc;
   --bronze: #c98b5c;
-  --slate: #6a6972;
+  --slate: #67717f;
 
-  --live: #f43f6e;
-  --lift: rgba(255, 255, 255, 0.045);
-  --glow-1: rgba(167, 139, 250, 0.09);
-  --glow-2: rgba(167, 139, 250, 0.07);
-  --grain-opacity: 0.03;
-  --glass-bg: rgba(28, 28, 36, 0.92);
-  --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 12px 28px -20px rgba(0, 0, 0, 1);
+  --live: #ff6b6b;
+  --info: #6fc3e8;
+
+  /* Per-section card washes, so no two neighbouring boxes read the same. */
+  --tint-team: rgba(224, 168, 60, 0.055);
+  --tint-league: rgba(111, 195, 232, 0.055);
+  --tint-live: rgba(255, 107, 107, 0.07);
+  --tint-board: rgba(243, 241, 234, 0.03);
+
+  --lift: rgba(243, 241, 234, 0.05);
+  --glow-1: rgba(224, 168, 60, 0.07);
+  --glow-2: rgba(111, 195, 232, 0.05);
+  --grain-opacity: 0.028;
+  --glass-bg: rgba(24, 33, 45, 0.94);
+  --card-shadow: 0 1px 0 rgba(243, 241, 234, 0.05) inset, 0 16px 34px -24px rgba(0, 0, 0, 1);
 }
 
 /* Day theme: crisp white cards on a soft cool ground. Toggled by the theme
    button (cookie epld_theme); dark stays the default. */
 [data-theme='light'] {
-  --bg-top: #f6f6f7;
-  --bg-top-fade: rgba(246, 246, 247, 0);
-  --bg: #f6f6f7;
-  --bg-2: #eaeaee;
+  --bg-top: #f7f5f0;
+  --bg-top-fade: rgba(247, 245, 240, 0);
+  --bg: #f7f5f0;
+  --bg-2: #ece8df;
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --line: rgba(16, 16, 20, 0.1);
-  --line-strong: rgba(16, 16, 20, 0.2);
-  --fg: #16161a;
-  --muted: #5d5d67;
-  --muted-2: #8b8b95;
+  --line: rgba(13, 19, 28, 0.1);
+  --line-strong: rgba(13, 19, 28, 0.2);
+  --fg: #131a24;
+  --muted: #55606e;
+  --muted-2: #8a94a1;
 
-  --accent: #5b21b6;
-  --accent-2: #4c1d95;
+  --accent: #9a6c0c;
+  --accent-2: #7d5709;
   --accent-ink: #ffffff;
 
-  --btn-bg: #16161a;
-  --btn-fg: #ffffff;
+  --btn-bg: #131a24;
+  --btn-fg: #f7f5f0;
 
-  --gold: #9a7325;
-  --silver: #83838d;
+  --gold: #9a6c0c;
+  --silver: #6f7885;
   --bronze: #9a6238;
-  --slate: #7b7b85;
+  --slate: #767f8c;
 
-  --live: #c81e57;
-  --lift: rgba(255, 255, 255, 0.5);
-  --glow-1: rgba(91, 33, 182, 0.05);
-  --glow-2: rgba(91, 33, 182, 0.04);
-  --grain-opacity: 0.015;
-  --glass-bg: rgba(255, 255, 255, 0.96);
-  --card-shadow: 0 1px 2px rgba(16, 16, 20, 0.06), 0 8px 24px -16px rgba(16, 16, 20, 0.18);
+  --live: #d13c3c;
+  --info: #17607f;
+
+  --tint-team: rgba(154, 108, 12, 0.05);
+  --tint-league: rgba(23, 96, 127, 0.05);
+  --tint-live: rgba(209, 60, 60, 0.06);
+  --tint-board: rgba(13, 19, 28, 0.02);
+
+  --lift: rgba(255, 255, 255, 0.55);
+  --glow-1: rgba(154, 108, 12, 0.05);
+  --glow-2: rgba(23, 96, 127, 0.04);
+  --grain-opacity: 0.014;
+  --glass-bg: rgba(255, 255, 255, 0.97);
+  --card-shadow: 0 1px 2px rgba(13, 19, 28, 0.06), 0 10px 28px -18px rgba(13, 19, 28, 0.2);
 }
 
 @theme inline {
@@ -97,7 +114,8 @@
   --color-bronze: var(--bronze);
   --color-slate: var(--slate);
   --color-live: var(--live);
-  --font-display: var(--font-hanken);
+  --color-info: var(--info);
+  --font-display: var(--font-display);
   --font-sans: var(--font-hanken);
 }
 
@@ -181,11 +199,21 @@ body {
   }
 }
 
-/* Display type: same face as body, heavier and tighter. */
+/* Display type: the editorial face, tight and confident. */
 .font-display {
-  font-family: var(--font-hanken), system-ui, sans-serif;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display), var(--font-hanken), system-ui, sans-serif;
+  letter-spacing: -0.03em;
   font-weight: 700;
+}
+h1,
+h2 {
+  font-family: var(--font-display), var(--font-hanken), system-ui, sans-serif;
+  letter-spacing: -0.025em;
+}
+/* Every figure in the app lines up in columns. */
+.tabular-nums,
+[class*='tabular'] {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Primary action: solid ink on paper. High contrast, no gradient. */
@@ -312,6 +340,68 @@ body {
 }
 [data-theme='light'] .tile {
   background: var(--surface);
+}
+
+/* Section tints. Each family of card carries a different wash so a column
+   of them reads as distinct objects rather than one grey wall. */
+.tile-team {
+  background:
+    linear-gradient(180deg, var(--tint-team), transparent 70%),
+    linear-gradient(180deg, rgba(243, 241, 234, 0.035), rgba(243, 241, 234, 0.012));
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--line));
+}
+.tile-league {
+  background:
+    linear-gradient(180deg, var(--tint-league), transparent 70%),
+    linear-gradient(180deg, rgba(243, 241, 234, 0.035), rgba(243, 241, 234, 0.012));
+  border-color: color-mix(in srgb, var(--info) 20%, var(--line));
+}
+.tile-live {
+  background:
+    linear-gradient(180deg, var(--tint-live), transparent 72%),
+    linear-gradient(180deg, rgba(243, 241, 234, 0.035), rgba(243, 241, 234, 0.012));
+  border-color: color-mix(in srgb, var(--live) 26%, var(--line));
+}
+.tile-board {
+  background: linear-gradient(180deg, var(--tint-board), transparent 80%);
+}
+[data-theme='light'] .tile-team,
+[data-theme='light'] .tile-league,
+[data-theme='light'] .tile-live,
+[data-theme='light'] .tile-board {
+  background: var(--surface);
+}
+[data-theme='light'] .tile-team {
+  background: linear-gradient(180deg, var(--tint-team), var(--surface) 70%);
+}
+[data-theme='light'] .tile-league {
+  background: linear-gradient(180deg, var(--tint-league), var(--surface) 70%);
+}
+[data-theme='light'] .tile-live {
+  background: linear-gradient(180deg, var(--tint-live), var(--surface) 70%);
+}
+
+/* Every modal in the app: centred, floating, opaque. Never a bottom sheet. */
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(4, 7, 11, 0.86);
+}
+.modal-card {
+  width: 100%;
+  max-width: 26rem;
+  max-height: 85%;
+  overflow-y: auto;
+  border-radius: 1.5rem;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-raised);
+  padding: 1.6rem;
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9);
 }
 
 /* The gameweek panel: elevated surface, a whisper of violet, faint pitch

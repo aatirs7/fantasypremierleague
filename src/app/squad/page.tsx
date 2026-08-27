@@ -185,7 +185,6 @@ export default async function SquadPage({
         gw={editable.gw}
         initial={picks}
         players={players}
-        autoSet={row?.autoSet ?? true}
       />
       {/* Squad surgery lives below the pitch: you decide the XI first, then
           go looking for a new player. */}

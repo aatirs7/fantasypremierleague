@@ -314,7 +314,7 @@ export default async function HomePage({
       {liveFixtures.length ? (
         <Link
           href={liveFixtures.length === 1 ? `/matches/${liveFixtures[0].fplFixtureId}` : '/matches'}
-          className="tile reveal flex shrink-0 flex-col items-center gap-1.5 p-4 text-center active:scale-[0.99]"
+          className="tile tile-live reveal flex shrink-0 flex-col items-center gap-1.5 p-4 text-center active:scale-[0.99]"
         >
           <span className="flex items-center gap-1.5 text-[0.58rem] font-medium uppercase tracking-[0.22em] text-live">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-live" />
@@ -434,9 +434,9 @@ export default async function HomePage({
       >
         <Link
           href="/squad"
-          className="tile flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1.5 overflow-hidden p-3 text-center active:scale-[0.98]"
+          className="tile tile-team flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1.5 overflow-hidden p-3 text-center active:scale-[0.98]"
         >
-          <Shirt className="h-6 w-6 text-muted" strokeWidth={1.5} />
+          <Shirt className="h-6 w-6 text-accent" strokeWidth={1.5} />
           <span className="min-w-0 w-full">
             <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
               My Team
@@ -459,9 +459,9 @@ export default async function HomePage({
 
         <Link
           href={`/league/${activeId}`}
-          className="tile flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1.5 overflow-hidden p-3 text-center active:scale-[0.98]"
+          className="tile tile-league flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1.5 overflow-hidden p-3 text-center active:scale-[0.98]"
         >
-          <Trophy className="h-6 w-6 text-muted" strokeWidth={1.5} />
+          <Trophy className="h-6 w-6 text-info" strokeWidth={1.5} />
           <span className="min-w-0 w-full">
             <span className="block text-[0.58rem] font-medium uppercase tracking-[0.16em] text-muted-2">
               League
@@ -493,7 +493,7 @@ export default async function HomePage({
               <Link
                 key={p.fplId}
                 href={`/players/${p.fplId}`}
-                className="tile flex w-[4.6rem] flex-col items-center gap-0.5 px-2 pb-1.5 pt-1.5 text-center active:scale-[0.98]"
+                className="tile tile-board flex w-[4.6rem] flex-col items-center gap-0.5 px-2 pb-1.5 pt-1.5 text-center active:scale-[0.98]"
               >
                 <span className="text-[0.55rem] font-medium tabular-nums text-muted-2">
                   {seasonRunning ? `${p.totalPoints} pts` : `#${p.draftRank ?? i + 1}`}

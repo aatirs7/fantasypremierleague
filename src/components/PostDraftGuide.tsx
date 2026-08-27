@@ -164,11 +164,11 @@ export default function PostDraftGuide({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/85 lg:items-center"
+      className="modal-scrim"
       onClick={close}
     >
       <div
-        className="reveal w-full max-w-md space-y-5 rounded-t-3xl border border-edge p-6 pb-10 text-center shadow-2xl lg:rounded-3xl lg:pb-6"
+        className="modal-card reveal space-y-5 text-center"
         style={{ background: 'var(--surface-raised)' }}
         onClick={(e) => e.stopPropagation()}
       >

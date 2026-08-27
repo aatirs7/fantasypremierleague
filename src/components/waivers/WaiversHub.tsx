@@ -304,9 +304,9 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
       ) : null}
 
       {adding ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 lg:items-center" onClick={() => setAdding(null)}>
+        <div className="modal-scrim" onClick={() => setAdding(null)}>
           <div
-            className="glass reveal w-full max-w-md space-y-3 rounded-t-3xl p-5 pb-8 lg:rounded-3xl lg:pb-5"
+            className="modal-card reveal space-y-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">

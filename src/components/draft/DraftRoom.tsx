@@ -696,9 +696,12 @@ export default function DraftRoom({
         {/* The moment the board fills, walk everyone through what happens
             next. Shows once per league, then never again. */}
         <PostDraftGuide leagueId={leagueId} gw={null} openSignal={guideNonce} />
-        <div className="card space-y-1 p-5 text-center">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-gold">Draft complete</p>
-          <h1 className="shine font-display text-5xl">All squads locked in</h1>
+        <div className="space-y-1 py-4 text-center">
+          <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
+            {state.leagueName}
+          </p>
+          <h1 className="font-display text-4xl">Draft complete</h1>
+          <p className="text-sm text-muted">Every squad is locked in.</p>
         </div>
         <button
           onClick={() => setGuideNonce((n) => n + 1)}
@@ -908,11 +911,11 @@ export default function DraftRoom({
       {/* Confirm sheet. */}
       {confirm ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 lg:items-center"
+          className="modal-scrim"
           onClick={() => setConfirm(null)}
         >
           <div
-            className="glass reveal w-full max-w-md space-y-4 rounded-t-3xl p-5 pb-8 lg:rounded-3xl lg:pb-5"
+            className="modal-card reveal space-y-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
