@@ -46,3 +46,5 @@ next-env.d.ts
 # scratch db scripts
 tmp*.mjs
 q.mjs
+tmp*
+vapidnew.txt

@@ -34,6 +34,7 @@ import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
 import NoScroll from '@/components/NoScroll';
 import HowItWorks from '@/components/HowItWorks';
+import TeamNamePrompt from '@/components/squad/TeamNamePrompt';
 import PostDraftGuide from '@/components/PostDraftGuide';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
 
@@ -374,20 +375,24 @@ export default async function HomePage({
       {lineupNeedsAttention && nextGw ? (
         <Link
           href="/squad"
-          className="tile tile-live reveal flex shrink-0 items-center gap-3 px-3.5 py-2.5 active:scale-[0.99]"
+          className="tile tile-live reveal shrink-0 px-3.5 py-2.5 text-center active:scale-[0.99]"
           style={{ animationDelay: '50ms' }}
         >
-          <Shirt className="h-5 w-5 shrink-0 text-live" strokeWidth={1.8} />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[0.8rem] font-semibold leading-tight tracking-tight">
+          <span className="flex items-center justify-center gap-1.5">
+            <Shirt className="h-3.5 w-3.5 shrink-0 text-live" strokeWidth={1.9} />
+            <span className="text-[0.8rem] font-semibold leading-tight tracking-tight">
               Set your lineup
             </span>
-            <span className="block truncate text-[0.65rem] leading-tight text-muted">
-              Locks in <Countdown toIso={nextGw.deadline.toISOString()} doneText="now" />
-            </span>
           </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" />
+          <span className="mt-0.5 block text-[0.65rem] leading-tight text-muted">
+            Locks in <Countdown toIso={nextGw.deadline.toISOString()} doneText="now" />
+          </span>
         </Link>
+      ) : null}
+
+      {/* Still on the default name? Ask once, here, where they will see it. */}
+      {mySquad && active?.draftStatus === 'complete' && !mySquad.name ? (
+        <TeamNamePrompt squadId={mySquad.id} currentName={teamName} />
       ) : null}
 
       {/* Season stat strip, once the league has drafted. */}

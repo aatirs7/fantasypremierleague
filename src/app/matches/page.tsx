@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { asc, eq } from 'drizzle-orm';
+import { asc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { fixtures, fplPlayers, gameweeks } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import LivePoller from '@/components/matches/LivePoller';
+import TodayMarker from '@/components/matches/TodayMarker';
+import ScrollToNext from '@/components/matches/ScrollToNext';
 import ClubBadge from '@/components/matches/ClubBadge';
 import LocalTime from '@/components/LocalTime';
 import { computePLTable } from '@/lib/pl-table';
@@ -16,35 +18,72 @@ type FixtureRow = typeof fixtures.$inferSelect;
 
 // One fixture, wc26 MatchRow style: stacked team rows with club badges,
 // loser dimmed, status pill and kickoff time in the right rail.
+function Side({
+  clubId,
+  score,
+  isWinner,
+  clubById,
+  started,
+  dim,
+}: {
+  clubId: number;
+  score: number | null;
+  isWinner: boolean;
+  clubById: Map<number, Club>;
+  started: boolean;
+  dim: boolean;
+}) {
+  const club = clubById.get(clubId);
+  return (
+    <div className={`flex items-center gap-2.5 ${dim ? 'opacity-55' : ''}`}>
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-black/20">
+        <ClubBadge clubCode={club?.clubCode ?? null} name={club?.clubShort ?? '?'} size={22} />
+      </span>
+      <span className="flex-1 truncate text-sm font-semibold">
+        {club?.clubName ?? `Club ${clubId}`}
+      </span>
+      {started ? (
+        <span className={`font-display text-xl tabular-nums ${isWinner ? 'text-accent' : ''}`}>
+          {score ?? 0}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+// One fixture: stacked team rows with club badges, loser dimmed, status and
+// kickoff time in the right rail.
 function MatchCard({ f, clubById }: { f: FixtureRow; clubById: Map<number, Club> }) {
   const played = f.homeScore !== null && f.awayScore !== null && f.started;
   const live = f.started && !f.finished;
   const homeWin = played && (f.homeScore ?? 0) > (f.awayScore ?? 0);
   const awayWin = played && (f.awayScore ?? 0) > (f.homeScore ?? 0);
-
-  const Side = ({ clubId, score, isWinner }: { clubId: number; score: number | null; isWinner: boolean }) => {
-    const club = clubById.get(clubId);
-    return (
-      <div className={`flex items-center gap-2.5 ${played && !isWinner && homeWin !== awayWin ? 'opacity-55' : ''}`}>
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-black/20">
-          <ClubBadge clubCode={club?.clubCode ?? null} name={club?.clubShort ?? '?'} size={22} />
-        </span>
-        <span className="flex-1 truncate text-sm font-semibold">{club?.clubName ?? `Club ${clubId}`}</span>
-        {f.started ? (
-          <span className={`font-display text-xl tabular-nums ${isWinner ? 'text-accent' : ''}`}>
-            {score ?? 0}
-          </span>
-        ) : null}
-      </div>
-    );
-  };
+  const decided = played && homeWin !== awayWin;
 
   return (
-    <Link href={`/matches/${f.fplFixtureId}`} className="card block p-3 active:scale-[0.99]">
+    <Link
+      href={`/matches/${f.fplFixtureId}`}
+      data-kickoff={f.kickoff?.toISOString()}
+      className="card block p-3 active:scale-[0.99]"
+    >
       <div className="flex items-stretch gap-3">
         <div className="min-w-0 flex-1 space-y-2">
-          <Side clubId={f.homeClub} score={f.homeScore} isWinner={homeWin} />
-          <Side clubId={f.awayClub} score={f.awayScore} isWinner={awayWin} />
+          <Side
+            clubId={f.homeClub}
+            score={f.homeScore}
+            isWinner={homeWin}
+            clubById={clubById}
+            started={f.started}
+            dim={decided && !homeWin}
+          />
+          <Side
+            clubId={f.awayClub}
+            score={f.awayScore}
+            isWinner={awayWin}
+            clubById={clubById}
+            started={f.started}
+            dim={decided && !awayWin}
+          />
         </div>
         <div className="flex w-16 shrink-0 flex-col items-end justify-center gap-1 border-l border-edge pl-2.5 text-right">
           {live ? (
@@ -74,7 +113,7 @@ export default async function MatchesPage({
 }) {
   const session = await readSession();
   if (!session) redirect('/?next=/matches');
-  const { gw: gwParam, view } = await searchParams;
+  const { view } = await searchParams;
   const showTable = view === 'table';
 
   const gws = await db.select().from(gameweeks).orderBy(asc(gameweeks.gw));
@@ -82,8 +121,6 @@ export default async function MatchesPage({
     return <p className="py-10 text-center text-sm text-muted">Fixtures arrive after the first sync.</p>;
   }
   const current = gws.find((g) => g.isCurrent) ?? gws.find((g) => g.isNext) ?? gws[0];
-  const requested = Number(gwParam);
-  const gw = gws.find((g) => g.gw === requested) ?? current;
 
   const clubs = await db
     .selectDistinct({
@@ -95,12 +132,14 @@ export default async function MatchesPage({
     .from(fplPlayers);
   const clubById = new Map<number, Club>(clubs.map((c) => [c.clubId, c]));
 
+  // Every fixture in the season, in kickoff order. The list opens on the
+  // next one to be played and you scroll up for what has already happened,
+  // which is how anyone actually reads a fixture list.
   const rows = showTable
     ? []
     : await db
         .select()
         .from(fixtures)
-        .where(eq(fixtures.gw, gw.gw))
         .orderBy(asc(fixtures.kickoff), asc(fixtures.fplFixtureId));
 
   const allFixtures = showTable ? await db.select().from(fixtures) : [];
@@ -124,6 +163,17 @@ export default async function MatchesPage({
     if (!byDay.has(key)) byDay.set(key, []);
     byDay.get(key)!.push(f);
   }
+  const days = [...byDay.entries()];
+
+  // The first day that has not finished. That is where the page opens, and
+  // where each gameweek pill lands.
+  const nextDayKey =
+    days.find(([, dayRows]) => dayRows.some((f) => !f.finished))?.[0] ?? days[days.length - 1]?.[0];
+  const firstDayOfGw = new Map<number, string>();
+  for (const [key, dayRows] of days) {
+    const g = dayRows[0]?.gw;
+    if (g != null && !firstDayOfGw.has(g)) firstDayOfGw.set(g, key);
+  }
 
   return (
     <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
@@ -133,7 +183,7 @@ export default async function MatchesPage({
         <h1 className="font-display text-4xl leading-none">Matches</h1>
         <div className="flex rounded-full border border-edge bg-white/[0.03] p-1 text-xs font-bold">
           <Link
-            href={`/matches?gw=${gw.gw}`}
+            href="/matches"
             className={`rounded-full px-4 py-1.5 transition-colors ${!showTable ? 'bg-accent text-[var(--accent-ink)]' : 'text-muted'}`}
           >
             Fixtures
@@ -207,42 +257,42 @@ export default async function MatchesPage({
           <div className="-mx-4 overflow-x-auto px-4">
             <div className="flex w-max gap-1.5 pb-1">
               {gws.map((g) => (
-                <Link
+                <a
                   key={g.gw}
-                  href={`/matches?gw=${g.gw}`}
+                  href={`#day-${firstDayOfGw.get(g.gw) ?? ''}`}
                   className={`rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                    g.gw === gw.gw
+                    g.gw === current.gw
                       ? 'bg-accent text-[var(--accent-ink)]'
-                      : g.gw === current.gw
-                        ? 'border border-accent/40 bg-accent/10 text-accent'
-                        : 'border border-edge bg-white/[0.02] text-muted'
+                      : 'border border-edge text-muted'
                   }`}
                 >
                   GW{g.gw}
-                </Link>
+                </a>
               ))}
             </div>
           </div>
           <p className="text-center text-xs text-muted-2">
-            {gw.name}
-            {gw.finished ? (
-              ' · finished'
-            ) : (
-              <>
-                {' · deadline '}
-                <LocalTime iso={gw.deadline.toISOString()} mode="weekday-time" />
-              </>
-            )}
+            {current.name} deadline{' '}
+            <LocalTime iso={current.deadline.toISOString()} mode="weekday-time" />
           </p>
 
-          {[...byDay.entries()].map(([day, dayRows]) => (
-            <section key={day}>
-              <h2 className="sticky top-[var(--chrome-top)] z-10 mb-2 -mx-1 bg-[var(--bg)]/85 px-1 py-1 text-center font-display text-lg tracking-wide text-muted backdrop-blur lg:top-16">
+          {nextDayKey ? <ScrollToNext anchorId={`day-${nextDayKey}`} /> : null}
+          <TodayMarker />
+
+          {days.map(([day, dayRows]) => (
+            <section key={day} id={`day-${day}`} className="scroll-mt-24">
+              <h2
+                data-day-kickoff={dayRows[0]?.kickoff?.toISOString()}
+                className="sticky top-[var(--chrome-top)] z-10 mb-2 -mx-1 bg-[var(--bg)]/85 px-1 py-1 text-center font-display text-lg tracking-wide text-muted backdrop-blur lg:top-16"
+              >
                 {dayRows[0]?.kickoff ? (
                   <LocalTime iso={dayRows[0].kickoff.toISOString()} mode="day" />
                 ) : (
                   'Date TBC'
                 )}
+                <span className="ml-2 text-[0.6rem] font-medium uppercase tracking-wider text-muted-2">
+                  GW{dayRows[0]?.gw}
+                </span>
               </h2>
               <div className="space-y-2">
                 {dayRows.map((f) => (
@@ -253,7 +303,7 @@ export default async function MatchesPage({
           ))}
           {rows.length === 0 ? (
             <p className="card p-5 text-center text-sm text-muted">
-              No fixtures scheduled for this gameweek.
+              No fixtures yet. They arrive with the next sync.
             </p>
           ) : null}
         </>

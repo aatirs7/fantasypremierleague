@@ -17,9 +17,13 @@ const ROUND_LABEL: Record<string, string> = {
 export default async function H2HStandings({
   leagueId,
   viewerId,
+  show = 'both',
 }: {
   leagueId: string;
   viewerId: string;
+  // The league landing page shows only this week's fixtures; the standings
+  // live behind their own tab so neither has to fight for the fold.
+  show?: 'both' | 'fixtures' | 'table';
 }) {
   const [current] = await db
     .select({ gw: gameweeks.gw })
@@ -48,7 +52,7 @@ export default async function H2HStandings({
 
   return (
     <div className="space-y-4">
-      {fixtures.length ? (
+      {show !== 'table' && fixtures.length ? (
         <section className="space-y-2">
           <p className="text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
             {gw >= SEMIS_GW ? 'Playoffs' : `Gameweek ${gw}`}
@@ -111,6 +115,7 @@ export default async function H2HStandings({
         </section>
       ) : null}
 
+      {show === 'fixtures' ? null : (
       <section className="space-y-2">
         <p className="text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
           Standings
@@ -165,6 +170,7 @@ export default async function H2HStandings({
           Regular season ends GW{REGULAR_SEASON_END}.
         </p>
       </section>
+      )}
     </div>
   );
 }

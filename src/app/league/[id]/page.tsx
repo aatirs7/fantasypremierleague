@@ -71,6 +71,7 @@ export default async function LeaguePage({
             {(
               [
                 ['', 'Head to head', view == null],
+                ['?view=standings', 'Standings', view === 'standings'],
                 ['?view=points', 'Points', view === 'points'],
                 ['?view=pl', 'PL Table', showPl],
               ] as [string, string, boolean][]
@@ -145,16 +146,12 @@ export default async function LeaguePage({
         <PLStandings />
       ) : view === 'points' ? (
         <LeagueStandings league={league} viewerId={session.userId} members={members} />
+      ) : view === 'standings' ? (
+        <H2HStandings leagueId={league.id} viewerId={session.userId} show="table" />
       ) : (
         <>
-          <H2HStandings leagueId={league.id} viewerId={session.userId} />
+          <H2HStandings leagueId={league.id} viewerId={session.userId} show="fixtures" />
           <AwardsFeed leagueId={league.id} />
-          <Link
-            href={`/draft?league=${league.id}`}
-            className="btn-outline mx-auto w-full max-w-xs"
-          >
-            View Draft Recap
-          </Link>
         </>
       )}
 

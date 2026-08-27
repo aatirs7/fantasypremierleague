@@ -647,3 +647,15 @@ h2 {
 
 ::-webkit-scrollbar { width: 0; height: 0; }
 * { scrollbar-width: none; }
+
+/* Today's fixtures, marked client-side once the viewer's timezone is known.
+   A warm rule down the leading edge and a lifted surface: enough to find at
+   a glance while scrolling a whole season. */
+[data-today='true'].card {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 55%);
+  box-shadow: inset 3px 0 0 var(--accent), var(--card-shadow);
+}
+h2[data-today='true'] {
+  color: var(--accent);
+}

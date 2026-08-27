@@ -351,7 +351,7 @@ export default function LineupEditor({
 
   return (
     <div className={`space-y-3 ${dirty ? 'pb-24' : 'pb-2'}`}>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-center gap-2">
         <p className="shrink-0 text-xs text-muted">
           <span className={`font-semibold ${formationOk ? 'text-foreground' : 'text-live'}`}>
             {counts.DEF}-{counts.MID}-{counts.FWD}

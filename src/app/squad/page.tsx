@@ -9,6 +9,7 @@ import { editableGw, ensureLineup, playersByIds } from '@/lib/lineup';
 import LineupEditor from '@/components/squad/LineupEditor';
 import DraftBoardPitch from '@/components/squad/DraftBoardPitch';
 import ChipsPanel from '@/components/leagues/ChipsPanel';
+import TeamNamePrompt from '@/components/squad/TeamNamePrompt';
 import { QUOTAS, SQUAD_SIZE } from '@/lib/draft';
 import Countdown from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
@@ -172,7 +173,15 @@ export default async function SquadPage({
         <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
           {league.name}
         </p>
-        <h1 className="font-display text-4xl">Gameweek {editable.gw}</h1>
+        <h1 className="font-display text-4xl">{squad.name ?? `${session.username} FC`}</h1>
+        <p className="text-xs text-muted">
+          Gameweek {editable.gw} ·{' '}
+          <TeamNamePrompt
+            squadId={squad.id}
+            currentName={squad.name ?? `${session.username} FC`}
+            variant="inline"
+          />
+        </p>
         <p className="text-xs text-muted">
           Locks in{' '}
           <span className="font-bold text-foreground">
