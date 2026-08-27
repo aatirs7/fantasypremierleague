@@ -20,6 +20,7 @@ import { squadContributions } from '@/lib/contributions';
 import { isNull } from 'drizzle-orm';
 import { squadPlayers } from '@/lib/schema';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
+import DraftBoardPitch from '@/components/squad/DraftBoardPitch';
 
 export const dynamic = 'force-dynamic';
 
@@ -109,6 +110,37 @@ export default async function SquadViewPage({
     ]),
   );
 
+  // Before the first lineup exists (mid-draft, or between the draft and the
+  // opening deadline) show what they have actually drafted instead of an
+  // empty shrug.
+  let drafted: {
+    fplId: number;
+    webName: string;
+    clubShort: string;
+    position: string;
+    photoCode: number | null;
+    status: string;
+  }[] = [];
+  if (!lineup) {
+    const owned = await db
+      .select({ fplId: squadPlayers.fplId })
+      .from(squadPlayers)
+      .where(and(eq(squadPlayers.squadId, squad.id), isNull(squadPlayers.droppedGw)));
+    if (owned.length) {
+      drafted = await db
+        .select({
+          fplId: fplPlayers.fplId,
+          webName: fplPlayers.webName,
+          clubShort: fplPlayers.clubShort,
+          position: fplPlayers.position,
+          photoCode: fplPlayers.photoCode,
+          status: fplPlayers.status,
+        })
+        .from(fplPlayers)
+        .where(inArray(fplPlayers.fplId, owned.map((o) => o.fplId)));
+    }
+  }
+
   const autosubName = (fplId: number) => playerById.get(fplId)?.webName ?? `#${fplId}`;
 
   const Row = ({ pick }: { pick: (typeof starters)[number] }) => {
@@ -170,8 +202,15 @@ export default async function SquadViewPage({
             </div>
           </div>
         </>
+      ) : drafted.length ? (
+        <div className="space-y-2">
+          <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+            Drafted so far · {drafted.length} of 15
+          </p>
+          <DraftBoardPitch players={drafted} />
+        </div>
       ) : (
-        <p className="card p-4 text-sm text-muted">No lineup yet.</p>
+        <p className="card p-4 text-center text-sm text-muted">No picks yet.</p>
       )}
 
       <Contributions squadId={squad.id} leagueId={leagueId} />

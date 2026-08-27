@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
-import { Swords, Trophy, Users } from 'lucide-react';
+import { ChevronRight, Swords, Trophy, Users } from 'lucide-react';
 import { db } from '@/lib/db';
 import { leagues } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
@@ -169,7 +169,12 @@ export default async function LeaguePage({
           Managers ({members.length})
         </p>
         {members.map((m) => (
-          <div key={m.userId} className="card flex min-h-12 items-center gap-3 px-3 py-2">
+          // Tap any manager to open their full squad page.
+          <Link
+            key={m.userId}
+            href={`/league/${league.id}/squad/${m.userId}`}
+            className="card flex min-h-12 items-center gap-3 px-3 py-2 active:scale-[0.99]"
+          >
             <Avatar name={m.username} size={32} />
             <span className="flex-1 truncate text-sm font-semibold">
               {m.username}
@@ -187,7 +192,8 @@ export default async function LeaguePage({
             {m.userId === league.ownerId ? (
               <span className="text-[0.6rem] font-bold uppercase tracking-wider text-gold">Owner</span>
             ) : null}
-          </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" />
+          </Link>
         ))}
       </div>
     </div>

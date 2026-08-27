@@ -394,6 +394,11 @@ export default function DraftRoom({
           <Star className="h-3.5 w-3.5 text-gold" />
           My draft plan
         </p>
+        {myTurn && queuedAvailable.length > 0 ? (
+          <p className="text-center text-[0.65rem] font-semibold text-accent">
+            Your pick. Tap + to draft straight from the plan.
+          </p>
+        ) : null}
         {queuedAvailable.length === 0 ? (
           <p className="text-center text-xs text-muted-2">
             Tap the star on players below to queue them. If your timer runs out, we draft from
@@ -412,6 +417,15 @@ export default function DraftRoom({
                     {p.position}
                   </span>
                 </span>
+                {myTurn && myCounts[p.position] < QUOTAS[p.position] ? (
+                  <button
+                    onClick={() => setConfirm(p)}
+                    aria-label={`draft ${p.webName}`}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-white active:scale-90"
+                  >
+                    <Plus className="h-4.5 w-4.5" strokeWidth={2.6} />
+                  </button>
+                ) : null}
                 <button
                   onClick={() => {
                     const next = queuedAvailable.slice();
