@@ -34,6 +34,7 @@ import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
 import NoScroll from '@/components/NoScroll';
 import HowItWorks from '@/components/HowItWorks';
+import PostDraftGuide from '@/components/PostDraftGuide';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
 
 export const dynamic = 'force-dynamic';
@@ -292,6 +293,11 @@ export default async function HomePage({
     <div className="flex h-full flex-col gap-3 overflow-hidden pb-2 lg:mx-auto lg:h-auto lg:max-w-2xl lg:overflow-visible">
       <NoScroll />
       <RememberLeague leagueId={activeId} />
+      {/* First visit after the board fills: walk through everything that
+          happens from here. Shows once per league, then never again. */}
+      {active?.draftStatus === 'complete' ? (
+        <PostDraftGuide leagueId={activeId} gw={nextGw?.gw ?? null} />
+      ) : null}
 
       <header className="reveal shrink-0 text-center">
         <p className="text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
