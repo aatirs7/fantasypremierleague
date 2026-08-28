@@ -101,9 +101,21 @@ export default function LineupEditor({
     }
     const a = picks.find((p) => p.fplId === selected)!;
     const b = picks.find((p) => p.fplId === fplId)!;
-    if (a.starting === b.starting) {
-      // Same side: treat as re-selection.
+    if (a.starting && b.starting) {
+      // Two starters: order among the XI doesn't matter, so treat as re-selection.
       setSelected(fplId);
+      return;
+    }
+    if (!a.starting && !b.starting) {
+      // Two bench players: swap their autosub order.
+      const next = picks.map((p) => {
+        if (p.fplId === a.fplId) return { ...p, slot: b.slot };
+        if (p.fplId === b.fplId) return { ...p, slot: a.slot };
+        return p;
+      });
+      setPicks(renumber(next));
+      setSelected(null);
+      setDirty(true);
       return;
     }
     const next = picks.map((p) => {
@@ -229,11 +241,12 @@ export default function LineupEditor({
     const p = byId.get(pick.fplId);
     if (!p) return null;
     const sel = selected === pick.fplId;
+    const selectedPickForTarget = selected != null ? picks.find((x) => x.fplId === selected) : null;
     const isTarget =
       swapMode &&
       selected != null &&
       selected !== pick.fplId &&
-      picks.find((x) => x.fplId === selected)?.starting !== pick.starting;
+      !(selectedPickForTarget?.starting && pick.starting);
 
     const inner = (
       <>
