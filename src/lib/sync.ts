@@ -70,7 +70,11 @@ export async function setMeta(key: string, value: string): Promise<void> {
 }
 
 // Any fixture underway right now. Also true shortly before kickoff so the
-// first minutes are not missed (fixtures within the next 30 min).
+// first minutes are not missed (fixtures within the next 30 min), and for a
+// stretch after full time: FPL keeps revising bonus points for up to an hour
+// or so after a match ends, well before data_checked finalizes the gameweek,
+// so polling that stops the instant "finished" flips true leaves scores
+// stuck on a stale, pre-bonus total.
 export async function inLiveWindow(): Promise<boolean> {
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
@@ -78,7 +82,9 @@ export async function inLiveWindow(): Promise<boolean> {
     .where(
       sql`(${fixtures.started} = true and ${fixtures.finished} = false)
         or (${fixtures.started} = false and ${fixtures.kickoff} is not null
-            and ${fixtures.kickoff} between now() and now() + interval '30 minutes')`,
+            and ${fixtures.kickoff} between now() and now() + interval '30 minutes')
+        or (${fixtures.finished} = true and ${fixtures.kickoff} is not null
+            and ${fixtures.kickoff} > now() - interval '3 hours')`,
     );
   return (row?.n ?? 0) > 0;
 }
