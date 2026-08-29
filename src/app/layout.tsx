@@ -87,7 +87,11 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col pb-tabbar">
         <div className="bg-atmosphere" aria-hidden />
         <div className="bg-grain" aria-hidden />
-        <AutoRefresh />
+        <AutoRefresh
+          initialBuildId={
+            process.env.VERCEL_DEPLOYMENT_ID ?? process.env.VERCEL_GIT_COMMIT_SHA ?? 'dev'
+          }
+        />
         <ThemeButton initial={theme} />
         <DesktopNav />
         <main className="mx-auto w-full max-w-md flex-1 px-4 pt-2 lg:max-w-6xl lg:px-8 lg:pt-24">
