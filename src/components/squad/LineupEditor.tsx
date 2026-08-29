@@ -16,6 +16,7 @@ type PlayerInfo = {
   clubShort: string;
   form: string | null;
   status: string;
+  points?: number | null;
 };
 
 const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
@@ -205,6 +206,9 @@ export default function LineupEditor({
             </span>
           </span>
         </button>
+        {p.points != null ? (
+          <span className="shrink-0 text-sm font-bold tabular-nums text-accent">{p.points} pts</span>
+        ) : null}
         {pick.starting ? (
           <span className="flex shrink-0 gap-1">
             <button
@@ -262,6 +266,11 @@ export default function LineupEditor({
         {benchIndex != null ? (
           <span className="absolute -left-1 -top-1 rounded-full bg-black/50 px-1.5 text-[0.55rem] font-bold text-white/70">
             {benchIndex + 1}
+          </span>
+        ) : null}
+        {p.points != null ? (
+          <span className="absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[0.62rem] font-bold text-[var(--accent-ink)]">
+            {p.points}
           </span>
         ) : null}
         <PlayerPhoto photoCode={p.photoCode} name={p.webName} size={42} />
