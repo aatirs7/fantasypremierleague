@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { leagues, lineups, squadPlayers, squads } from '@/lib/schema';
+import { gwPlayerPoints, leagues, lineups, squadPlayers, squads } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { myLeagues, resolveActiveLeagueId } from '@/lib/leagues';
 import { editableGw, ensureLineup, playersByIds } from '@/lib/lineup';
@@ -159,7 +159,17 @@ export default async function SquadPage({
       </div>
     );
   }
-  const players = await playersByIds(picks.map((p) => p.fplId));
+  const playerIds = picks.map((p) => p.fplId);
+  const players = await playersByIds(playerIds);
+  const pts = await db
+    .select({ fplId: gwPlayerPoints.fplId, totalPoints: gwPlayerPoints.totalPoints })
+    .from(gwPlayerPoints)
+    .where(and(eq(gwPlayerPoints.gw, editable.gw), inArray(gwPlayerPoints.fplId, playerIds)));
+  const pointsById = new Map(pts.map((p) => [p.fplId, p.totalPoints]));
+  const playersWithPoints = players.map((p) => ({
+    ...p,
+    points: pointsById.get(p.fplId) ?? null,
+  }));
   const [row] = await db
     .select({ autoSet: lineups.autoSet })
     .from(lineups)
@@ -196,7 +206,7 @@ export default async function SquadPage({
         squadId={squad.id}
         gw={editable.gw}
         initial={picks}
-        players={players}
+        players={playersWithPoints}
       />
       {/* Squad surgery lives below the pitch: you decide the XI first, then
           go looking for a new player. */}

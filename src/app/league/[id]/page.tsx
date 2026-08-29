@@ -73,9 +73,8 @@ export default async function LeaguePage({
             {(
               [
                 ['', 'Head to head', view == null],
-                ['?view=standings', 'Standings', view === 'standings'],
+                ['?view=standings', 'Standings', view === 'standings' || view === 'points'],
                 ['?view=grades', 'Draft', view === 'grades'],
-                ['?view=points', 'Points', view === 'points'],
                 ['?view=pl', 'PL Table', showPl],
               ] as [string, string, boolean][]
             ).map(([suffix, label, active]) => (
@@ -151,14 +150,40 @@ export default async function LeaguePage({
         </Link>
       ) : showPl ? (
         <PLStandings />
-      ) : view === 'points' ? (
-        <LeagueStandings league={league} viewerId={session.userId} members={members} />
+      ) : view === 'standings' || view === 'points' ? (
+        <div className="space-y-4">
+          <div className="flex justify-center gap-1.5">
+            <Link
+              href={`/league/${league.id}?view=standings`}
+              className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                view === 'standings'
+                  ? 'border-accent bg-accent/10 text-accent'
+                  : 'border-edge bg-white/[0.02] text-muted'
+              }`}
+            >
+              Head to head
+            </Link>
+            <Link
+              href={`/league/${league.id}?view=points`}
+              className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                view === 'points'
+                  ? 'border-accent bg-accent/10 text-accent'
+                  : 'border-edge bg-white/[0.02] text-muted'
+              }`}
+            >
+              Points
+            </Link>
+          </div>
+          {view === 'points' ? (
+            <LeagueStandings league={league} viewerId={session.userId} members={members} />
+          ) : (
+            <H2HStandings leagueId={league.id} viewerId={session.userId} show="table" />
+          )}
+        </div>
       ) : view === 'grades' ? (
         <DraftGrades leagueId={league.id} viewerId={session.userId} />
       ) : view === 'stats' ? (
         <LeagueStats leagueId={league.id} />
-      ) : view === 'standings' ? (
-        <H2HStandings leagueId={league.id} viewerId={session.userId} show="table" />
       ) : (
         <>
           <DraftReportCard leagueId={league.id} viewerId={session.userId} />
