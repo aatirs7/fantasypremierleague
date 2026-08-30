@@ -1,0 +1,128 @@
+name: Agent build
+
+# Triggered by Elysium Builds when the owner approves a client request, or asks
+# for a tweak on an open pull request. Runs Claude headless to make the change.
+# For a new request it opens a pull request; for a tweak it pushes more commits
+# to the request's existing branch. It only runs when dispatched.
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: What to build (the client request and context)
+        required: true
+      task_id:
+        description: Elysium task id
+        required: false
+      base:
+        description: Branch to build on and open the PR against (defaults to the repo default branch)
+        required: false
+      branch:
+        description: Existing PR branch to tweak (leave empty for a new request)
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve refs
+        id: refs
+        env:
+          IN_BASE: ${{ github.event.inputs.base }}
+          IN_BRANCH: ${{ github.event.inputs.branch }}
+          DEF_BASE: ${{ github.event.repository.default_branch }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          BASE="${IN_BASE:-$DEF_BASE}"
+          if [ -n "$IN_BRANCH" ]; then
+            echo "work=$IN_BRANCH" >> "$GITHUB_OUTPUT"
+            echo "checkout=$IN_BRANCH" >> "$GITHUB_OUTPUT"
+            echo "tweak=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "work=agent/$RUN_ID" >> "$GITHUB_OUTPUT"
+            echo "checkout=$BASE" >> "$GITHUB_OUTPUT"
+            echo "tweak=no" >> "$GITHUB_OUTPUT"
+          fi
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.checkout }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Implement the change
+        env:
+          # Subscription auth (your Max plan), not a pay-per-token API key.
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          TASK: ${{ github.event.inputs.task }}
+          WORK: ${{ steps.refs.outputs.work }}
+          TWEAK: ${{ steps.refs.outputs.tweak }}
+        run: |
+          set -e
+          if [ "$TWEAK" = "yes" ]; then
+            git checkout "$WORK" 2>/dev/null || git checkout -B "$WORK"
+          else
+            git checkout -b "$WORK"
+          fi
+
+          GUIDE="The site code is already checked out in this folder and is the branch that is live, so work directly here. Implement every requested change above, one by one, in the existing style of the codebase. Open each screenshot URL once with WebFetch to see what the client means. Do not start a dev server and do not deploy. IMPORTANT: do not run git yourself, do not commit, do not push, and do not open or edit any pull request. Only edit files. Committing your work and opening the pull request are done for you automatically after you finish, so if you open one it breaks that. Be efficient: this is a real client site, so make each change carefully but keep moving so you finish all of them. When you are done, write a file PR_SUMMARY.md: one dash bullet per change, and nothing else. Each bullet is ONE short, plain sentence a busy non-technical shop owner reads in two seconds, under about 18 words, saying what is different now in everyday language. No code, no file names, no jargon, no technical words, no intro line, no 'Check' line. Example of the tone: '- The Buy button at the top now says Buy now instead of Browse accounts.'"
+          PROMPT=$(printf '%s\n\n%s' "$TASK" "$GUIDE")
+
+          claude -p "$PROMPT" \
+            --dangerously-skip-permissions \
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash,WebFetch" \
+            --max-turns 200 || true
+
+          if [ -f PR_SUMMARY.md ]; then
+            cp PR_SUMMARY.md /tmp/pr_summary.md
+            rm -f PR_SUMMARY.md
+          fi
+
+          git config user.name "Elysium Agent"
+          git config user.email "agent@elysiumbuilds.dev"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "The agent produced no changes."
+            exit 0
+          fi
+          git commit -m "Agent: apply requested changes"
+          git push origin "$WORK"
+
+      - name: Open a pull request
+        if: steps.refs.outputs.tweak == 'no'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          WORK="${{ steps.refs.outputs.work }}"
+          BASE="${{ steps.refs.outputs.base }}"
+          if ! git ls-remote --exit-code --heads origin "$WORK" >/dev/null 2>&1; then
+            echo "No branch pushed, nothing to open."
+            exit 0
+          fi
+
+          SUMMARY="Automated change from an approved request."
+          [ -f /tmp/pr_summary.md ] && SUMMARY="$(cat /tmp/pr_summary.md)"
+          NOTE="See it before you merge: Vercel adds a live preview link to this PR shortly. Open it to view the change on the real site. Nothing goes live until you merge. Built automatically from an approved request (task ${{ github.event.inputs.task_id }})."
+          printf '%s\n\n---\n\n%s\n' "$SUMMARY" "$NOTE" > /tmp/pr_body.md
+
+          gh pr create \
+            --title "Requested changes for review" \
+            --body-file /tmp/pr_body.md \
+            --head "$WORK" \
+            --base "$BASE" || true
+
+          # Belt and suspenders: force the body to carry our task footer even if
+          # a PR for this branch already existed, so the notify webhook can
+          # match the task from the PR body.
+          gh pr edit "$WORK" --body-file /tmp/pr_body.md || true
