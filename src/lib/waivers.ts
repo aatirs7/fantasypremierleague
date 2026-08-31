@@ -2,7 +2,6 @@ import 'server-only';
 import { and, asc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
 import { db, withTransaction, type Tx } from './db';
 import {
-  fixtures,
   fplPlayers,
   gameweeks,
   leagueMembers,
@@ -17,11 +16,11 @@ import { QUOTAS } from './draft';
 import { leagueTable } from './scoring';
 
 // Waivers, spec section 9.
-// Window for upcoming GW N: opens when GW N-1's fixtures have all finished,
-// closes 24 hours before GW N's deadline. Claims process at close, in
-// priority order, one approval per manager per window. Dropped players are
-// locked until the next window. After processing and until the deadline,
-// unclaimed players are instant free agents.
+// Window for upcoming GW N is always open: claims close 24 hours before
+// GW N's deadline and process in priority order, one approval per manager
+// per window. Dropped players are locked until the next window. After
+// processing and until the deadline, unclaimed players are instant free
+// agents.
 
 export type WaiverWindow = {
   upcomingGw: number;
@@ -50,22 +49,14 @@ export async function waiverWindow(): Promise<WaiverWindow | null> {
     .limit(1);
   if (!upcoming) return null;
 
-  // Open once every earlier fixture has finished (blank prior GW counts as
-  // finished; before GW1 there is no window).
-  const [unfinishedPrior] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(fixtures)
-    .where(and(sql`${fixtures.gw} < ${upcoming.gw}`, eq(fixtures.finished, false)));
-  const priorDone = upcoming.gw > 1 && (unfinishedPrior?.n ?? 0) === 0;
-
   const closesAt = new Date(upcoming.deadline.getTime() - 24 * 60 * 60 * 1000);
   const processed = (await getProcessedFlag(upcoming.gw)) || false;
   return {
     upcomingGw: upcoming.gw,
     deadline: upcoming.deadline,
     closesAt,
-    opensNow: priorDone && now < closesAt && !processed,
-    freeAgencyNow: priorDone && processed && now < upcoming.deadline,
+    opensNow: now < closesAt && !processed,
+    freeAgencyNow: processed && now < upcoming.deadline,
     processed,
   };
 }

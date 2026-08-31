@@ -164,8 +164,7 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
             </p>
           ) : (
             <p className="text-sm text-muted">
-              Closed. Opens once the current gameweek finishes; claims process 24h before the next
-              deadline.
+              Claims are being processed. Back in a moment for instant pickups.
             </p>
           )}
         </div>
