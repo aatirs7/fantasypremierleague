@@ -69,6 +69,23 @@ export async function setMeta(key: string, value: string): Promise<void> {
     .onConflictDoUpdate({ target: syncMeta.key, set: { value, updatedAt: new Date() } });
 }
 
+// Have matches been played that our stored points do not reflect yet?
+//
+// The live pull only ran inside a live window, so any outage that spanned a
+// match round left those points stranded: the window had closed by the time
+// the app came back, and nothing else pulls them until FPL confirms the
+// gameweek. This is the catch-up path, and it makes recovery automatic.
+export async function livePointsBehind(gw: number, lastLiveSyncMs: number): Promise<boolean> {
+  const [row] = await db
+    .select({ latest: sql<string | null>`max(${fixtures.kickoff})` })
+    .from(fixtures)
+    .where(and(eq(fixtures.gw, gw), eq(fixtures.started, true)));
+  if (!row?.latest) return false;
+  // A match is done scoring about two hours after kickoff, bonus aside.
+  const settledBy = new Date(row.latest).getTime() + 2 * 60 * 60 * 1000;
+  return lastLiveSyncMs < settledBy;
+}
+
 // Any fixture underway right now. Also true shortly before kickoff so the
 // first minutes are not missed (fixtures within the next 30 min), and for a
 // stretch after full time: FPL keeps revising bonus points for up to an hour
@@ -479,12 +496,17 @@ export async function runSync(opts: { dry?: boolean; force?: boolean } = {}): Pr
 
   // Live points pull + provisional scores, 2min floor while live.
   const gw = await currentGw();
-  if (live && gw != null && (force || now - (await getMetaMs('lastLiveSync')) > LIVE_FLOOR_MS)) {
+  const lastLive = await getMetaMs('lastLiveSync');
+  // Pull when a match is in play, and also when finished matches are not yet
+  // reflected in what we stored.
+  const behind = gw != null && (await livePointsBehind(gw, lastLive));
+  if ((live || behind) && gw != null && (force || behind || now - lastLive > LIVE_FLOOR_MS)) {
     try {
       await syncLivePoints(gw, report);
       const { rescoreGwProvisional } = await import('./scoring');
       await rescoreGwProvisional(gw, report.notes);
       await setMeta('lastLiveSync', String(now));
+      if (behind) report.notes.push(`live points were behind play, caught up gw${gw}`);
     } catch (e) {
       report.notes.push(`live sync FAILED: ${e instanceof Error ? e.message : String(e)}`);
     }

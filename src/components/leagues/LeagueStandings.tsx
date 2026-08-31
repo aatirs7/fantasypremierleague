@@ -2,6 +2,7 @@ import { desc, eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { gameweeks, gwScores, squads, standingSnapshots, type leagues } from '@/lib/schema';
 import { leagueTable } from '@/lib/scoring';
+import { teamNames } from '@/lib/names';
 import type { LeagueMemberInfo } from '@/lib/leagues';
 import LeagueTable from './LeagueTable';
 
@@ -27,12 +28,17 @@ export default async function LeagueStandings({
     .from(standingSnapshots)
     .where(eq(standingSnapshots.leagueId, league.id));
   const snapByUser = new Map(snaps.map((s) => [s.userId, s]));
-  const nameById = new Map(members.map((m) => [m.userId, m.username]));
+  // Team names are the identity everywhere else in the league, so they are
+  // the identity here too.
+  const nameById = await teamNames(league.id);
+  for (const m of members) if (!nameById.has(m.userId)) nameById.set(m.userId, m.username);
 
-  const anyLive = table.some((r) => r.currentGwLive);
+  const anyLive = table.some((r) => r.seasonLive);
   const rows = table.map((r) => {
     const snap = snapByUser.get(r.userId);
-    const combined = r.seasonTotal + (r.currentGwLive ? (r.currentGwPoints ?? 0) : 0);
+    // seasonTotal already counts the live gameweek; adding it again here was
+    // how the same points showed up twice.
+    const combined = r.seasonTotal;
     return {
       rank: r.rank,
       userId: r.userId,
@@ -48,7 +54,7 @@ export default async function LeagueStandings({
   });
 
   // Season stats: leaders once at least one GW has final scores.
-  const played = table.some((r) => r.seasonTotal > 0 || r.gwWins > 0);
+  const played = table.some((r) => r.seasonTotal > 0 || r.gwWins > 0 || r.currentGwPoints != null);
   let bestGw: { username: string; gw: number; points: number } | null = null;
   if (played) {
     const squadRows = await db

@@ -254,6 +254,8 @@ export type TableRow = {
   squadGoals: number;
   currentGwPoints: number | null;
   currentGwLive: boolean;
+  // True while any gameweek in the total is still provisional.
+  seasonLive: boolean;
 };
 
 export async function leagueTable(leagueId: string, currentGw: number | null): Promise<TableRow[]> {
@@ -265,25 +267,47 @@ export async function leagueTable(leagueId: string, currentGw: number | null): P
   const ids = squadRows.map((s) => s.squadId);
   const season = await db.select().from(seasonScores).where(inArray(seasonScores.squadId, ids));
   const seasonBySquad = new Map(season.map((s) => [s.squadId, s]));
-  const gwRows = currentGw
-    ? await db
-        .select()
-        .from(gwScores)
-        .where(and(inArray(gwScores.squadId, ids), eq(gwScores.gw, currentGw)))
-    : [];
-  const gwBySquad = new Map(gwRows.map((g) => [g.squadId, g]));
+
+  // The table totals every gameweek this league counts, provisional ones
+  // included. season_scores only accumulates gameweeks FPL has confirmed,
+  // which left the table reading zero all the way through a live gameweek
+  // while the head to head page showed real scores. Same numbers, one truth.
+  const startGwOf = await leagueStartGws();
+  const startGw = startGwOf.get(leagueId) ?? 1;
+  const allScores = await db
+    .select()
+    .from(gwScores)
+    .where(inArray(gwScores.squadId, ids));
+  const counted = allScores.filter((r) => r.gw >= startGw);
+
+  const totals = new Map<string, { points: number; goals: number; live: boolean }>();
+  for (const row of counted) {
+    const t = totals.get(row.squadId) ?? { points: 0, goals: 0, live: false };
+    t.points += row.totalPoints;
+    t.goals += row.goals;
+    if (!row.final) t.live = true;
+    totals.set(row.squadId, t);
+  }
+
+  const gwBySquad = new Map(
+    counted.filter((g) => currentGw != null && g.gw === currentGw).map((g) => [g.squadId, g]),
+  );
 
   const rows = squadRows
     .map((s) => {
       const se = seasonBySquad.get(s.squadId);
+      const t = totals.get(s.squadId);
       const g = gwBySquad.get(s.squadId);
       return {
         squadId: s.squadId,
         userId: s.userId,
         rank: 0,
-        seasonTotal: se?.totalPoints ?? 0,
+        seasonTotal: t?.points ?? 0,
+        // Wins are only awarded once a gameweek is settled, so they stay on
+        // the finalized record.
         gwWins: se?.gwWins ?? 0,
-        squadGoals: se?.squadGoals ?? 0,
+        squadGoals: t?.goals ?? 0,
+        seasonLive: t?.live ?? false,
         currentGwPoints: g?.totalPoints ?? null,
         currentGwLive: g ? !g.final : false,
       };

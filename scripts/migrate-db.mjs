@@ -53,14 +53,22 @@ const TABLES = [
 
 const CHUNK = 500;
 
+// Names plus the underlying type, because how a value has to be handed back
+// to Postgres depends on it: jsonb wants a JSON string, but a native array
+// column (udt_name starts with an underscore) wants the JS array itself.
+// Stringifying both is how "malformed array literal" happens.
 async function columnsOf(table) {
   const r = await src.query(
-    `select column_name from information_schema.columns
+    `select column_name, data_type, udt_name from information_schema.columns
       where table_schema = 'public' and table_name = $1
       order by ordinal_position`,
     [table],
   );
-  return (r.rows ?? r).map((c) => c.column_name);
+  return (r.rows ?? r).map((c) => ({
+    name: c.column_name,
+    isJson: c.data_type === 'jsonb' || c.data_type === 'json',
+    isArray: c.udt_name.startsWith('_'),
+  }));
 }
 
 async function tableExists(table) {
@@ -88,7 +96,7 @@ for (const table of TABLES) {
     continue;
   }
 
-  const quoted = cols.map((c) => `"${c}"`).join(', ');
+  const quoted = cols.map((c) => `"${c.name}"`).join(', ');
   for (let i = 0; i < rows.length; i += CHUNK) {
     const slice = rows.slice(i, i + CHUNK);
     const values = [];
@@ -97,9 +105,11 @@ for (const table of TABLES) {
     for (const row of slice) {
       values.push(`(${cols.map(() => `$${n++}`).join(', ')})`);
       for (const c of cols) {
-        const v = row[c];
-        // jsonb comes back as an object and has to go in as text.
-        params.push(v !== null && typeof v === 'object' && !(v instanceof Date) ? JSON.stringify(v) : v);
+        const v = row[c.name];
+        if (v === null || v === undefined) params.push(null);
+        else if (c.isArray) params.push(v); // the driver encodes arrays itself
+        else if (c.isJson) params.push(JSON.stringify(v));
+        else params.push(v);
       }
     }
     await dst.query(`insert into "${table}" (${quoted}) values ${values.join(', ')}`, params);
