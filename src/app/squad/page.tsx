@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { gwPlayerPoints, leagues, lineups, squadPlayers, squads } from '@/lib/schema';
+import { gwPlayerPoints, gwScores, leagues, lineups, squadPlayers, squads } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { myLeagues, resolveActiveLeagueId } from '@/lib/leagues';
 import { editableGw, ensureLineup, playersByIds } from '@/lib/lineup';
@@ -176,6 +176,19 @@ export default async function SquadPage({
     .where(and(eq(lineups.squadId, squad.id), eq(lineups.gw, editable.gw)))
     .limit(1);
 
+  // GW total (from the scoring engine, live or final) and what the bench
+  // scored, so a manager can see both without hunting through each plate.
+  const [gwScoreRow] = await db
+    .select({ totalPoints: gwScores.totalPoints, final: gwScores.final })
+    .from(gwScores)
+    .where(and(eq(gwScores.squadId, squad.id), eq(gwScores.gw, editable.gw)))
+    .limit(1);
+  const benchPicks = picks.filter((p) => !p.starting);
+  const benchScored = benchPicks.some((p) => pointsById.get(p.fplId) != null);
+  const benchPoints = benchScored
+    ? benchPicks.reduce((sum, p) => sum + (pointsById.get(p.fplId) ?? 0), 0)
+    : null;
+
   return (
     <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
       <RememberLeague leagueId={leagueId} />
@@ -198,6 +211,32 @@ export default async function SquadPage({
             <Countdown toIso={editable.deadline.toISOString()} doneText="Locked" />
           </span>
         </p>
+        {gwScoreRow ? (
+          <div className="flex items-center justify-center gap-5 pt-1">
+            <p className="text-center">
+              <span
+                className={`block font-display text-2xl tabular-nums ${
+                  gwScoreRow.final ? 'text-accent' : 'text-live'
+                }`}
+              >
+                {gwScoreRow.totalPoints}
+              </span>
+              <span className="block text-[0.55rem] font-bold uppercase tracking-wider text-muted-2">
+                {gwScoreRow.final ? 'GW points' : 'GW points · live'}
+              </span>
+            </p>
+            {benchPoints != null ? (
+              <p className="text-center">
+                <span className="block font-display text-2xl tabular-nums text-muted">
+                  {benchPoints}
+                </span>
+                <span className="block text-[0.55rem] font-bold uppercase tracking-wider text-muted-2">
+                  Bench points
+                </span>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
       {switcher}
       {/* Chips act on your own team, so they sit with it. */}
