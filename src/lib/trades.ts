@@ -1,20 +1,12 @@
 import 'server-only';
 import { and, asc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { db, withTransaction, type Tx } from './db';
-import {
-  fixtures,
-  fplPlayers,
-  gameweeks,
-  leagues,
-  squadPlayers,
-  squads,
-  trades,
-} from './schema';
+import { fplPlayers, gameweeks, leagues, squadPlayers, squads, trades } from './schema';
 import { QUOTAS } from './draft';
 
 // Trades, spec section 10. 1-for-1 up to 3-for-3; both squads must satisfy
-// 2/5/5/3 AFTER the swap. 48h expiry, optional 24h owner veto window,
-// frozen between a GW deadline and that GW finishing. Execution runs inside
+// 2/5/5/3 AFTER the swap. 48h expiry, optional 24h owner veto window. Open
+// at all times, including while a gameweek plays out. Execution runs inside
 // the league advisory lock and verifies every player is still where the
 // trade expects it.
 
@@ -29,22 +21,11 @@ export class TradeError extends Error {
 const EXPIRY_MS = 48 * 60 * 60 * 1000;
 const VETO_MS = 24 * 60 * 60 * 1000;
 
-// Frozen: the most recent deadline has passed but that GW's fixtures have
-// not all finished.
+// The market stays open every day of the week, live gameweeks included, so
+// trades are never frozen. Kept as a function (rather than inlining `false`
+// at every call site) since it is still the one place that decision lives.
 export async function tradesFrozen(): Promise<boolean> {
-  const now = new Date();
-  const started = await db
-    .select({ gw: gameweeks.gw })
-    .from(gameweeks)
-    .where(sql`${gameweeks.deadline} <= ${now}`)
-    .orderBy(asc(gameweeks.deadline));
-  const latest = started[started.length - 1];
-  if (!latest) return false;
-  const [unfinished] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(fixtures)
-    .where(and(eq(fixtures.gw, latest.gw), eq(fixtures.finished, false)));
-  return (unfinished?.n ?? 0) > 0;
+  return false;
 }
 
 async function squadIdOf(tx: Tx, leagueId: string, userId: string): Promise<string> {

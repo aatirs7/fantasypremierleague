@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { gwPlayerPoints, leagues, lineups, squadPlayers, squads } from '@/lib/schema';
+import { gwPlayerPoints, gwScores, leagues, lineups, squadPlayers, squads } from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { myLeagues, resolveActiveLeagueId } from '@/lib/leagues';
 import { editableGw, ensureLineup, playersByIds } from '@/lib/lineup';
@@ -176,6 +176,31 @@ export default async function SquadPage({
     .where(and(eq(lineups.squadId, squad.id), eq(lineups.gw, editable.gw)))
     .limit(1);
 
+  // Most recent scored gameweek (live or final), so the manager can see the
+  // total and how much sat unused on the bench without leaving this page.
+  const [latestScore] = await db
+    .select({ gw: gwScores.gw, totalPoints: gwScores.totalPoints, final: gwScores.final })
+    .from(gwScores)
+    .where(eq(gwScores.squadId, squad.id))
+    .orderBy(desc(gwScores.gw))
+    .limit(1);
+  let benchPoints = 0;
+  if (latestScore) {
+    const [scoredLineup] = await db
+      .select({ picks: lineups.picks })
+      .from(lineups)
+      .where(and(eq(lineups.squadId, squad.id), eq(lineups.gw, latestScore.gw)))
+      .limit(1);
+    const benchIds = scoredLineup?.picks.filter((p) => !p.starting).map((p) => p.fplId) ?? [];
+    if (benchIds.length) {
+      const benchPts = await db
+        .select({ totalPoints: gwPlayerPoints.totalPoints })
+        .from(gwPlayerPoints)
+        .where(and(eq(gwPlayerPoints.gw, latestScore.gw), inArray(gwPlayerPoints.fplId, benchIds)));
+      benchPoints = benchPts.reduce((sum, p) => sum + p.totalPoints, 0);
+    }
+  }
+
   return (
     <div className="reveal space-y-4 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
       <RememberLeague leagueId={leagueId} />
@@ -200,6 +225,29 @@ export default async function SquadPage({
         </p>
       </div>
       {switcher}
+      {latestScore ? (
+        <div className="card flex items-center justify-between gap-3 px-4 py-3">
+          <div>
+            <p className="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-muted">
+              Gameweek {latestScore.gw} points{latestScore.final ? '' : ' · live'}
+            </p>
+            <p className="font-display text-3xl leading-none tabular-nums">
+              {latestScore.totalPoints}
+              <span className="ml-1 text-xs font-semibold uppercase tracking-wider text-muted-2">
+                pts
+              </span>
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-muted">
+              On the bench
+            </p>
+            <p className="font-display text-xl leading-none tabular-nums text-muted-2">
+              {benchPoints} pts
+            </p>
+          </div>
+        </div>
+      ) : null}
       {/* Chips act on your own team, so they sit with it. */}
       <ChipsPanel leagueId={leagueId} />
       <LineupEditor

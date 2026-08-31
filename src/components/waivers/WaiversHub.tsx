@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Search, X } from 'lucide-react';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
-import LocalTime from '@/components/LocalTime';
 
 // Waivers hub: pool with search/filters, claim queue with reorder, the
 // visible priority order, and the results feed. During free agency the same
@@ -147,27 +146,12 @@ export default function WaiversHub({ leagueId, myUserId }: { leagueId: string; m
       {win ? (
         <div className="card space-y-1 p-4">
           <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-            Gameweek {win.upcomingGw} window
+            Gameweek {win.upcomingGw}
           </p>
-          {win.opensNow ? (
-            <p className="text-sm">
-              <span className="font-bold text-accent">Claims open.</span>{' '}
-              <span className="text-muted">
-                Processed <LocalTime iso={win.closesAt} mode="weekday-time" />
-                , 24h before the deadline.
-              </span>
-            </p>
-          ) : win.freeAgencyNow ? (
-            <p className="text-sm">
-              <span className="font-bold text-gold">Free agency.</span>{' '}
-              <span className="text-muted">Claims are processed. Instant pickups until the deadline.</span>
-            </p>
-          ) : (
-            <p className="text-sm text-muted">
-              Closed. Opens once the current gameweek finishes; claims process 24h before the next
-              deadline.
-            </p>
-          )}
+          <p className="text-sm">
+            <span className="font-bold text-accent">Free agents open.</span>{' '}
+            <span className="text-muted">Pick up anyone unclaimed, any time.</span>
+          </p>
         </div>
       ) : (
         <p className="card p-4 text-sm text-muted">The season is over.</p>
