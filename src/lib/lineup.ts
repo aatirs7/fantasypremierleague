@@ -2,7 +2,7 @@ import 'server-only';
 import { and, asc, eq, gt, inArray, isNull, lte } from 'drizzle-orm';
 import { db } from './db';
 import { fplPlayers, gameweeks, lineups, squadPlayers, squads, type LineupPick } from './schema';
-import { generateAutoLineup, type SquadPlayerInfo } from './lineup-rules';
+import { generateAutoLineup, reconcileLineup, type SquadPlayerInfo } from './lineup-rules';
 
 // Lineup lifecycle:
 //  - The editable GW is the earliest one whose deadline is still ahead.
@@ -45,7 +45,30 @@ export async function ensureLineup(squadId: string, gw: number): Promise<LineupP
     .from(lineups)
     .where(and(eq(lineups.squadId, squadId), eq(lineups.gw, gw)))
     .limit(1);
-  if (existing) return existing.picks;
+
+  if (existing) {
+    // A lineup is a snapshot of fifteen players, and signing a free agent or
+    // winning a waiver makes it stale: the player who left is still in it and
+    // the new one is missing, so My Team shows a squad you no longer own.
+    // Only ever repair a gameweek that has not locked; a played one has to
+    // keep the eleven that actually scored.
+    const [gwRow] = await db
+      .select({ deadline: gameweeks.deadline })
+      .from(gameweeks)
+      .where(eq(gameweeks.gw, gw))
+      .limit(1);
+    if (!gwRow || gwRow.deadline <= new Date()) return existing.picks;
+
+    const current = await squadMembers(squadId);
+    if (current.length !== 15) return existing.picks;
+    const { picks: fixed, changed } = reconcileLineup(existing.picks, current);
+    if (!changed) return existing.picks;
+    await db
+      .update(lineups)
+      .set({ picks: fixed })
+      .where(and(eq(lineups.squadId, squadId), eq(lineups.gw, gw)));
+    return fixed;
+  }
 
   const members = await squadMembers(squadId);
   if (members.length !== 15) return null; // squad not drafted yet

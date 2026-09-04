@@ -10,6 +10,7 @@ export type SquadPlayerInfo = {
 // Valid XI: 1 GK, 3-5 DEF, 2-5 MID, 1-3 FWD, exactly 11 starting.
 export const XI_MIN: Record<string, number> = { GK: 1, DEF: 3, MID: 2, FWD: 1 };
 export const XI_MAX: Record<string, number> = { GK: 1, DEF: 5, MID: 5, FWD: 3 };
+const POSITIONS_XI = ['GK', 'DEF', 'MID', 'FWD'];
 
 export function validateLineup(
   picks: LineupPick[],
@@ -173,4 +174,129 @@ export function applyFormation(
       isVice: false,
     })),
   ];
+}
+
+// Bring a stored lineup back in line with who the manager actually owns.
+//
+// A lineup is a snapshot of fifteen players. Sign a free agent or win a
+// waiver and that snapshot goes stale: the player you dropped is still in
+// it and the one you gained is nowhere, so My Team shows a squad you no
+// longer have. This reconciles the two, preserving as many of the
+// manager's own choices as the rules allow.
+//
+// Anyone new arrives on the bench, because promoting a signing over a
+// starter the manager picked is not our decision to make.
+export function reconcileLineup(
+  picks: LineupPick[],
+  members: SquadPlayerInfo[],
+): { picks: LineupPick[]; changed: boolean } {
+  const memberIds = new Set(members.map((m) => m.fplId));
+  const infoOf = new Map(members.map((m) => [m.fplId, m]));
+
+  const kept = picks.filter((p) => memberIds.has(p.fplId));
+  const added = members.filter((m) => !picks.some((p) => p.fplId === m.fplId));
+  if (kept.length === picks.length && added.length === 0) {
+    return { picks, changed: false };
+  }
+
+  const posOf = (id: number) => infoOf.get(id)?.position ?? 'MID';
+  const formOf = (id: number) => infoOf.get(id)?.form ?? 0;
+
+  let starters = kept.filter((p) => p.starting);
+  const bench = [
+    ...kept.filter((p) => !p.starting),
+    // New arrivals sit at the back of the bench.
+    ...added.map((m) => ({
+      fplId: m.fplId,
+      slot: 99,
+      starting: false,
+      isCaptain: false,
+      isVice: false,
+    })),
+  ];
+
+  const countOf = (list: typeof starters) => {
+    const c: Record<string, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+    for (const p of list) c[posOf(p.fplId)]++;
+    return c;
+  };
+
+  // Too many starters (impossible today, but cheap to be safe): drop the
+  // weakest whose position can spare one.
+  while (starters.length > 11) {
+    const c = countOf(starters);
+    const droppable = starters
+      .filter((p) => c[posOf(p.fplId)] > XI_MIN[posOf(p.fplId)])
+      .sort((a, b) => formOf(a.fplId) - formOf(b.fplId));
+    const out = droppable[0] ?? starters[starters.length - 1];
+    starters = starters.filter((p) => p.fplId !== out.fplId);
+    bench.push({ ...out, starting: false });
+  }
+
+  // Short of eleven because a starter was dropped: promote the best bench
+  // player whose position still has room.
+  const promoted = new Set<number>();
+  while (starters.length < 11) {
+    const c = countOf(starters);
+    const candidate = bench
+      .filter((p) => !promoted.has(p.fplId))
+      .filter((p) => c[posOf(p.fplId)] < XI_MAX[posOf(p.fplId)])
+      .sort((a, b) => formOf(b.fplId) - formOf(a.fplId))[0];
+    if (!candidate) break;
+    promoted.add(candidate.fplId);
+    starters.push({ ...candidate, starting: true });
+  }
+
+  const remainingBench = bench.filter((p) => !promoted.has(p.fplId));
+  const counts = countOf(starters);
+  const legal =
+    starters.length === 11 &&
+    remainingBench.length === 4 &&
+    POSITIONS_XI.every((pos) => counts[pos] >= XI_MIN[pos] && counts[pos] <= XI_MAX[pos]);
+
+  // If preserving the manager's picks cannot produce a legal eleven, start
+  // clean rather than save something the server would reject.
+  if (!legal) {
+    return { picks: generateAutoLineup(members), changed: true };
+  }
+
+  const posOrder: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
+  const orderedXi = starters.sort(
+    (a, b) => posOrder[posOf(a.fplId)] - posOrder[posOf(b.fplId)] || a.slot - b.slot,
+  );
+  const orderedBench = remainingBench.sort((a, b) => a.slot - b.slot);
+
+  // An armband on someone who left, or who is now benched, is worth nothing.
+  const startingIds = new Set(orderedXi.map((p) => p.fplId));
+  let captain = picks.find((p) => p.isCaptain && startingIds.has(p.fplId))?.fplId;
+  let vice = picks.find((p) => p.isVice && startingIds.has(p.fplId))?.fplId;
+  if (captain == null) {
+    captain = orderedXi.slice().sort((a, b) => formOf(b.fplId) - formOf(a.fplId))[0]?.fplId;
+  }
+  if (vice == null || vice === captain) {
+    vice = orderedXi
+      .slice()
+      .sort((a, b) => formOf(b.fplId) - formOf(a.fplId))
+      .find((p) => p.fplId !== captain)?.fplId;
+  }
+
+  return {
+    picks: [
+      ...orderedXi.map((p, i) => ({
+        ...p,
+        starting: true,
+        slot: i + 1,
+        isCaptain: p.fplId === captain,
+        isVice: p.fplId === vice,
+      })),
+      ...orderedBench.map((p, i) => ({
+        ...p,
+        starting: false,
+        slot: 12 + i,
+        isCaptain: false,
+        isVice: false,
+      })),
+    ],
+    changed: true,
+  };
 }

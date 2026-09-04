@@ -3,6 +3,7 @@ import {
   applyFormation,
   generateAutoLineup,
   legalFormations,
+  reconcileLineup,
   validateLineup,
   type SquadPlayerInfo,
 } from '@/lib/lineup-rules';
@@ -198,5 +199,89 @@ describe('applyFormation', () => {
       fwd: 2,
     });
     expect(out.filter((p) => !p.starting)).toHaveLength(4);
+  });
+});
+
+describe('reconcileLineup', () => {
+  // A squad of 15 and a valid starting eleven built from it.
+  function setup() {
+    const members = makeSquad();
+    const picks = generateAutoLineup(members);
+    return { members, picks };
+  }
+
+  it('leaves an unchanged squad alone', () => {
+    const { members, picks } = setup();
+    const out = reconcileLineup(picks, members);
+    expect(out.changed).toBe(false);
+    expect(out.picks).toBe(picks);
+  });
+
+  it('brings in a signing and removes the player who left', () => {
+    const { members, picks } = setup();
+    // The manager dropped a benched player and signed a new midfielder.
+    const dropped = picks.find((p) => !p.starting)!.fplId;
+    const next = members
+      .filter((m) => m.fplId !== dropped)
+      .concat([{ fplId: 999, position: 'MID', form: 9 }]);
+    const out = reconcileLineup(picks, next);
+    expect(out.changed).toBe(true);
+    const ids = out.picks.map((p) => p.fplId);
+    expect(ids).toContain(999);
+    expect(ids).not.toContain(dropped);
+    expect(out.picks).toHaveLength(15);
+  });
+
+  it('puts a signing on the bench rather than into the eleven', () => {
+    const { members, picks } = setup();
+    const dropped = picks.find((p) => !p.starting)!.fplId;
+    const next = members
+      .filter((m) => m.fplId !== dropped)
+      .concat([{ fplId: 999, position: 'MID', form: 99 }]);
+    const out = reconcileLineup(picks, next);
+    expect(out.picks.find((p) => p.fplId === 999)!.starting).toBe(false);
+  });
+
+  it('promotes from the bench when a starter is dropped', () => {
+    const { members, picks } = setup();
+    const droppedStarter = picks.find((p) => p.starting && p.fplId)!;
+    const pos = members.find((m) => m.fplId === droppedStarter.fplId)!.position;
+    const next = members
+      .filter((m) => m.fplId !== droppedStarter.fplId)
+      .concat([{ fplId: 999, position: pos, form: 1 }]);
+    const out = reconcileLineup(picks, next);
+    expect(out.picks.filter((p) => p.starting)).toHaveLength(11);
+    expect(out.picks.filter((p) => !p.starting)).toHaveLength(4);
+  });
+
+  it('always yields a legal eleven', () => {
+    const { members, picks } = setup();
+    for (const victim of members) {
+      const next = members
+        .filter((m) => m.fplId !== victim.fplId)
+        .concat([{ fplId: 999, position: victim.position, form: 5 }]);
+      const out = reconcileLineup(picks, next);
+      const starters = out.picks.filter((p) => p.starting);
+      expect(starters).toHaveLength(11);
+      const count = (pos: string) =>
+        starters.filter((p) => next.find((m) => m.fplId === p.fplId)!.position === pos).length;
+      expect(count('GK')).toBe(1);
+      expect(count('DEF')).toBeGreaterThanOrEqual(3);
+      expect(count('MID')).toBeGreaterThanOrEqual(2);
+      expect(count('FWD')).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('never leaves an armband on a player who is gone or benched', () => {
+    const { members, picks } = setup();
+    const captain = picks.find((p) => p.isCaptain)!;
+    const next = members
+      .filter((m) => m.fplId !== captain.fplId)
+      .concat([{ fplId: 999, position: 'MID', form: 5 }]);
+    const out = reconcileLineup(picks, next);
+    const c = out.picks.find((p) => p.isCaptain);
+    expect(c).toBeDefined();
+    expect(c!.starting).toBe(true);
+    expect(c!.fplId).not.toBe(captain.fplId);
   });
 });

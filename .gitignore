@@ -48,3 +48,5 @@ tmp*.mjs
 q.mjs
 tmp*
 vapidnew.txt
+.tgt
+.env.snapshot
