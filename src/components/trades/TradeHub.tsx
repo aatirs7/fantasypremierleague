@@ -35,7 +35,6 @@ type TradeRow = {
 type TradesData = {
   vetoEnabled: boolean;
   isOwner: boolean;
-  frozen: boolean;
   squads: { userId: string; username: string; isBot: boolean; players: TradePlayer[] }[];
   trades: TradeRow[];
 };
@@ -185,11 +184,6 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
 
   return (
     <div className="space-y-3">
-      {data.frozen ? (
-        <p className="rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-2 text-center text-xs text-gold">
-          Trades are frozen while the gameweek plays out. Back after the final whistle.
-        </p>
-      ) : null}
       {error ? (
         <button
           onClick={() => setError(null)}
@@ -261,7 +255,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
                       requestFplIds: s.get.map((p) => p.fplId),
                     })
                   }
-                  disabled={busy || data.frozen}
+                  disabled={busy}
                   className="btn-primary min-h-10 w-full text-xs"
                 >
                   Offer this to {s.partnerName}
@@ -354,7 +348,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
                         requestFplIds: request,
                       })
                     }
-                    disabled={busy || data.frozen || !offer.length || !request.length}
+                    disabled={busy || !offer.length || !request.length}
                     className="btn-primary w-full"
                   >
                     <ArrowLeftRight className="h-4 w-4" />
@@ -386,7 +380,7 @@ export default function TradeHub({ leagueId, myUserId }: { leagueId: string; myU
                     <div className="flex gap-2 pt-1">
                       <button
                         onClick={() => void act({ action: 'accept', tradeId: t.id })}
-                        disabled={busy || data.frozen}
+                        disabled={busy}
                         className="btn-primary min-h-10 flex-1 text-xs"
                       >
                         Accept

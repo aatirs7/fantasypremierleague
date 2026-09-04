@@ -5,17 +5,10 @@ import { db } from '@/lib/db';
 import { fplPlayers, leagues, squadPlayers, squads, trades, users } from '@/lib/schema';
 import { currentUserId } from '@/lib/auth';
 import { isLeagueMember } from '@/lib/leagues';
-import {
-  TradeError,
-  cancelTrade,
-  proposeTrade,
-  respondTrade,
-  tradesFrozen,
-  vetoTrade,
-} from '@/lib/trades';
+import { TradeError, cancelTrade, proposeTrade, respondTrade, vetoTrade } from '@/lib/trades';
 
 // GET: everything the trade hub needs: every squad's players, trade lists,
-// veto rights, frozen state.
+// veto rights.
 export async function GET(_req: Request, ctx: { params: Promise<{ leagueId: string }> }) {
   const userId = await currentUserId();
   if (!userId) return NextResponse.json({ error: 'sign in first' }, { status: 401 });
@@ -77,7 +70,6 @@ export async function GET(_req: Request, ctx: { params: Promise<{ leagueId: stri
   return NextResponse.json({
     vetoEnabled: league.vetoEnabled,
     isOwner: league.ownerId === userId,
-    frozen: await tradesFrozen(),
     squads: squadsOut,
     trades: tradeRows.map((t) => ({
       id: t.id,

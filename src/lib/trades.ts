@@ -2,7 +2,6 @@ import 'server-only';
 import { and, asc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { db, withTransaction, type Tx } from './db';
 import {
-  fixtures,
   fplPlayers,
   gameweeks,
   leagues,
@@ -13,10 +12,11 @@ import {
 import { QUOTAS } from './draft';
 
 // Trades, spec section 10. 1-for-1 up to 3-for-3; both squads must satisfy
-// 2/5/5/3 AFTER the swap. 48h expiry, optional 24h owner veto window,
-// frozen between a GW deadline and that GW finishing. Execution runs inside
-// the league advisory lock and verifies every player is still where the
-// trade expects it.
+// 2/5/5/3 AFTER the swap. 48h expiry, optional 24h owner veto window. Trades
+// always take effect from the next unlocked gameweek, so accepting one mid
+// gameweek never touches a lineup that is already locked in for scoring.
+// Execution runs inside the league advisory lock and verifies every player
+// is still where the trade expects it.
 
 export class TradeError extends Error {
   status: number;
@@ -28,24 +28,6 @@ export class TradeError extends Error {
 
 const EXPIRY_MS = 48 * 60 * 60 * 1000;
 const VETO_MS = 24 * 60 * 60 * 1000;
-
-// Frozen: the most recent deadline has passed but that GW's fixtures have
-// not all finished.
-export async function tradesFrozen(): Promise<boolean> {
-  const now = new Date();
-  const started = await db
-    .select({ gw: gameweeks.gw })
-    .from(gameweeks)
-    .where(sql`${gameweeks.deadline} <= ${now}`)
-    .orderBy(asc(gameweeks.deadline));
-  const latest = started[started.length - 1];
-  if (!latest) return false;
-  const [unfinished] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(fixtures)
-    .where(and(eq(fixtures.gw, latest.gw), eq(fixtures.finished, false)));
-  return (unfinished?.n ?? 0) > 0;
-}
 
 async function squadIdOf(tx: Tx, leagueId: string, userId: string): Promise<string> {
   const [row] = await tx
@@ -123,9 +105,6 @@ export async function proposeTrade(
   if (proposerId === receiverId) throw new TradeError('You cannot trade with yourself', 400);
   if (offer.length < 1 || offer.length > 3 || request.length < 1 || request.length > 3) {
     throw new TradeError('Trades are 1-for-1 up to 3-for-3', 400);
-  }
-  if (await tradesFrozen()) {
-    throw new TradeError('Trades are frozen while the gameweek plays out');
   }
   return withTransaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${leagueId}))`);
@@ -210,9 +189,6 @@ export async function respondTrade(
         .where(eq(trades.id, tradeId));
       return;
     }
-    if (await tradesFrozen()) {
-      throw new TradeError('Trades are frozen while the gameweek plays out');
-    }
     const [league] = await tx
       .select({ vetoEnabled: leagues.vetoEnabled })
       .from(leagues)
@@ -268,7 +244,6 @@ export async function runTradeCron(notes: string[]): Promise<void> {
   for (const trade of due) {
     if (testIds.has(trade.leagueId)) continue;
     try {
-      if (await tradesFrozen()) continue; // executes after the GW finishes
       await withTransaction(async (tx) => {
         await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${trade.leagueId}))`);
         const [fresh] = await tx.select().from(trades).where(eq(trades.id, trade.id)).limit(1);
