@@ -1,8 +1,16 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, desc as sqlDesc, eq, inArray, isNull, sql as sqlRaw } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { gwPlayerPoints, gwScores, leagues, lineups, squadPlayers, squads } from '@/lib/schema';
+import {
+  fixtures,
+  gwPlayerPoints,
+  gwScores,
+  leagues,
+  lineups,
+  squadPlayers,
+  squads,
+} from '@/lib/schema';
 import { readSession } from '@/lib/auth';
 import { myLeagues, resolveActiveLeagueId } from '@/lib/leagues';
 import { editableGw, ensureLineup, playersByIds } from '@/lib/lineup';
@@ -161,10 +169,31 @@ export default async function SquadPage({
   }
   const playerIds = picks.map((p) => p.fplId);
   const players = await playersByIds(playerIds);
+
+  // Which gameweek's points to show on the pitch. The lineup you are editing
+  // is for the gameweek ahead, and until it kicks off nobody has scored in
+  // it, so showing that would mean an empty pitch every week between rounds.
+  // Fall back to the last gameweek that was actually played.
+  const [startedRow] = await db
+    .select({ n: sqlRaw<number>`count(*)::int` })
+    .from(fixtures)
+    .where(and(eq(fixtures.gw, editable.gw), eq(fixtures.started, true)));
+  let pointsGw = editable.gw;
+  if ((startedRow?.n ?? 0) === 0) {
+    const [lastPlayed] = await db
+      .select({ gw: fixtures.gw })
+      .from(fixtures)
+      .where(and(eq(fixtures.started, true), sqlRaw`${fixtures.gw} < ${editable.gw}`))
+      .orderBy(sqlDesc(fixtures.gw))
+      .limit(1);
+    if (lastPlayed?.gw != null) pointsGw = lastPlayed.gw;
+  }
+  const showingPastGw = pointsGw !== editable.gw;
+
   const pts = await db
     .select({ fplId: gwPlayerPoints.fplId, totalPoints: gwPlayerPoints.totalPoints })
     .from(gwPlayerPoints)
-    .where(and(eq(gwPlayerPoints.gw, editable.gw), inArray(gwPlayerPoints.fplId, playerIds)));
+    .where(and(eq(gwPlayerPoints.gw, pointsGw), inArray(gwPlayerPoints.fplId, playerIds)));
   const pointsById = new Map(pts.map((p) => [p.fplId, p.totalPoints]));
   const playersWithPoints = players.map((p) => ({
     ...p,
@@ -181,7 +210,7 @@ export default async function SquadPage({
   const [gwScoreRow] = await db
     .select({ totalPoints: gwScores.totalPoints, final: gwScores.final })
     .from(gwScores)
-    .where(and(eq(gwScores.squadId, squad.id), eq(gwScores.gw, editable.gw)))
+    .where(and(eq(gwScores.squadId, squad.id), eq(gwScores.gw, pointsGw)))
     .limit(1);
   const benchPicks = picks.filter((p) => !p.starting);
   const benchScored = benchPicks.some((p) => pointsById.get(p.fplId) != null);
@@ -222,7 +251,11 @@ export default async function SquadPage({
                 {gwScoreRow.totalPoints}
               </span>
               <span className="block text-[0.55rem] font-bold uppercase tracking-wider text-muted-2">
-                {gwScoreRow.final ? 'GW points' : 'GW points · live'}
+                {showingPastGw
+                  ? `GW${pointsGw} points`
+                  : gwScoreRow.final
+                    ? 'GW points'
+                    : 'GW points · live'}
               </span>
             </p>
             {benchPoints != null ? (
@@ -238,6 +271,12 @@ export default async function SquadPage({
           </div>
         ) : null}
       </div>
+      {showingPastGw ? (
+        <p className="text-center text-[0.65rem] text-muted-2">
+          Numbers on each player are their gameweek {pointsGw} points. Gameweek {editable.gw} has
+          not kicked off yet.
+        </p>
+      ) : null}
       {switcher}
       {/* Chips act on your own team, so they sit with it. */}
       <ChipsPanel leagueId={leagueId} />
