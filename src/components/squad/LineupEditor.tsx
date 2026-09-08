@@ -17,6 +17,11 @@ type PlayerInfo = {
   form: string | null;
   status: string;
   points?: number | null;
+  // 2 or 3 when this player's points are doubled or tripled by the armband.
+  multiplied?: number | null;
+  // The engine replaced this starter, or brought this substitute on.
+  subbedOut?: boolean;
+  subbedIn?: boolean;
 };
 
 const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
@@ -207,7 +212,16 @@ export default function LineupEditor({
           </span>
         </button>
         {p.points != null ? (
-          <span className="shrink-0 text-sm font-bold tabular-nums text-accent">{p.points} pts</span>
+          <span
+            className={`shrink-0 text-sm font-bold tabular-nums ${p.multiplied ? 'text-gold' : 'text-accent'}`}
+          >
+            {p.points} pts
+            {p.multiplied ? (
+              <span className="ml-1 text-[0.6rem] font-medium text-muted-2">
+                {p.points / p.multiplied}x{p.multiplied}
+              </span>
+            ) : null}
+          </span>
         ) : null}
         {pick.starting ? (
           <span className="flex shrink-0 gap-1">
@@ -268,8 +282,23 @@ export default function LineupEditor({
             {benchIndex + 1}
           </span>
         ) : null}
+        {p.subbedOut || p.subbedIn ? (
+          <span
+            className={`absolute -bottom-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full text-[0.6rem] font-bold ${
+              p.subbedIn ? 'bg-accent text-[var(--accent-ink)]' : 'bg-black/60 text-white/70'
+            }`}
+            title={p.subbedIn ? 'Came on as an autosub' : 'Replaced by an autosub'}
+          >
+            {p.subbedIn ? '↑' : '↓'}
+          </span>
+        ) : null}
         {p.points != null ? (
-          <span className="absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[0.62rem] font-bold text-[var(--accent-ink)]">
+          <span
+            className={`absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[0.62rem] font-bold ${
+              p.multiplied ? 'bg-gold text-[var(--accent-ink)] ring-1 ring-white/40' : 'bg-accent text-[var(--accent-ink)]'
+            }`}
+            title={p.multiplied ? `${p.points / p.multiplied} x${p.multiplied}` : undefined}
+          >
             {p.points}
           </span>
         ) : null}
@@ -289,6 +318,8 @@ export default function LineupEditor({
     );
 
     const cls = `plate relative flex ${benchIndex != null ? 'w-full' : 'w-[4.7rem]'} flex-col items-center gap-0.5 px-1 pb-1.5 pt-1.5 transition ${
+      p.subbedOut ? 'opacity-45' : ''
+    } ${p.subbedIn ? 'ring-1 ring-accent/60' : ''} ${
       sel ? 'z-10 scale-105 ring-2 ring-[var(--accent)]' : ''
     } ${isTarget ? 'ring-1 ring-accent/50' : ''} ${swapMode && !sel && !isTarget ? 'opacity-70' : ''}`;
 

@@ -18,6 +18,7 @@ import LineupEditor from '@/components/squad/LineupEditor';
 import DraftBoardPitch from '@/components/squad/DraftBoardPitch';
 import ChipsPanel from '@/components/leagues/ChipsPanel';
 import TeamNamePrompt from '@/components/squad/TeamNamePrompt';
+import { activeChip } from '@/lib/chips';
 import { QUOTAS, SQUAD_SIZE } from '@/lib/draft';
 import Countdown from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
@@ -191,14 +192,16 @@ export default async function SquadPage({
   const showingPastGw = pointsGw !== editable.gw;
 
   const pts = await db
-    .select({ fplId: gwPlayerPoints.fplId, totalPoints: gwPlayerPoints.totalPoints })
+    .select({
+      fplId: gwPlayerPoints.fplId,
+      totalPoints: gwPlayerPoints.totalPoints,
+      minutes: gwPlayerPoints.minutes,
+    })
     .from(gwPlayerPoints)
     .where(and(eq(gwPlayerPoints.gw, pointsGw), inArray(gwPlayerPoints.fplId, playerIds)));
   const pointsById = new Map(pts.map((p) => [p.fplId, p.totalPoints]));
-  const playersWithPoints = players.map((p) => ({
-    ...p,
-    points: pointsById.get(p.fplId) ?? null,
-  }));
+  const minutesById = new Map(pts.map((p) => [p.fplId, p.minutes]));
+
   const [row] = await db
     .select({ autoSet: lineups.autoSet })
     .from(lineups)
@@ -208,14 +211,51 @@ export default async function SquadPage({
   // GW total (from the scoring engine, live or final) and what the bench
   // scored, so a manager can see both without hunting through each plate.
   const [gwScoreRow] = await db
-    .select({ totalPoints: gwScores.totalPoints, final: gwScores.final })
+    .select({
+      totalPoints: gwScores.totalPoints,
+      final: gwScores.final,
+      autosubs: gwScores.autosubs,
+    })
     .from(gwScores)
     .where(and(eq(gwScores.squadId, squad.id), eq(gwScores.gw, pointsGw)))
     .limit(1);
+
+  // Who the engine actually fielded. A starter who did not play is replaced
+  // by a bench player who did, so without this the badges on the pitch add
+  // up to less than the total printed above them.
+  const autosubs = gwScoreRow?.autosubs ?? [];
+  const subbedOut = new Set(autosubs.map((a) => a.outFplId));
+  const subbedIn = new Set(autosubs.map((a) => a.inFplId));
+
+  // The armband is worth double, so show it that way. This mirrors
+  // computeFinalScore exactly: the captain multiplies only if he played, the
+  // vice takes over if he did not, and Triple Captain makes it three.
+  const chip = await activeChip(leagueId, session.userId, pointsGw);
+  const multiplier = chip === 'triple_captain' ? 3 : 2;
+  const captainId = picks.find((p) => p.isCaptain)?.fplId;
+  const viceId = picks.find((p) => p.isVice)?.fplId;
+  let armbandId: number | null = null;
+  if (captainId != null && (minutesById.get(captainId) ?? 0) > 0) armbandId = captainId;
+  else if (viceId != null && (minutesById.get(viceId) ?? 0) > 0) armbandId = viceId;
+
+  const playersWithPoints = players.map((p) => {
+    const raw = pointsById.get(p.fplId) ?? null;
+    return {
+      ...p,
+      points: raw != null && p.fplId === armbandId ? raw * multiplier : raw,
+      // So the plate can say why the number is bigger than the player scored.
+      multiplied: p.fplId === armbandId && raw != null ? multiplier : null,
+      subbedOut: subbedOut.has(p.fplId),
+      subbedIn: subbedIn.has(p.fplId),
+    };
+  });
+
   const benchPicks = picks.filter((p) => !p.starting);
   const benchScored = benchPicks.some((p) => pointsById.get(p.fplId) != null);
   const benchPoints = benchScored
-    ? benchPicks.reduce((sum, p) => sum + (pointsById.get(p.fplId) ?? 0), 0)
+    ? benchPicks
+        .filter((p) => !subbedIn.has(p.fplId))
+        .reduce((sum, p) => sum + (pointsById.get(p.fplId) ?? 0), 0)
     : null;
 
   return (
