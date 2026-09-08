@@ -34,12 +34,11 @@ function topicFor(pathname: string): HelpTopic | null {
   }
   if (pathname.includes('/waivers')) {
     return {
-      title: 'Waivers',
+      title: 'Free agents',
       steps: [
-        'Sign unowned players, fairly.',
-        'File a claim: one in, one of yours out.',
-        'Claims process 24h before the deadline. Lower-ranked teams get priority.',
-        'After processing, leftovers are instant free agents.',
+        'Anyone nobody owns can be signed right now.',
+        'One in, one out, and the player you drop must be the same position.',
+        'First come first served. Whoever drops a player puts him straight back in the pool.',
       ],
     };
   }

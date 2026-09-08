@@ -21,13 +21,6 @@ const META: Record<
     how: 'Worth most in a week where all four of your bench players have fixtures and are fit. Check the deadline team news before you burn it.',
     icon: Layers,
   },
-  wildcard: {
-    label: 'Wildcard',
-    short: 'WC',
-    blurb: 'Every waiver claim can land in one window.',
-    how: 'Normally only your top claim goes through. Play this when three or four players you want are all sitting unowned at once.',
-    icon: Sparkles,
-  },
 };
 
 type Played = { chip: string; gw: number };

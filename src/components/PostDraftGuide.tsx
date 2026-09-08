@@ -81,21 +81,21 @@ function cards(leagueId: string, gw: number | null): Card[] {
     },
     {
       icon: Swords,
-      title: 'Waivers',
+      title: 'Free agents',
       lines: [
-        'League tab, then Waivers. This is how you sign anyone unowned.',
+        'Market tab, then Free agents. This is how you sign anyone unowned.',
         'File a claim, one in and one out. Claims all process together, 24h before the deadline.',
         'Worst team in the table gets first refusal. Win a claim and you drop to the back of the queue.',
       ],
-      cta: { label: 'Open Waivers', href: `/league/${leagueId}/waivers` },
+      cta: { label: 'Open the market', href: '/market' },
     },
     {
       icon: Sparkles,
       title: 'Chips',
       lines: [
-        'Three of them, once each per season, on the League tab.',
+        'Two of them, once each per season, on your team page.',
         'Triple Captain: your captain scores 3x. Bench Boost: all 15 score.',
-        'Wildcard: every waiver claim can land in one window instead of just the top one.',
+        'Both are one use each, for the whole season.',
       ],
       cta: { label: 'See your chips', href: `/league/${leagueId}` },
     },

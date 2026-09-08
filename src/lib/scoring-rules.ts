@@ -74,7 +74,7 @@ export function applyAutosubs(
 }
 
 // Chips that change how a gameweek scores.
-export type ScoringChip = 'triple_captain' | 'bench_boost' | 'wildcard' | null;
+export type ScoringChip = 'triple_captain' | 'bench_boost' | null;
 
 // Final score for a finished, data-checked GW.
 export function computeFinalScore(

@@ -376,7 +376,7 @@ export const chips = pgTable(
   {
     leagueId: uuid('league_id').notNull(),
     userId: uuid('user_id').notNull(),
-    // triple_captain | bench_boost | wildcard
+    // triple_captain | bench_boost
     chip: text('chip').notNull(),
     gw: integer('gw').notNull(),
     playedAt: timestamp('played_at', { withTimezone: true }).defaultNow().notNull(),

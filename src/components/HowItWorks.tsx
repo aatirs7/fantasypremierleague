@@ -72,20 +72,19 @@ const CARDS: Card[] = [
     icon: Sparkles,
     title: 'Chips',
     lines: [
-      'Three one-time power plays. Timing is everything.',
+      'Two one-time power plays. Timing is everything.',
       'Triple Captain: your captain scores 3x.',
       'Bench Boost: all 15 players score.',
-      'Wildcard: every waiver claim can land in one window.',
     ],
   },
   {
     icon: BookOpen,
-    title: 'Waivers',
+    title: 'Free agents',
     lines: [
-      'Claim unowned players: one in, one out.',
-      'All claims process together, 24h before the deadline.',
-      'Teams lower in the table get first refusal. Winning a claim drops you to the bottom.',
-      'Leftovers become instant free agents until the deadline.',
+      'Anyone nobody owns can be signed the moment you want him.',
+      'One in, one out, and the player you drop has to be the same position.',
+      'First come first served. No claims, no waiting, no priority order.',
+      'Whoever you drop goes straight back into the pool for everyone else.',
     ],
   },
   {

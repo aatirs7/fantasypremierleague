@@ -7,9 +7,11 @@ import { chips } from './schema';
 // and locked in for that gameweek.
 //   triple_captain: the captain scores 3x instead of 2x
 //   bench_boost:    all 15 players count, no autosubs
-//   wildcard:       unlimited waiver claims can be approved that window
 
-export const CHIP_KINDS = ['triple_captain', 'bench_boost', 'wildcard'] as const;
+// Wildcard was removed when waivers became open free agency: its only effect
+// was letting more than one claim land in a processing window, and there are
+// no claims or windows any more.
+export const CHIP_KINDS = ['triple_captain', 'bench_boost'] as const;
 export type ChipKind = (typeof CHIP_KINDS)[number];
 
 export const CHIP_META: Record<ChipKind, { label: string; blurb: string }> = {
@@ -20,10 +22,6 @@ export const CHIP_META: Record<ChipKind, { label: string; blurb: string }> = {
   bench_boost: {
     label: 'Bench Boost',
     blurb: 'All 15 of your players score. Nobody is left on the bench.',
-  },
-  wildcard: {
-    label: 'Wildcard',
-    blurb: 'Every one of your waiver claims can land in a single window.',
   },
 };
 
