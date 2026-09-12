@@ -15,7 +15,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Env vars (all set on the Vercel project): `DATABASE_URL`, `SESSION_SECRET` (32+ chars), `CRON_SECRET`, `ADMIN_USERNAMES` (comma-separated usernames allowed to use the dev test-draft endpoints).
+Env vars (all set on the Vercel project): `DATABASE_URL`, `SESSION_SECRET` (32+ chars), `CRON_SECRET`, `ADMIN_USERNAMES` (comma-separated usernames allowed to use the dev test-draft and account recovery endpoints).
 
 ## How data flows
 
@@ -29,6 +29,10 @@ Env vars (all set on the Vercel project): `DATABASE_URL`, `SESSION_SECRET` (32+ 
 ## Draft dry run
 
 Sign in as an admin username and `POST /api/dev/test-draft {"managers":8,"bot_speed_ms":4000}` (or run `node scripts/test-draft.js` against a dev server) to rehearse a full bot draft through the real pick transaction. Delete it from the room's TEST MODE banner afterwards.
+
+## Forgotten PINs
+
+There is no self-service PIN reset (no email or phone on file). Sign in as an admin username, find the account with `GET /api/dev/users?q=brown` (matches any part of the username, non-bots only, lists their leagues), then `POST /api/dev/users {"username":"brownsugar","pin":"1234"}` to set a fresh PIN and clear any lockout. Pass the new PIN to the manager directly.
 
 ## Tests
 
