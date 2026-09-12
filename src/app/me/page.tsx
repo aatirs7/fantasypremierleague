@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Share, Sparkles } from 'lucide-react';
+import { Share, ShieldCheck, Sparkles } from 'lucide-react';
 import { readSession } from '@/lib/auth';
+import { currentAdminId } from '@/lib/admin';
 import { myLeagues } from '@/lib/leagues';
+import ChangePin from '@/components/auth/ChangePin';
 import SignOutButton from '@/components/auth/SignOutButton';
 import LeagueActions from '@/components/leagues/LeagueActions';
 import InviteShare from '@/components/leagues/InviteShare';
@@ -13,6 +15,7 @@ export default async function MePage() {
   const session = await readSession();
   if (!session) redirect('/?next=/me');
   const mine = await myLeagues(session.userId);
+  const isAdmin = (await currentAdminId()) != null;
 
   return (
     <div className="reveal space-y-7 pb-4 pt-1 lg:mx-auto lg:max-w-2xl">
@@ -21,7 +24,7 @@ export default async function MePage() {
           {session.username.slice(0, 1).toUpperCase()}
         </span>
         <h1 className="font-display text-3xl leading-none">{session.username}</h1>
-        <p className="text-xs text-muted">Remember your PIN, there is no reset.</p>
+        <p className="text-xs text-muted">Signed in with your username and 4-digit PIN.</p>
       </header>
 
       <section className="space-y-3">
@@ -74,6 +77,22 @@ export default async function MePage() {
             app-like experience.
           </p>
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <p className="text-center text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">
+          Account
+        </p>
+        <ChangePin />
+        {isAdmin ? (
+          <Link
+            href="/admin"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 text-sm font-bold text-accent active:scale-95"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Manage accounts
+          </Link>
+        ) : null}
       </section>
 
       <SignOutButton />

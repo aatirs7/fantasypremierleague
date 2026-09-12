@@ -108,7 +108,7 @@ function topicFor(pathname: string): HelpTopic | null {
       title: 'Me',
       steps: [
         'Your account and leagues.',
-        'No PIN reset exists. Do not forget it.',
+        'Change your PIN here any time. Forgot it? Ask Aatir for a reset code and use "Forgot your PIN?" on the sign-in screen.',
         'Add the app to your home screen for the full experience.',
       ],
     };

@@ -15,7 +15,8 @@ This version has breaking changes - APIs, conventions, and file structure may al
 - No hardcoded season dates. Gameweek deadlines come from the API mirror
   (gameweeks table).
 - Auth is username + 4-digit PIN with a jose-encrypted session cookie
-  (src/lib/auth.ts). No Clerk, no OAuth, no email, no PIN reset in v1.
+  (src/lib/auth.ts). No Clerk, no OAuth, no email. PIN reset is admin-issued
+  one-time codes only (src/lib/pin-reset.ts, /admin), never self-service.
 - The scoring engine (src/lib/scoring.ts) recomputes from scratch with
   delete + insert and must stay idempotent. Same for every sync step.
 - Multi-statement transactions (draft picks, waivers, trades) go through

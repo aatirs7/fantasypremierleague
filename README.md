@@ -15,7 +15,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Env vars (all set on the Vercel project): `DATABASE_URL`, `SESSION_SECRET` (32+ chars), `CRON_SECRET`, `ADMIN_USERNAMES` (comma-separated usernames allowed to use the dev test-draft endpoints).
+Env vars (all set on the Vercel project): `DATABASE_URL`, `SESSION_SECRET` (32+ chars), `CRON_SECRET`, `ADMIN_USERNAMES` (comma-separated usernames allowed to use the dev test-draft and account recovery endpoints).
 
 ## How data flows
 
@@ -29,6 +29,10 @@ Env vars (all set on the Vercel project): `DATABASE_URL`, `SESSION_SECRET` (32+ 
 ## Draft dry run
 
 Sign in as an admin username and `POST /api/dev/test-draft {"managers":8,"bot_speed_ms":4000}` (or run `node scripts/test-draft.js` against a dev server) to rehearse a full bot draft through the real pick transaction. Delete it from the room's TEST MODE banner afterwards.
+
+## Forgotten PINs
+
+There is no email or phone on file, so PIN reset runs through the admin. Sign in as an admin username and open Profile, then Manage accounts (`/admin`): search any part of the username ("brown sugar" finds brownsugar, non-bots only, shows their leagues) and tap Reset code. Send the 6-character code to the manager; they tap "Forgot your PIN?" on the sign-in screen and enter username, code, and a new PIN. Codes work once and expire after 24 hours. Set PIN directly on the same page replaces the PIN outright if that is easier. Both clear any login lockout. The same actions are available as `GET /api/dev/users?q=brown` and `POST /api/dev/users {"username":"brownsugar"}` (add `"pin":"1234"` to set it directly). Signed-in managers can change their own PIN from Profile.
 
 ## Tests
 
