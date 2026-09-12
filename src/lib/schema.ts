@@ -28,6 +28,10 @@ export const users = pgTable(
     usernameLower: text('username_lower').notNull(),
     pinHash: text('pin_hash').notNull(),
     isBot: boolean('is_bot').notNull().default(false),
+    // One-time PIN reset code issued by an admin (bcrypt hash + expiry).
+    // Cleared the moment it is used; null means no reset is pending.
+    pinResetHash: text('pin_reset_hash'),
+    pinResetExpiresAt: timestamp('pin_reset_expires_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [uniqueIndex('users_username_lower_unique').on(t.usernameLower)],

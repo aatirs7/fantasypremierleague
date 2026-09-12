@@ -32,7 +32,7 @@ Sign in as an admin username and `POST /api/dev/test-draft {"managers":8,"bot_sp
 
 ## Forgotten PINs
 
-There is no self-service PIN reset (no email or phone on file). Sign in as an admin username, find the account with `GET /api/dev/users?q=brown` (matches any part of the username, non-bots only, lists their leagues), then `POST /api/dev/users {"username":"brownsugar","pin":"1234"}` to set a fresh PIN and clear any lockout. Pass the new PIN to the manager directly.
+There is no email or phone on file, so PIN reset runs through the admin. Sign in as an admin username and open Profile, then Manage accounts (`/admin`): search any part of the username ("brown sugar" finds brownsugar, non-bots only, shows their leagues) and tap Reset code. Send the 6-character code to the manager; they tap "Forgot your PIN?" on the sign-in screen and enter username, code, and a new PIN. Codes work once and expire after 24 hours. Set PIN directly on the same page replaces the PIN outright if that is easier. Both clear any login lockout. The same actions are available as `GET /api/dev/users?q=brown` and `POST /api/dev/users {"username":"brownsugar"}` (add `"pin":"1234"` to set it directly). Signed-in managers can change their own PIN from Profile.
 
 ## Tests
 
