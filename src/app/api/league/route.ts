@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
+import { and, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { leagueMembers, leagues } from '@/lib/schema';
-import { currentUserId } from '@/lib/auth';
+import { leagueMembers, leagues, users } from '@/lib/schema';
+import { PIN_RE, currentUserId } from '@/lib/auth';
 import { generateJoinCode } from '@/lib/leagues';
+import { clearUserFailures } from '@/lib/rate-limit';
 
 const Body = z.discriminatedUnion('action', [
   z.object({
@@ -18,6 +20,12 @@ const Body = z.discriminatedUnion('action', [
     leagueId: z.string().uuid(),
     // ISO timestamp for the draft, or null to clear.
     draftTime: z.string().datetime({ offset: true }).nullable(),
+  }),
+  z.object({
+    action: z.literal('reset-pin'),
+    leagueId: z.string().uuid(),
+    userId: z.string().uuid(),
+    pin: z.string().regex(PIN_RE, 'PIN must be exactly 4 digits'),
   }),
 ]);
 
@@ -65,6 +73,30 @@ export async function POST(req: Request) {
       .values({ leagueId: league.id, userId })
       .onConflictDoNothing();
     return NextResponse.json({ league });
+  }
+
+  if (body.action === 'reset-pin') {
+    // There is no email, so a forgotten PIN is fixed by the league owner:
+    // they set a fresh 4-digit PIN for a member of their own league.
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, body.leagueId)).limit(1);
+    if (!league) return NextResponse.json({ error: 'not found' }, { status: 404 });
+    if (league.ownerId !== userId) {
+      return NextResponse.json({ error: 'Only the league owner can reset a PIN' }, { status: 403 });
+    }
+    const [membership] = await db
+      .select({ userId: leagueMembers.userId })
+      .from(leagueMembers)
+      .where(and(eq(leagueMembers.leagueId, league.id), eq(leagueMembers.userId, body.userId)))
+      .limit(1);
+    if (!membership) return NextResponse.json({ error: 'Not a member of this league' }, { status: 404 });
+    const [target] = await db.select().from(users).where(eq(users.id, body.userId)).limit(1);
+    if (!target || target.isBot) return NextResponse.json({ error: 'Not a member of this league' }, { status: 404 });
+
+    const pinHash = await bcrypt.hash(body.pin, 10);
+    await db.update(users).set({ pinHash }).where(eq(users.id, target.id));
+    // A locked-out member should be able to use the new PIN right away.
+    await clearUserFailures(target.usernameLower);
+    return NextResponse.json({ ok: true, username: target.username });
   }
 
   // schedule

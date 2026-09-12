@@ -114,9 +114,14 @@ export default function Onboard({
 
         {mode === 'register' ? (
           <p className="text-center text-xs text-muted">
-            Remember your PIN, there is no reset.
+            Remember your PIN. Only you or your league owner can reset it.
           </p>
-        ) : null}
+        ) : (
+          <p className="text-center text-xs text-muted">
+            Usernames have no spaces. Forgot your PIN? Ask your league owner, they can set you a new one
+            from the league page.
+          </p>
+        )}
 
         {error ? (
           <p className="rounded-xl border border-live/40 bg-live/[0.08] px-3 py-2 text-center text-sm text-live">

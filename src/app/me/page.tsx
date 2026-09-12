@@ -4,6 +4,7 @@ import { Share, Sparkles } from 'lucide-react';
 import { readSession } from '@/lib/auth';
 import { myLeagues } from '@/lib/leagues';
 import SignOutButton from '@/components/auth/SignOutButton';
+import ChangePin from '@/components/auth/ChangePin';
 import LeagueActions from '@/components/leagues/LeagueActions';
 import InviteShare from '@/components/leagues/InviteShare';
 
@@ -21,7 +22,7 @@ export default async function MePage() {
           {session.username.slice(0, 1).toUpperCase()}
         </span>
         <h1 className="font-display text-3xl leading-none">{session.username}</h1>
-        <p className="text-xs text-muted">Remember your PIN, there is no reset.</p>
+        <p className="text-xs text-muted">Forgot your PIN? Change it below while you are signed in.</p>
       </header>
 
       <section className="space-y-3">
@@ -76,6 +77,7 @@ export default async function MePage() {
         </div>
       </section>
 
+      <ChangePin />
       <SignOutButton />
     </div>
   );

@@ -16,6 +16,7 @@ import DraftGrades from '@/components/leagues/DraftGrades';
 import DraftReportCard from '@/components/leagues/DraftReportCard';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
+import ResetMemberPin from '@/components/leagues/ResetMemberPin';
 import RememberLeague from '@/components/RememberLeague';
 import LocalTime from '@/components/LocalTime';
 
@@ -192,6 +193,12 @@ export default async function LeaguePage({
         </>
       )}
 
+      {isOwner ? (
+        <ResetMemberPin
+          leagueId={league.id}
+          members={members.filter((m) => !m.isBot).map((m) => ({ userId: m.userId, username: m.username }))}
+        />
+      ) : null}
     </div>
   );
 }
