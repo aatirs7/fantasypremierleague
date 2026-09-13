@@ -15,13 +15,22 @@ This version has breaking changes - APIs, conventions, and file structure may al
 - No hardcoded season dates. Gameweek deadlines come from the API mirror
   (gameweeks table).
 - Auth is username + 4-digit PIN with a jose-encrypted session cookie
-  (src/lib/auth.ts). No Clerk, no OAuth, no email, no PIN reset in v1.
+  (src/lib/auth.ts). No Clerk, no OAuth, no email. Login accepts a username
+  or a team name (team name only when exactly one manager uses it). Lockouts
+  count against the resolved account, never the text typed.
+- PIN recovery without email: a logged-in manager changes their own PIN
+  (needs the current one) from /me, and a league owner resets a member's
+  PIN from the league page. Never reset a PIN from anywhere else.
 - The scoring engine (src/lib/scoring.ts) recomputes from scratch with
   delete + insert and must stay idempotent. Same for every sync step.
 - Multi-statement transactions (draft picks, waivers, trades) go through
   withTransaction in src/lib/db.ts (WebSocket driver); everything else
   uses the shared neon-http db.
-- One Vercel cron only: * * * * * hitting /api/cron, self-gating inside.
+- One Vercel cron only: */5 * * * * hitting /api/cron. It decides whether
+  there is work from the FPL API, NOT from Postgres, so most ticks open no
+  database connection. Do not go back to every minute or gate on a DB query:
+  Neon bills from the first query until the compute suspends, and a
+  per-minute cron kept the database 96% awake and took it over quota.
 - Test leagues (leagues.is_test) and bot users (users.is_bot) are excluded
   from crons and any cross-league queries.
 

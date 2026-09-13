@@ -24,7 +24,13 @@ export default function Onboard({
   const [error, setError] = useState<string | null>(null);
   const [available, setAvailable] = useState<boolean | null>(null);
 
-  const validUsername = /^[A-Za-z0-9_]{3,20}$/.test(username);
+  // Signing up needs a proper username. Logging in accepts a username OR a
+  // team name, and team names can contain spaces and apostrophes, so the
+  // strict pattern only applies when registering.
+  const validUsername =
+    mode === 'register'
+      ? /^[A-Za-z0-9_]{3,20}$/.test(username)
+      : username.trim().length > 0;
 
   // Debounced availability check while registering.
   useEffect(() => {
@@ -50,7 +56,7 @@ export default function Onboard({
       const res = await fetch(`/api/auth/${mode}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ username, pin }),
+        body: JSON.stringify({ username: username.trim(), pin }),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
@@ -87,17 +93,21 @@ export default function Onboard({
 
       <div className="card flex flex-col gap-4 p-4 text-center">
         <div>
-          <p className="mb-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Username</p>
+          <p className="mb-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+            {mode === 'register' ? 'Username' : 'Username or team name'}
+          </p>
           <input
             className={`${INPUT_CLS} text-center`}
-            placeholder="e.g. rayyan_10"
+            placeholder={mode === 'register' ? 'e.g. rayyan_10' : 'e.g. rayyan_10 or BrownSugar'}
             value={username}
             name="draft-nickname"
             autoComplete="off"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            onChange={(e) => setUsername(e.target.value.trim())}
+            onChange={(e) =>
+              setUsername(mode === 'register' ? e.target.value.trim() : e.target.value)
+            }
           />
           {mode === 'register' && username && !validUsername ? (
             <p className="mt-1.5 text-xs text-live">3-20 characters: letters, numbers, underscores.</p>
@@ -112,11 +122,11 @@ export default function Onboard({
 
         <PinInput value={pin} onChange={setPin} label={mode === 'register' ? 'Choose a 4-digit PIN' : 'Your PIN'} />
 
-        {mode === 'register' ? (
-          <p className="text-center text-xs text-muted">
-            Remember your PIN, there is no reset.
-          </p>
-        ) : null}
+        <p className="text-center text-xs text-muted">
+          {mode === 'register'
+            ? 'Remember your PIN. If you forget it, your league owner can reset it.'
+            : 'Forgot your PIN? Ask your league owner to reset it for you.'}
+        </p>
 
         {error ? (
           <p className="rounded-xl border border-live/40 bg-live/[0.08] px-3 py-2 text-center text-sm text-live">

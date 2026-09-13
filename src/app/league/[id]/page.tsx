@@ -14,6 +14,8 @@ import AwardsFeed from '@/components/leagues/AwardsFeed';
 import LeagueStats from '@/components/leagues/LeagueStats';
 import DraftGrades from '@/components/leagues/DraftGrades';
 import DraftReportCard from '@/components/leagues/DraftReportCard';
+import { ResetMemberPin } from '@/components/auth/PinControls';
+import { teamNames } from '@/lib/names';
 import Countdown from '@/components/leagues/Countdown';
 import ScheduleDraft from '@/components/leagues/ScheduleDraft';
 import RememberLeague from '@/components/RememberLeague';
@@ -40,6 +42,7 @@ export default async function LeaguePage({
 
   const members = await leagueMemberList(league.id);
   const isOwner = league.ownerId === session.userId;
+  const ownerNames = isOwner ? await teamNames(league.id) : new Map<string, string>();
   const pending = league.draftStatus === 'pending';
 
   return (
@@ -192,6 +195,24 @@ export default async function LeaguePage({
         </>
       )}
 
+      {/* Owner tools. There is no email on any account, so when someone forgets
+          their PIN the owner, who knows everyone, is the one who resets it. */}
+      {isOwner ? (
+        <ResetMemberPin
+          leagueId={league.id}
+          members={members
+            .filter((m) => m.userId !== session.userId && !m.isBot)
+            .map((m) => {
+              // Both names, so the owner picks the right person even when a
+              // team name gives nothing away about who is behind it.
+              const team = ownerNames.get(m.userId);
+              return {
+                userId: m.userId,
+                name: team && team !== m.username ? `${team} (${m.username})` : m.username,
+              };
+            })}
+        />
+      ) : null}
     </div>
   );
 }
