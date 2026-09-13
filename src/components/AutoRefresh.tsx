@@ -22,12 +22,20 @@ import { useRouter } from 'next/navigation';
 // then call router.refresh() against a newer server and throw on the RSC
 // payload mismatch, with no reload ever triggered to recover from it.
 const THROTTLE_MS = 4000;
-const POLL_MS = 30000;
+// Every server refresh re-queries Postgres, and Neon will not suspend for
+// 300 seconds after the last query. At the old 30 second poll, one phone or
+// tablet left open on a desk kept the database awake indefinitely. So poll
+// once a minute, and only while someone is actually using the app: after a
+// few idle minutes the poll stops, and the next tap, focus or return to the
+// app refreshes straight away.
+const POLL_MS = 60000;
+const IDLE_AFTER_MS = 3 * 60 * 1000;
 
 export default function AutoRefresh({ initialBuildId }: { initialBuildId: string }) {
   const router = useRouter();
   const last = useRef(0);
   const buildId = useRef<string>(initialBuildId);
+  const lastActivity = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,20 +72,41 @@ export default function AutoRefresh({ initialBuildId }: { initialBuildId: string
       if (!stale) router.refresh();
     };
     const onVisible = () => {
-      if (document.visibilityState === 'visible') void refresh();
+      if (document.visibilityState === 'visible') {
+        lastActivity.current = Date.now();
+        void refresh();
+      }
     };
 
-    void refresh();
+    // Counts as active from the moment the page mounts.
+    lastActivity.current = Date.now();
+
+    // The page was server-rendered a moment ago, so refreshing it now would
+    // just run every query twice. Only confirm the bundle is current.
+    void checkVersion();
+
+    const markActive = () => {
+      const wasIdle = Date.now() - lastActivity.current > IDLE_AFTER_MS;
+      lastActivity.current = Date.now();
+      // Coming back from idle: catch up at once rather than waiting a minute.
+      if (wasIdle) void refresh();
+    };
+    const activityEvents = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const;
+    for (const ev of activityEvents) {
+      window.addEventListener(ev, markActive, { passive: true });
+    }
 
     window.addEventListener('focus', refresh);
     window.addEventListener('online', refresh);
     document.addEventListener('visibilitychange', onVisible);
     const id = setInterval(() => {
-      if (document.visibilityState === 'visible') void refresh();
+      const idle = Date.now() - lastActivity.current > IDLE_AFTER_MS;
+      if (document.visibilityState === 'visible' && !idle) void refresh();
     }, POLL_MS);
 
     return () => {
       cancelled = true;
+      for (const ev of activityEvents) window.removeEventListener(ev, markActive);
       window.removeEventListener('focus', refresh);
       window.removeEventListener('online', refresh);
       document.removeEventListener('visibilitychange', onVisible);

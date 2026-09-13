@@ -7,21 +7,21 @@ export const maxDuration = 60;
 // The one cron. Vercel hits this every 5 minutes.
 //
 // Most ticks do nothing and, crucially, touch no database. Neon bills from
-// the first query until the compute suspends, so a tick that opens a
-// connection just to discover there is no work still costs five minutes of
-// compute. Deciding from the FPL API instead keeps Postgres asleep for days
-// between match rounds.
+// the first query until the compute suspends, and this plan will not suspend
+// sooner than 300 seconds, so a tick that opens a connection just to discover
+// there is no work still costs five minutes of compute. The decision comes
+// from the FPL API (src/lib/sync-window.ts, unit-tested) instead.
 //
-// When something IS happening the invocation stays alive and re-syncs every
-// 20 seconds within its own budget. The database is already awake by then,
-// so those extra passes are close to free and live scores move in near real
-// time rather than in five minute steps.
+// The gate is stateless on purpose. An earlier version remembered its last
+// run in a module variable, and every cold serverless start reset it to zero,
+// so a cold instance always believed its heartbeat was overdue and synced.
+//
+// While a ball is actually being kicked the invocation stays alive and
+// re-syncs every 20 seconds within its own budget. The database is awake by
+// then anyway, so those passes cost nothing extra and live scores move in
+// near real time.
 const LIVE_PASS_MS = 20_000;
 const BUDGET_MS = 45_000;
-
-// Survives between invocations on a warm instance. Only an optimisation: a
-// cold start just means one extra heartbeat sync.
-let lastRunMs = 0;
 
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -31,28 +31,23 @@ export async function GET(req: Request) {
 
   const started = Date.now();
   try {
-    const url = new URL(req.url);
-    const force = url.searchParams.get('force') === '1';
-    const window = force
-      ? { active: true, reason: 'forced' }
-      : await syncWindow(lastRunMs, started);
+    const force = new URL(req.url).searchParams.get('force') === '1';
+    const decision = force
+      ? { active: true, chase: false, reason: 'forced' }
+      : await syncWindow(started);
 
-    if (!window.active) {
-      return NextResponse.json({ skipped: true, reason: window.reason });
+    if (!decision.active) {
+      return NextResponse.json({ skipped: true, reason: decision.reason });
     }
 
-    lastRunMs = started;
     const reports = [await runSync()];
-
-    // Stay on the clock while matches are in play.
-    const chase = window.reason.includes('in play');
-    while (chase && Date.now() - started + LIVE_PASS_MS < BUDGET_MS) {
+    while (decision.chase && Date.now() - started + LIVE_PASS_MS < BUDGET_MS) {
       await new Promise((r) => setTimeout(r, LIVE_PASS_MS));
       reports.push(await runSync());
     }
 
     return NextResponse.json({
-      reason: window.reason,
+      reason: decision.reason,
       passes: reports.length,
       report: reports[reports.length - 1],
     });

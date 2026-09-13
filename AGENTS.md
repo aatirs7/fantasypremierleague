@@ -29,8 +29,17 @@ This version has breaking changes - APIs, conventions, and file structure may al
 - One Vercel cron only: */5 * * * * hitting /api/cron. It decides whether
   there is work from the FPL API, NOT from Postgres, so most ticks open no
   database connection. Do not go back to every minute or gate on a DB query:
-  Neon bills from the first query until the compute suspends, and a
-  per-minute cron kept the database 96% awake and took it over quota.
+  Neon bills from the first query until the compute suspends (300s minimum on
+  this plan), and a per-minute cron kept the database 96% awake and took it
+  over quota.
+- The gate's rules live in src/lib/sync-window.ts and are unit-tested. A match
+  is live while started && !finished_provisional. Never use `finished` for
+  that: FPL flips it only when bonus is confirmed, up to 32 hours after full
+  time, and gating on it kept the database awake 8.5 hours a day.
+- The gate must stay stateless. No module variables remembering a last run:
+  cold serverless starts wipe them and every cold instance then syncs.
+- Client polling (AutoRefresh, LivePoller) pauses after a few idle minutes
+  and never refreshes on mount. Every router.refresh re-queries Postgres.
 - Test leagues (leagues.is_test) and bot users (users.is_bot) are excluded
   from crons and any cross-league queries.
 
