@@ -34,7 +34,6 @@ import Countdown, { CountdownBlocks } from '@/components/leagues/Countdown';
 import RememberLeague from '@/components/RememberLeague';
 import NoScroll from '@/components/NoScroll';
 import HowItWorks from '@/components/HowItWorks';
-import TeamNamePrompt from '@/components/squad/TeamNamePrompt';
 import PostDraftGuide from '@/components/PostDraftGuide';
 import PlayerPhoto from '@/components/players/PlayerPhoto';
 
@@ -324,25 +323,34 @@ export default async function HomePage({
         <LeagueSwitcher leagues={mine.map((l) => ({ id: l.id, name: l.name }))} activeId={activeId} />
       ) : null}
 
-      {/* Live matches card. */}
+      {/* Live matches, one row whatever the count. Stacked, three simultaneous
+          kickoffs made this card 150px tall and pushed the bottom of the
+          screen under the tab bar on exactly the days people open the app. */}
       {liveFixtures.length ? (
         <Link
           href={liveFixtures.length === 1 ? `/matches/${liveFixtures[0].fplFixtureId}` : '/matches'}
-          className="tile tile-live reveal flex shrink-0 flex-col items-center gap-1.5 p-4 text-center active:scale-[0.99]"
+          className="tile tile-live reveal flex shrink-0 items-center gap-2.5 px-3.5 py-2.5 active:scale-[0.99]"
         >
-          <span className="flex items-center gap-1.5 text-[0.58rem] font-medium uppercase tracking-[0.22em] text-live">
+          <span className="flex shrink-0 items-center gap-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-live">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-live" />
-            Live now
+            Live
           </span>
-          {liveFixtures.map((f) => (
-            <span key={f.fplFixtureId} className="text-lg font-semibold tracking-tight tabular-nums">
-              {liveClubShort.get(f.homeClub) ?? '?'} {f.homeScore ?? 0} - {f.awayScore ?? 0}{' '}
-              {liveClubShort.get(f.awayClub) ?? '?'}
-            </span>
-          ))}
-          <span className="text-xs text-muted">
-            {liveFixtures.length === 1 ? 'Open match' : 'All live matches'}
+          <span className="flex min-w-0 flex-1 items-center justify-center gap-3 overflow-hidden text-sm font-semibold tabular-nums">
+            {/* Two scores fit across a phone. A third would be clipped mid-name,
+                so say how many more there are instead. */}
+            {liveFixtures.slice(0, 2).map((f) => (
+              <span key={f.fplFixtureId} className="shrink-0 whitespace-nowrap">
+                {liveClubShort.get(f.homeClub) ?? '?'} {f.homeScore ?? 0}-{f.awayScore ?? 0}{' '}
+                {liveClubShort.get(f.awayClub) ?? '?'}
+              </span>
+            ))}
+            {liveFixtures.length > 2 ? (
+              <span className="shrink-0 whitespace-nowrap text-xs font-medium text-muted">
+                +{liveFixtures.length - 2}
+              </span>
+            ) : null}
           </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" />
         </Link>
       ) : null}
 
@@ -360,69 +368,27 @@ export default async function HomePage({
           <div className="mb-3 mt-3">
             <CountdownBlocks toIso={nextGw.deadline.toISOString()} doneText="Underway" />
           </div>
-          <Link
-            href="/matches"
-            className="flex items-center justify-center gap-1 border-t border-edge pt-2.5 text-sm font-medium text-muted"
-          >
-            View fixtures
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        </section>
-      ) : null}
-
-      {/* One job, one deadline. Sits directly under the clock because it is
-          the only thing on this screen that expires. */}
-      {lineupNeedsAttention && nextGw ? (
-        <Link
-          href="/squad"
-          className="tile tile-live reveal shrink-0 px-3.5 py-2.5 text-center active:scale-[0.99]"
-          style={{ animationDelay: '50ms' }}
-        >
-          <span className="flex items-center justify-center gap-1.5">
-            <Shirt className="h-3.5 w-3.5 shrink-0 text-live" strokeWidth={1.9} />
-            <span className="text-[0.8rem] font-semibold leading-tight tracking-tight">
-              Set your lineup
-            </span>
-          </span>
-          <span className="mt-0.5 block text-[0.65rem] leading-tight text-muted">
-            Locks in <Countdown toIso={nextGw.deadline.toISOString()} doneText="now" />
-          </span>
-        </Link>
-      ) : null}
-
-      {/* Still on the default name? Ask once, here, where they will see it. */}
-      {mySquad && active?.draftStatus === 'complete' && !mySquad.name ? (
-        <TeamNamePrompt squadId={mySquad.id} currentName={teamName} />
-      ) : null}
-
-      {/* Season stat strip, once the league has drafted. */}
-      {active?.draftStatus === 'complete' ? (
-        <section className="reveal grid shrink-0 grid-cols-3 gap-2.5" style={{ animationDelay: '60ms' }}>
-          {(
-            [
-              ['Rank', myRank ? ordinal(myRank) : '-', myRank ? `of ${fieldSize}` : 'no scores yet'],
-              ['Points', String(seasonPoints), 'season'],
-              [
-                'This GW',
-                gwPoints != null ? String(gwPoints) : '-',
-                gwLive ? 'live now' : 'confirmed',
-              ],
-            ] as [string, string, string][]
-          ).map(([label, value, sub], i) => (
-            <div key={label} className="tile px-2 py-3 text-center">
-              <p className="text-[0.55rem] font-medium uppercase tracking-[0.18em] text-muted-2">
-                {label}
-              </p>
-              <p
-                className={`mt-1 text-2xl font-semibold leading-none tracking-tight ${
-                  i === 2 && gwLive ? 'text-live' : ''
-                }`}
-              >
-                {value}
-              </p>
-              <p className="mt-1 text-[0.6rem] text-muted-2">{sub}</p>
-            </div>
-          ))}
+          {/* The panel's own action. When your lineup still needs setting that
+              is the one thing on this screen that expires, so it replaces the
+              fixtures link rather than adding a second card under the clock. */}
+          {lineupNeedsAttention ? (
+            <Link
+              href="/squad"
+              className="flex items-center justify-center gap-1.5 border-t border-edge pt-2.5 text-sm font-semibold text-live"
+            >
+              <Shirt className="h-4 w-4" strokeWidth={1.9} />
+              Set your lineup before it locks
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <Link
+              href="/matches"
+              className="flex items-center justify-center gap-1 border-t border-edge pt-2.5 text-sm font-medium text-muted"
+            >
+              View fixtures
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          )}
         </section>
       ) : null}
 
@@ -461,11 +427,9 @@ export default async function HomePage({
       ) : null}
 
       {/* The rules, one obvious tap away. Slim bar so it costs little height. */}
-      {!lineupNeedsAttention ? (
-        <div className="reveal shrink-0" style={{ animationDelay: '85ms' }}>
-          <HowItWorks trigger="card" />
-        </div>
-      ) : null}
+      <div className="reveal shrink-0" style={{ animationDelay: '85ms' }}>
+        <HowItWorks trigger="card" />
+      </div>
 
       {/* Two across. The only flexible row, so it absorbs whatever height is
           left over and the board strip below is never pushed off screen. */}
@@ -475,7 +439,7 @@ export default async function HomePage({
       >
         <Link
           href="/squad"
-          className="tile tile-team flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1.5 overflow-hidden p-3 text-center active:scale-[0.98]"
+          className="tile tile-team flex h-full min-h-0 flex-col items-center justify-center gap-1 overflow-hidden p-3 text-center active:scale-[0.98]"
         >
           <Shirt className="h-6 w-6 text-accent" strokeWidth={1.5} />
           <span className="min-w-0 w-full">
@@ -485,14 +449,23 @@ export default async function HomePage({
             <span className="mt-1 block truncate text-base font-semibold tracking-tight">
               {teamName}
             </span>
-            <span className="block truncate text-xs text-muted">
-              {formation ?? (active?.draftStatus === 'complete' ? 'Set your lineup' : 'Drafts soon')}
-            </span>
+            {/* An unnamed team asks to be named right here, instead of in a card
+                of its own stacked above the tiles. */}
+            {mySquad && active?.draftStatus === 'complete' && !mySquad.name ? (
+              <span className="block truncate text-xs font-medium text-accent">Tap to name it</span>
+            ) : (
+              <span className="block truncate text-xs text-muted">
+                {formation ?? (active?.draftStatus === 'complete' ? 'Set your lineup' : 'Drafts soon')}
+              </span>
+            )}
             {gwPoints != null ? (
               <span
-                className={`block text-xs font-medium ${gwLive ? 'text-live' : 'text-muted-2'}`}
+                className={`block text-sm font-semibold tabular-nums ${gwLive ? 'text-live' : 'text-foreground'}`}
               >
-                {gwLive ? `${gwPoints} pts live` : `${gwPoints} pts`}
+                {gwPoints}
+                <span className="ml-1 text-[0.6rem] font-medium text-muted-2">
+                  {gwLive ? 'this GW, live' : 'this GW'}
+                </span>
               </span>
             ) : null}
           </span>
@@ -500,7 +473,7 @@ export default async function HomePage({
 
         <Link
           href={`/league/${activeId}`}
-          className="tile tile-league flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1.5 overflow-hidden p-3 text-center active:scale-[0.98]"
+          className="tile tile-league flex h-full min-h-0 flex-col items-center justify-center gap-1 overflow-hidden p-3 text-center active:scale-[0.98]"
         >
           <Trophy className="h-6 w-6 text-info" strokeWidth={1.5} />
           <span className="min-w-0 w-full">
@@ -510,13 +483,18 @@ export default async function HomePage({
             <span className="mt-1 block truncate text-base font-semibold tracking-tight">
               {active?.name}
             </span>
-            <span className="block text-xs text-muted">
-              {teamCount} {teamCount === 1 ? 'team' : 'teams'}
-            </span>
             {myRank ? (
-              <span className="block text-xs font-medium text-muted-2">
-                {ordinal(myRank)} of {fieldSize}
+              <span className="block text-sm font-semibold tabular-nums text-foreground">
+                {ordinal(myRank)}
+                <span className="ml-1 text-[0.6rem] font-medium text-muted-2">of {fieldSize}</span>
               </span>
+            ) : (
+              <span className="block text-xs text-muted">
+                {teamCount} {teamCount === 1 ? 'team' : 'teams'}
+              </span>
+            )}
+            {active?.draftStatus === 'complete' ? (
+              <span className="block text-xs tabular-nums text-muted-2">{seasonPoints} pts season</span>
             ) : null}
           </span>
         </Link>
@@ -524,7 +502,7 @@ export default async function HomePage({
       </section>
 
       {/* Board strip: fills the last of the screen with real faces. */}
-      <section className="reveal mt-1.5 shrink-0" style={{ animationDelay: '150ms' }}>
+      <section className="home-board reveal mt-1.5 shrink-0" style={{ animationDelay: '150ms' }}>
         <p className="mb-2 text-center text-[0.56rem] font-medium uppercase tracking-[0.22em] text-muted-2">
           {seasonRunning ? 'Leading scorers' : 'Top of the board'}
         </p>
