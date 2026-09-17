@@ -6,6 +6,10 @@ import DesktopNav from '@/components/nav/DesktopNav';
 import AutoRefresh from '@/components/AutoRefresh';
 import HelpButton from '@/components/HelpButton';
 import ThemeButton from '@/components/ThemeButton';
+import { db } from '@/lib/db';
+import { fixtures } from '@/lib/schema';
+import { AFTER_KICKOFF, liveWindow, type LiveWindow } from '@/lib/live-window';
+import { and, asc, gte, isNotNull } from 'drizzle-orm';
 import './globals.css';
 
 // Matchday programme, printed at night: a characterful editorial display
@@ -67,6 +71,27 @@ export async function generateViewport(): Promise<Viewport> {
   };
 }
 
+// The current or next live window, stamped into the page so AutoRefresh only
+// polls while scores can move. Kickoffs come from the fixtures the cron keeps
+// in sync; a query failure just means no polling until the next render.
+async function currentLiveWindow(): Promise<LiveWindow | null> {
+  const now = Date.now();
+  try {
+    const rows = await db
+      .select({ kickoff: fixtures.kickoff })
+      .from(fixtures)
+      .where(and(isNotNull(fixtures.kickoff), gte(fixtures.kickoff, new Date(now - AFTER_KICKOFF))))
+      .orderBy(asc(fixtures.kickoff))
+      .limit(40);
+    return liveWindow(
+      rows.map((r) => (r.kickoff ? r.kickoff.getTime() : Number.NaN)),
+      now,
+    );
+  } catch {
+    return null;
+  }
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -75,6 +100,7 @@ export default async function RootLayout({
   // Floodlit Night is the default; only an explicit cookie switches to day.
   const jar = await cookies();
   const theme = jar.get('epld_theme')?.value === 'light' ? 'light' : 'dark';
+  const live = await currentLiveWindow();
   return (
     <html
       lang="en"
@@ -91,6 +117,7 @@ export default async function RootLayout({
           initialBuildId={
             process.env.VERCEL_DEPLOYMENT_ID ?? process.env.VERCEL_GIT_COMMIT_SHA ?? 'dev'
           }
+          live={live}
         />
         <ThemeButton initial={theme} />
         <DesktopNav />

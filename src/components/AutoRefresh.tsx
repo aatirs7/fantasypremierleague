@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { isLiveNow, type LiveWindow } from '@/lib/live-window';
 
 // Keeps an installed (standalone) PWA fresh without a manual quit + relaunch.
 // Two layers:
@@ -24,14 +25,23 @@ import { useRouter } from 'next/navigation';
 const THROTTLE_MS = 4000;
 // Every server refresh re-queries Postgres, and Neon will not suspend for
 // 300 seconds after the last query. At the old 30 second poll, one phone or
-// tablet left open on a desk kept the database awake indefinitely. So poll
-// once a minute, and only while someone is actually using the app: after a
-// few idle minutes the poll stops, and the next tap, focus or return to the
-// app refreshes straight away.
+// tablet left open on a desk kept the database awake indefinitely, and at a
+// minute it still did whenever anyone was reading the table on a weeknight.
+// The only thing that changes on its own is a live score, so the poll runs
+// once a minute inside the live window the server stamped into the page
+// (src/lib/live-window.ts), while someone is actually using the app, and
+// never otherwise. Outside it, focus, reconnect and returning to the app
+// still refresh straight away, and that render brings a fresh window.
 const POLL_MS = 60000;
 const IDLE_AFTER_MS = 3 * 60 * 1000;
 
-export default function AutoRefresh({ initialBuildId }: { initialBuildId: string }) {
+export default function AutoRefresh({
+  initialBuildId,
+  live,
+}: {
+  initialBuildId: string;
+  live: LiveWindow | null;
+}) {
   const router = useRouter();
   const last = useRef(0);
   const buildId = useRef<string>(initialBuildId);
@@ -88,8 +98,9 @@ export default function AutoRefresh({ initialBuildId }: { initialBuildId: string
     const markActive = () => {
       const wasIdle = Date.now() - lastActivity.current > IDLE_AFTER_MS;
       lastActivity.current = Date.now();
-      // Coming back from idle: catch up at once rather than waiting a minute.
-      if (wasIdle) void refresh();
+      // Coming back from idle during a match: catch up at once rather than
+      // waiting a minute. Nothing has moved otherwise.
+      if (wasIdle && isLiveNow(live, Date.now())) void refresh();
     };
     const activityEvents = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const;
     for (const ev of activityEvents) {
@@ -100,8 +111,9 @@ export default function AutoRefresh({ initialBuildId }: { initialBuildId: string
     window.addEventListener('online', refresh);
     document.addEventListener('visibilitychange', onVisible);
     const id = setInterval(() => {
-      const idle = Date.now() - lastActivity.current > IDLE_AFTER_MS;
-      if (document.visibilityState === 'visible' && !idle) void refresh();
+      const now = Date.now();
+      const idle = now - lastActivity.current > IDLE_AFTER_MS;
+      if (document.visibilityState === 'visible' && !idle && isLiveNow(live, now)) void refresh();
     }, POLL_MS);
 
     return () => {
@@ -112,7 +124,7 @@ export default function AutoRefresh({ initialBuildId }: { initialBuildId: string
       document.removeEventListener('visibilitychange', onVisible);
       clearInterval(id);
     };
-  }, [router]);
+  }, [router, live]);
 
   return null;
 }
