@@ -1,3 +1,5 @@
+Fantasy Premier League
+
 # EPL Fantasy Draft
 
 Season-long fantasy Premier League for friend groups: snake draft before kickoff, official FPL scoring every gameweek, live points during matches, waivers and trades all season.
