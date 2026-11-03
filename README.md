@@ -40,3 +40,4 @@ Sign in as an admin username and `POST /api/dev/test-draft {"managers":8,"bot_sp
 - No hardcoded season dates: gameweek deadlines come from the API mirror.
 - One Vercel cron only; nothing always-on.
 - Test leagues (`is_test`) and bot users are excluded from crons and cross-league queries.
+Build pipeline check, 2026-11-03.
